@@ -42,18 +42,18 @@ except ImportError as e:
            "Check that you have GTK+3 and Vte installed.")
     sys.exit(1)
 
-import model.guiapi
-import model.api
-import model.log
+import faraday.client.model.guiapi
+import faraday.client.model.api
+import faraday.client.model.log
 
-from gui.gui_app import FaradayUi
-from config.configuration import getInstanceConfiguration
-from utils.logs import getLogger
+from faraday.client.gui.gui_app import FaradayUi
+from faraday.config.configuration import getInstanceConfiguration
+from faraday.utils.logs import getLogger
 from appwindow import AppWindow
 
-from persistence.server.server import is_authenticated, check_faraday_version, Unauthorized
+from faraday.client.persistence.server.server import is_authenticated, check_faraday_version, Unauthorized
 
-from server import ServerIO
+from faraday.client.gui.gtk.server import ServerIO
 from dialogs import PreferenceWindowDialog
 from dialogs import NewWorkspaceDialog
 from dialogs import PluginOptionsDialog
@@ -76,11 +76,11 @@ from mainwidgets import ConsoleLog
 from mainwidgets import Terminal
 from mainwidgets import Statusbar
 
-from gui.loghandler import GUIHandler
-from utils.logs import addHandler
-from utils.common import checkSSL
+from faraday.client.gui.loghandler import GUIHandler
+from faraday.utils.logs import addHandler
+from faraday.utils.common import checkSSL
 
-from plugins import fplugin_utils
+from faraday.client.plugins import fplugin_utils
 
 CONF = getInstanceConfiguration()
 
@@ -151,19 +151,19 @@ class GuiApp(Gtk.Application, FaradayUi):
 
         if name in self.workspace_manager.getWorkspacesNames():
             error_str = "A workspace with name %s already exists" % name
-            model.api.log(error_str, "ERROR")
+            faraday.client.model.api.log(error_str, "ERROR")
             errorDialog(self.window, error_str)
             creation_ok = False
         else:
-            model.api.log("Creating workspace '%s'" % name)
-            model.api.devlog("Looking for the delegation class")
+            faraday.client.model.api.log("Creating workspace '%s'" % name)
+            faraday.client.model.api.devlog("Looking for the delegation class")
             manager = self.getWorkspaceManager()
             try:
                 name = manager.createWorkspace(name, description)
                 self.change_workspace(name)
                 creation_ok = True
             except Exception as e:
-                model.guiapi.notification_center.showDialog(str(e))
+                faraday.client.model.guiapi.notification_center.showDialog(str(e))
                 creation_ok = False
 
         return creation_ok
@@ -173,13 +173,13 @@ class GuiApp(Gtk.Application, FaradayUi):
         a signal will be incoming vis postUpdates() and force the user to
         select another workspace."""
         try:
-            model.api.log("Removing Workspace: %s" % ws_name)
+            faraday.client.model.api.log("Removing Workspace: %s" % ws_name)
             self.getWorkspaceManager().removeWorkspace(ws_name)
             self.ws_sidebar.clear_sidebar()
             self.ws_sidebar.refresh_sidebar()
         except Exception as ex:
             traceback_str = traceback.format_exc()
-            model.api.log("An exception was captured while deleting "
+            faraday.client.model.api.log("An exception was captured while deleting "
                           "workspace %s\n%s" % (ws_name, traceback_str),
                           "ERROR")
 
@@ -757,13 +757,13 @@ class GuiApp(Gtk.Application, FaradayUi):
         self.window.present()
 
         self.loghandler = GUIHandler()
-        model.guiapi.setMainApp(self)
+        faraday.client.model.guiapi.setMainApp(self)
         addHandler(self.loghandler)
         self.loghandler.registerGUIOutput(self.window)
 
-        notifier = model.log.getNotifier()
+        notifier = faraday.client.model.log.getNotifier()
         notifier.widget = self.window
-        model.guiapi.notification_center.registerWidget(self.window)
+        faraday.client.model.guiapi.notification_center.registerWidget(self.window)
 
         if self.serverIO.server_info() is None:
 

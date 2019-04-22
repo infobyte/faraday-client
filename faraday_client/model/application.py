@@ -18,27 +18,27 @@ except ImportError:
     from queue import Queue
 import requests
 
-from model.controller import ModelController
-from managers.workspace_manager import WorkspaceManager
-from plugins.controller import PluginController
-from persistence.server.server import login_user
+from faraday.client.model.controller import ModelController
+from faraday.client.managers.workspace_manager import WorkspaceManager
+from faraday.client.plugins.controller import PluginController
+from faraday.client.persistence.server.server import login_user
 
-from utils.logs import setUpLogger
-import model.api
-import model.guiapi
-import apis.rest.api as restapi
-import model.log
-from utils.logs import getLogger
+from faraday.utils.logs import setUpLogger
+import faraday.client.model.api
+import faraday.client.model.guiapi
+import faraday.client.apis.rest.api as restapi
+import faraday.client.model.log
+from faraday.utils.logs import getLogger
 import traceback
-from plugins.manager import PluginManager
-from managers.mapper_manager import MapperManager
-from utils.error_report import exception_handler
-from utils.error_report import installThreadExcepthook
+from faraday.client.plugins.manager import PluginManager
+from faraday.client.managers.mapper_manager import MapperManager
+from faraday.utils.error_report import exception_handler
+from faraday.utils.error_report import installThreadExcepthook
 
-from gui.gui_app import UiFactory
-from model.cli_app import CliApp
+from faraday.client.gui.gui_app import UiFactory
+from faraday.client.model.cli_app import CliApp
 
-from config.configuration import getInstanceConfiguration
+from faraday.config.configuration import getInstanceConfiguration
 CONF = getInstanceConfiguration()
 
 
@@ -52,7 +52,7 @@ class TimerClass(threading.Thread):
         information = loads(json_response)
 
         for news in information["news"]:
-            model.guiapi.notification_center.sendCustomLog(
+            faraday.client.model.guiapi.notification_center.sendCustomLog(
                 "NEWS -" + news["url"] + "|" + news["description"])
 
     def run(self):
@@ -68,7 +68,7 @@ class TimerClass(threading.Thread):
                 self.sendNewstoLogGTK(res.text)
 
             except Exception:
-                model.api.devlog(
+                faraday.client.model.api.devlog(
                     "NEWS: Can't connect to faradaysec.com...")
 
             self.__event.wait(43200)
@@ -143,7 +143,7 @@ class MainApplication(object):
 
     def on_connection_lost(self):
         """All it does is send a notification to the notification center"""
-        model.guiapi.notification_center.DBConnectionProblem()
+        faraday.client.model.guiapi.notification_center.DBConnectionProblem()
 
     def enableExceptHook(self):
         sys.excepthook = exception_handler
@@ -153,24 +153,24 @@ class MainApplication(object):
         try:
             signal.signal(signal.SIGINT, self.ctrlC)
 
-            model.api.devlog("Starting application...")
-            model.api.devlog("Setting up remote API's...")
+            faraday.client.model.api.devlog("Starting application...")
+            faraday.client.model.api.devlog("Setting up remote API's...")
 
             if not self.args.workspace:
                 workspace = CONF.getLastWorkspace()
                 self.args.workspace = workspace
 
-            model.api.setUpAPIs(
+            faraday.client.model.api.setUpAPIs(
                 self._model_controller,
                 self._workspace_manager,
                 CONF.getApiConInfoHost(),
                 CONF.getApiConInfoPort())
-            model.guiapi.setUpGUIAPIs(self._model_controller)
+            faraday.client.model.guiapi.setUpGUIAPIs(self._model_controller)
 
-            model.api.devlog("Starting model controller daemon...")
+            faraday.client.model.api.devlog("Starting model controller daemon...")
 
             self._model_controller.start()
-            model.api.startAPIServer()
+            faraday.client.model.api.startAPIServer()
             restapi.startAPIs(
                 self._plugin_controller,
                 self._model_controller,
@@ -178,7 +178,7 @@ class MainApplication(object):
                 CONF.getApiRestfulConInfoPort()
             )
 
-            model.api.devlog("Faraday ready...")
+            faraday.client.model.api.devlog("Faraday ready...")
 
             exit_code = self.app.run(self.args)
 
@@ -197,16 +197,16 @@ class MainApplication(object):
         Exits the application with the provided code.
         It also waits until all app threads end.
         """
-        model.api.log("Closing Faraday...")
-        model.api.devlog("stopping model controller thread...")
-        model.api.stopAPIServer()
+        faraday.client.model.api.log("Closing Faraday...")
+        faraday.client.model.api.devlog("stopping model controller thread...")
+        faraday.client.model.api.stopAPIServer()
         restapi.stopServer()
         self._model_controller.stop()
         if self._model_controller.isAlive():
             # runs only if thread has started, i.e. self._model_controller.start() is run first
             self._model_controller.join()
         self.timer.stop()
-        model.api.devlog("Waiting for controller threads to end...")
+        faraday.client.model.api.devlog("Waiting for controller threads to end...")
         return exit_code
 
     def quit(self):

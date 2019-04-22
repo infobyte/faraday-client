@@ -8,12 +8,12 @@ See the file 'doc/LICENSE' for the license information
 
 import time
 
-from gui.gui_app import FaradayUi
-from gui.nogui.eventwatcher import EventWatcher
-import model.guiapi
-from utils.logs import getLogger
+from faraday.client.gui.gui_app import FaradayUi
+from faraday.client.gui.nogui.eventwatcher import EventWatcher
+import faraday.client.model.guiapi
+from faraday.utils.logs import getLogger
 
-from config.configuration import getInstanceConfiguration
+from faraday.config.configuration import getInstanceConfiguration
 CONF = getInstanceConfiguration()
 
 
@@ -25,9 +25,9 @@ class GuiApp(FaradayUi):
                            workspace_manager,
                            plugin_controller)
         self._stop = False
-        model.guiapi.setMainApp(self)
+        faraday.client.model.guiapi.setMainApp(self)
         self.event_watcher = EventWatcher()
-        model.guiapi.notification_center.registerWidget(self.event_watcher)
+        faraday.client.model.guiapi.notification_center.registerWidget(self.event_watcher)
 
     def run(self, args):
         workspace = args.workspace
