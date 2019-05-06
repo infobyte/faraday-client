@@ -9,13 +9,13 @@ See the file 'doc/LICENSE' for the license information
 import os
 import logging
 
-import model.common
-from config.configuration import getInstanceConfiguration
+import faraday.client.model.common
+from faraday.config.configuration import getInstanceConfiguration
 #from workspace import Workspace
-import model.log
-from model import Modelactions
-from utils.logs import getLogger
-from utils.common import socket, gateway
+import faraday.client.model.log
+from faraday.client.model import Modelactions
+from faraday.utils.logs import getLogger
+from faraday.utils.common import socket, gateway
 import shutil
 #from plugins.api import PluginControllerAPI
 
@@ -85,7 +85,7 @@ def _setUpAPIServer(hostname=None, port=None):
         for hostname in hostnames:
 
             try:
-                _xmlrpc_api_server = model.common.XMLRPCServer((hostname,CONF.getApiConInfoPort()))
+                _xmlrpc_api_server = faraday.client.model.common.XMLRPCServer((hostname,CONF.getApiConInfoPort()))
                 # Registers the XML-RPC introspection functions system.listMethods, system.methodHelp and system.methodSignature.
                 _xmlrpc_api_server.register_introspection_functions()
 
@@ -491,10 +491,10 @@ def devlog(msg):
     getLogger().debug(msg)
 
 def showDialog(msg, level="Information"):
-    return model.log.getNotifier().showDialog(msg, level)
+    return faraday.client.model.log.getNotifier().showDialog(msg, level)
 
 def showPopup(msg, level="Information"):
-    return model.log.getNotifier().showPopup(msg, level)
+    return faraday.client.model.log.getNotifier().showPopup(msg, level)
 
 
 # Plugin status

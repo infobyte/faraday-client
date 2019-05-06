@@ -38,14 +38,15 @@ except: # For Python 3
 
 import requests
 
-from persistence.server.utils import force_unique
-from persistence.server.server_io_exceptions import (WrongObjectSignature,
+from faraday import __version__ as f_version
+from faraday.client.persistence.server.utils import force_unique
+from faraday.client.persistence.server.server_io_exceptions import (WrongObjectSignature,
                                                      CantCommunicateWithServerError,
                                                      ConflictInDatabase,
                                                      ResourceDoesNotExist,
                                                      Unauthorized)
 
-from persistence.server.changes_stream import (
+from faraday.client.persistence.server.changes_stream import (
     CouchChangesStream,
     WebsocketsChangesStream
 )
@@ -71,13 +72,13 @@ OBJECT_TYPE_END_POINT_MAPPER = {
     'Cred': 'credential',
 }
 
-from config import constant as CONSTANTS
+from faraday.config import constant as CONSTANTS
 LOCAL_CONFIG_FILE = os.path.expanduser(
     os.path.join(CONSTANTS.CONST_FARADAY_HOME_PATH, 'config/server.ini'))
 
 
 def _conf():
-    from config.configuration import getInstanceConfiguration
+    from faraday.config.configuration import getInstanceConfiguration
     CONF = getInstanceConfiguration()
 
     # If you are running this libs outside of Faraday, cookies are not setted.
@@ -96,13 +97,10 @@ def _get_base_server_url():
     # Faraday server is running, and this module is used by upload_reports...
     if FARADAY_UPLOAD_REPORTS_OVERWRITE_SERVER_URL:
         server_url = FARADAY_UPLOAD_REPORTS_OVERWRITE_SERVER_URL
-        logger.info('Detected upload cookie Using server_url as {0}'.format(server_url))
     elif FARADAY_UP:
         server_url = _conf().getAPIUrl()
-        logger.info('Detected faraday client running. Using server_url as {0}'.format(server_url))
     else:
         server_url = SERVER_URL
-        logger.info('Could not detect upload or client running. Using default server_url as {0}'.format(server_url))
 
     return server_url.rstrip('/')
 
@@ -1554,12 +1552,7 @@ def check_faraday_version():
 
     faraday_directory = os.path.dirname(os.path.realpath('faraday.py'))
 
-    file_path = os.path.join(faraday_directory, 'VERSION')
-
-    with open(file_path, 'r') as version_file:
-        version = version_file.read().strip()
-
-    if info is not None and version != info['Version']:
+    if info is not None and f_version != info['Version']:
         raise RuntimeError('Client and server versions do not match')
 
 def check_server_url(url_to_test):

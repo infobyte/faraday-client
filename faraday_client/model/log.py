@@ -6,12 +6,12 @@ See the file 'doc/LICENSE' for the license information
 
 '''
 
-from gui.customevents import (ShowPopupCustomEvent,
+from faraday.client.gui.customevents import (ShowPopupCustomEvent,
                               ShowDialogCustomEvent)
-import model.guiapi
-from utils.logs import getLogger
+import faraday.client.model.guiapi
+from faraday.utils.logs import getLogger
 
-from config.configuration import getInstanceConfiguration
+from faraday.config.configuration import getInstanceConfiguration
 CONF = getInstanceConfiguration()
 
 __notifier = None
@@ -43,7 +43,7 @@ class Notifier(object):
         getLogger().log(text, "INFO")
         if self.widget is not None:
             event = customEventClass(text, level)
-            model.guiapi.postEvent(event, self.widget)
+            faraday.client.model.guiapi.postEvent(event, self.widget)
 
     def showDialog(self, text, level="Information"):
         self._postCustomEvent(text, level, ShowDialogCustomEvent)
