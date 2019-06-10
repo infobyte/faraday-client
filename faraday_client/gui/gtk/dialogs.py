@@ -12,15 +12,15 @@ import os
 
 gi.require_version('Gtk', '3.0')
 
-from persistence.server.server import ResourceDoesNotExist
+from faraday.client.persistence.server.server import ResourceDoesNotExist
 from gi.repository import Gtk, GdkPixbuf, Gdk
-from config.configuration import getInstanceConfiguration
-from persistence.server.server import is_authenticated, login_user, get_user_info, check_server_url
-from model import guiapi
+from faraday.config.configuration import getInstanceConfiguration
+from faraday.client.persistence.server.server import is_authenticated, login_user, get_user_info, check_server_url
+from faraday.client.model import guiapi
 from decorators import scrollable
 
 from compatibility import CompatibleScrolledWindow as GtkScrolledWindow
-from plugins import fplugin_utils
+from faraday.client.plugins import fplugin_utils
 
 CONF = getInstanceConfiguration()
 
@@ -1700,8 +1700,9 @@ class aboutDialog(Gtk.AboutDialog):
     def __init__(self, main_window):
 
         Gtk.AboutDialog.__init__(self, transient_for=main_window, modal=True)
-        icons = CONF.getImagePath() + "icons/"
-        faraday_icon = GdkPixbuf.Pixbuf.new_from_file(icons+"about.png")
+        icons = os.path.join(FARADAY_CLIENT_BASE, "data", "images", "icons")
+        faraday_icon = GdkPixbuf.Pixbuf.new_from_file(
+            os.path.join(icons, "about.png"))
         self.set_logo(faraday_icon)
         self.set_program_name("Faraday")
         self.set_comments("Penetration Test IDE -"

@@ -9,25 +9,27 @@ import os
 import sys
 
 from colorama import Fore
-from utils.logs import getLogger
+from faraday.utils.logs import getLogger
 
-from config.configuration import getInstanceConfiguration
+from faraday.config.configuration import getInstanceConfiguration
 
 CONF = getInstanceConfiguration()
 logger = getLogger()
 
 
 def get_available_plugins():
-    faraday_directory = os.path.dirname(os.path.realpath(os.path.join(__file__, "../")))
+    from faraday import client
+    client_base_path = os.path.dirname(os.path.abspath(client.__file__))
 
-    scan_path = os.path.join(faraday_directory, "bin/")
-
+    scan_path = os.path.join(client_base_path, "bin")
     plugin_list = os.listdir(scan_path)
 
-    if 'fplugin' in plugin_list:
-        plugin_list.remove('fplugin')
-
-    plugin_list = filter(lambda p: p[-3:] == '.py', plugin_list)
+    plugin_list = [
+        p for p in plugin_list
+        if p.endswith('.py')
+        ]
+    plugin_list.remove('fplugin.py')
+    plugin_list.remove('__init__.py')
 
     plugins_dic = {}
 

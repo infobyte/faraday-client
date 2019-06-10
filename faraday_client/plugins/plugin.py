@@ -17,12 +17,13 @@ import traceback
 import deprecation
 from threading import Thread
 
-import server.config
-import model.api
-import model.common
-from model.common import factory
-from persistence.server.models import get_host , update_host
-from persistence.server.models import (
+import faraday.server.config
+import faraday.client.model.api
+import faraday.client.model.common
+from faraday import __license_version__ as license_version
+from faraday.client.model.common import factory
+from faraday.client.persistence.server.models import get_host , update_host
+from faraday.client.persistence.server.models import (
     Host,
     Service,
     Vuln,
@@ -30,12 +31,12 @@ from persistence.server.models import (
     Credential,
     Note
 )
-from model import Modelactions
+from faraday.client.model import Modelactions
 #from plugins.modelactions import modelactions
 
-from config.configuration import getInstanceConfiguration
+from faraday.config.configuration import getInstanceConfiguration
 CONF = getInstanceConfiguration()
-VERSION = server.config.__get_version().split('-')[0].split('rc')[0]
+VERSION = license_version.split('-')[0].split('rc')[0]
 logger = logging.getLogger(__name__)
 
 
@@ -170,7 +171,7 @@ class PluginBase(object):
             args = args + (self.command_id, )
         else:
             logger.warn('Warning command id not set for action {0}'.format(args))
-        logger.debug('AddPendingAction', args)
+        logger.debug('AddPendingAction %s', args)
         self._pending_actions.put(args)
 
     def createAndAddHost(self, name, os="unknown", hostnames=None, mac=None):
@@ -226,7 +227,7 @@ class PluginBase(object):
             )
             status = 'open'
 
-        serv_obj = model.common.factory.createModelObject(
+        serv_obj = faraday.client.model.common.factory.createModelObject(
             Service.class_signature,
             name, protocol=protocol, ports=ports, status=status,
             version=version, description=description,
@@ -248,7 +249,7 @@ class PluginBase(object):
             )
             status = 'open'
 
-        serv_obj = model.common.factory.createModelObject(
+        serv_obj = faraday.client.model.common.factory.createModelObject(
             Service.class_signature,
             name, protocol=protocol, ports=ports, status=status,
             version=version, description=description,
@@ -262,7 +263,7 @@ class PluginBase(object):
     def createAndAddVulnToHost(self, host_id, name, desc="", ref=[],
                                severity="", resolution="", data=""):
 
-        vuln_obj = model.common.factory.createModelObject(
+        vuln_obj = faraday.client.model.common.factory.createModelObject(
             Vuln.class_signature,
             name, data=data, desc=desc, refs=ref, severity=severity,
             resolution=resolution, confirmed=False,
@@ -280,7 +281,7 @@ class PluginBase(object):
                                     desc="", ref=[], severity="",
                                     resolution="", data=""):
 
-        vuln_obj = model.common.factory.createModelObject(
+        vuln_obj = faraday.client.model.common.factory.createModelObject(
             Vuln.class_signature,
             name, data=data, desc=desc, refs=ref, severity=severity,
             resolution=resolution, confirmed=False,
@@ -294,7 +295,7 @@ class PluginBase(object):
     def createAndAddVulnToService(self, host_id, service_id, name, desc="",
                                   ref=[], severity="", resolution="", data=""):
 
-        vuln_obj = model.common.factory.createModelObject(
+        vuln_obj = faraday.client.model.common.factory.createModelObject(
             Vuln.class_signature,
             name, data=data, desc=desc, refs=ref, severity=severity,
             resolution=resolution, confirmed=False,
@@ -310,7 +311,7 @@ class PluginBase(object):
                                      website="", path="", request="",
                                      response="", method="", pname="",
                                      params="", query="", category="", data=""):
-        vulnweb_obj = model.common.factory.createModelObject(
+        vulnweb_obj = faraday.client.model.common.factory.createModelObject(
             VulnWeb.class_signature,
             name, data=data, desc=desc, refs=ref, severity=severity,
             resolution=resolution, website=website, path=path,
@@ -339,7 +340,7 @@ class PluginBase(object):
     def createAndAddCredToService(self, host_id, service_id, username,
                                   password):
 
-        cred_obj = model.common.factory.createModelObject(
+        cred_obj = faraday.client.model.common.factory.createModelObject(
             Credential.class_signature,
             username, password=password, parent_id=service_id, parent_type='Service',
             workspace_name=self.workspace)
@@ -391,26 +392,26 @@ class PluginProcess(Thread):
 
     def run(self):
         proc_name = self.name
-        model.api.devlog("-" * 40)
-        model.api.devlog("proc_name = %s" % proc_name)
-        model.api.devlog("Starting run method on PluginProcess")
-        model.api.devlog('parent process: %s' % os.getppid())
-        model.api.devlog('process id: %s' % os.getpid())
-        model.api.devlog("-" * 40)
+        faraday.client.model.api.devlog("-" * 40)
+        faraday.client.model.api.devlog("proc_name = %s" % proc_name)
+        faraday.client.model.api.devlog("Starting run method on PluginProcess")
+        faraday.client.model.api.devlog('parent process: %s' % os.getppid())
+        faraday.client.model.api.devlog('process id: %s' % os.getpid())
+        faraday.client.model.api.devlog("-" * 40)
         done = False
         while not done and not self.stop:
             output, command_id = self.output_queue.get()
             self.plugin.setCommandID(command_id)
             if output is not None:
-                model.api.devlog('%s: %s' % (proc_name, "New Output"))
+                faraday.client.model.api.devlog('%s: %s' % (proc_name, "New Output"))
                 try:
                     self.plugin.processOutput(output)
                 except Exception as ex:
-                    model.api.devlog("Plugin raised an exception:")
-                    model.api.devlog(traceback.format_exc())
+                    faraday.client.model.api.devlog("Plugin raised an exception:")
+                    faraday.client.model.api.devlog(traceback.format_exc())
             else:
                 done = True
-                model.api.devlog('%s: Exiting' % proc_name)
+                faraday.client.model.api.devlog('%s: Exiting' % proc_name)
 
             self.output_queue.task_done()
             time.sleep(0.1)
