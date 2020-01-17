@@ -15,6 +15,7 @@ from threading import Thread
 import faraday.server.config
 import faraday.client.model.api
 import faraday.client.model.common
+from faraday import __version__ as faraday_version
 from faraday import __license_version__ as license_version
 from faraday.client.model.common import factory
 from faraday.client.persistence.server.models import get_host, update_host
@@ -29,6 +30,8 @@ from faraday.client.persistence.server.models import (
 from faraday.client.model import Modelactions
 
 from faraday.config.configuration import getInstanceConfiguration
+
+
 CONF = getInstanceConfiguration()
 VERSION = license_version.split('-')[0].split('rc')[0]
 logger = logging.getLogger(__name__)
@@ -182,7 +185,7 @@ class PluginBase:
         return host_obj.getID()
 
     @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
-                            current_version=VERSION,
+                            current_version=faraday_version,
                             details="Interface object removed. Use host or service instead")
     def createAndAddInterface(
         self, host_id, name="", mac="00:00:00:00:00:00",
@@ -214,7 +217,7 @@ class PluginBase:
         return host_id
 
     @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
-                            current_version=VERSION,
+                            current_version=faraday_version,
                             details="Interface object removed. Use host or service instead. Service will be attached to Host!")
     def createAndAddServiceToInterface(self, host_id, interface_id, name,
                                        protocol="tcp?", ports=None,
@@ -280,7 +283,7 @@ class PluginBase:
         return vuln_obj.getID()
 
     @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
-                            current_version=VERSION,
+                            current_version=faraday_version,
                             details="Interface object removed. Use host or service instead. Vuln will be added to Host")
     def createAndAddVulnToInterface(self, host_id, interface_id, name,
                                     desc="", ref=None, severity="",
@@ -338,6 +341,9 @@ class PluginBase:
     def createAndAddNoteToHost(self, host_id, name, text):
         return None
 
+    @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
+                            current_version=faraday_version,
+                            details="Interface object removed. Use host or service instead. Note will be added to Host")
     def createAndAddNoteToInterface(self, host_id, interface_id, name, text):
         return None
 

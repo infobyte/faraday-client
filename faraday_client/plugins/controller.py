@@ -79,7 +79,6 @@ class PluginCommiter(Thread):
             os.rename(self.output, os.path.join(self._report_upath, name))
 
 
-
 class PluginController(Thread):
     """
     TODO: Doc string.

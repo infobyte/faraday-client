@@ -107,6 +107,7 @@ class ModelController(Thread):
         self._object_factory.register(models.VulnWeb)
         self._object_factory.register(models.Note)
         self._object_factory.register(models.Credential)
+        self._object_factory.register(models.Report)
 
     def _checkParent(self, parent_type):
         """Takes a parent_type and returns the appropiate checkParentDecorator,

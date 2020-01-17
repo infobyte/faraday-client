@@ -14,9 +14,9 @@ except ImportError:
 
 
 def cleanhtml(raw_html):
-        cleanr = re.compile('<.*?>')
-        cleantext = re.sub(cleanr, '', raw_html)
-        return cleantext
+    cleanr = re.compile('<.*?>')
+    cleantext = re.sub(cleanr, '', raw_html)
+    return cleantext
 
 
 class WebInspectParser():

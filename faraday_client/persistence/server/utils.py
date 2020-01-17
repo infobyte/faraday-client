@@ -120,6 +120,7 @@ def get_vuln_web_properties(vuln_web):
         'pname': vuln_web.getPname() or '',
         'query': vuln_web.getQuery(),
         'status': vuln_web.getStatus(),
+        'tags': vuln_web.getTags(),
         'parent': vuln_web.getParent(),
         'parent_type': vuln_web.getParentType(),
 	'external_id': vuln_web.getExternalID()
@@ -166,5 +167,22 @@ def get_command_properties(command):
         'import_source': command.import_source,
     }
 
+def get_report_properties(report):
+
+    return {'id': report.getID(),
+            'name': report.getName(),
+            'tags': report.getTags(),
+            'title': report.getTitle(),
+            'enterprise': report.getEnterprise(),
+            'scope': report.getScope(),
+            'objectives': report.getObjectives(),
+            'summary': report.getSummary(),
+            'confirmed': report.getConfirmed(),
+            'template_name': report.getTemplateName(),
+            'conclusions': report.getConclusions(),
+            'recommendations': report.getRecommendations(),
+            'date': report.getDate(),
+            'owner': report.getOwner(),
+            'grouped': report.getGrouped()}
 
 # I'm Py3

@@ -12,6 +12,9 @@ from __future__ import absolute_import
 import socket
 import subprocess
 import getpass
+from faraday.config.configuration import getInstanceConfiguration
+CONF = getInstanceConfiguration()
+
 
 from threading import Event
 from sys import platform as _platform
@@ -47,7 +50,12 @@ def get_hostname():
     return socket.gethostname()
 
 def get_user():
-    return getpass.getuser()
+    #Get User
+    user = CONF.getDBUser()
+    if not user: #if not user get the localuser
+        user = getpass.getuser()
+
+    return user
 
 
 class CommandRunInformation:

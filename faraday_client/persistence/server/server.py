@@ -29,6 +29,7 @@ import urllib
 import os
 import json
 import logging
+from time import sleep
 
 try:
     import urlparse
@@ -102,7 +103,6 @@ def _get_base_server_url():
         server_url = SERVER_URL
     return server_url.rstrip('/')
 
-
 def _create_server_api_url():
     """Return the server's api url."""
     return "{0}/_api/v2".format(_get_base_server_url())
@@ -167,10 +167,12 @@ def _create_couch_db_url(workspace_name):
     db_url = '{0}/{1}'.format(server_base_url, workspace_name)
     return db_url
 
+
 def _create_server_db_url(workspace_name):
     server_api_url = _create_server_api_url()
     db_url = '{0}/ws/'.format(server_api_url)
     return db_url
+
 
 def _add_session_cookies(func):
     """A decorator which wrapps a function dealing with I/O with the server and
@@ -334,6 +336,10 @@ def _save_to_server(workspace_name, **params):
     """
     post_url = _create_server_post_url(workspace_name, params['type'], params.get('command_id', None))
     return _post(post_url, update=False, expected_response=201, **params)
+
+def _get_raw_report_count_vulns(workspace_name, **params):
+    request_url = _create_server_get_url(workspace_name, 'report/countVulns')
+    return _get(request_url, **params)
 
 def _update_in_server(workspace_name, faraday_object_id, **params):
     put_url = _create_server_put_url(workspace_name, params['type'], faraday_object_id, params.get('command_id', None))
@@ -512,6 +518,60 @@ def get_commands(workspace_name, **params):
     """
     return _get_faraday_ready_dictionaries(workspace_name, 'commands',
                                            'commands', **params)
+
+
+def get_report(workspace_name, object_id):
+    """Get an unique report.
+
+    Returns:
+        A dictionary containing information about the report.
+    """
+
+    request_url = _create_server_post_url(workspace_name, object_id)
+    return _get(request_url)
+
+def get_report_docx(workspace_name, report_object_id):
+    """Get an report docx.
+
+    Returns:
+        The docx executive report.
+    """
+
+    report_creating = get_report(workspace_name, report_object_id)
+
+    while report_creating.get("status") == "processing":
+        report_creating = get_report(workspace_name, report_object_id)
+        sleep(5)
+
+    for key in report_creating.get("_attachments"):
+        filename = key
+
+    request_url = "{0}/{1}/{2}/{3}".format(
+        _get_base_server_url(),
+        workspace_name,
+        report_object_id,
+        filename)
+
+    return _unsafe_io_with_server(requests.get, 200, request_url)
+
+def get_report_count_vulns(workspace_name, confirmed=False, tags=[]):
+    """
+    Get vulnerabilities count from the server.
+    Filtered by confirmed or tags.
+    Used by: New executive report function.
+
+    Args:
+        workspace_name (str): the workspace from which to get the count.
+        confirmed (bool): Use only confirmed vulns
+        tags (lst): Use only vulns with tags included in list
+
+    Returns:
+        A dictionary containing the result of count.
+    """
+
+    return _get_raw_report_count_vulns(
+            workspace_name, confirmed="true" if confirmed else "false", tags=",".join(tags))
+
 
 def get_objects(workspace_name, object_signature, **params):
     """Get any type of object from the server, be it hosts, vulns, interfaces,
@@ -1132,7 +1192,7 @@ def create_vuln_web(workspace_name, command_id, name, description, parent,
                     desc="", metadata=None, method=None, params="",
                     path=None, pname=None, query=None, request=None,
                     response=None, category="", website=None,
-                    status=None, policyviolations=[], external_id=None):
+                    status=None, policyviolations=[], tags=[], external_id=None):
     """Creates a vuln web.
 
     Args:
@@ -1192,14 +1252,14 @@ def create_vuln_web(workspace_name, command_id, name, description, parent,
                            status=status,
                            type='VulnerabilityWeb',
                            policyviolations=policyviolations,
-			   external_id=external_id)
+                           tags=tags, external_id=external_id)
 
 def update_vuln_web(workspace_name, command_id, id, name, description,
                     parent, parent_type, owned=None, owner="",
                     confirmed=False, data="", refs=None, severity="info", resolution="",
                     desc="", metadata=None, method=None, params="", path=None, pname=None,
                     query=None, request=None, response=None, category="", website=None,
-                    status=None, policyviolations=[], external_id=None):
+                    status=None, policyviolations=[], tags=[], external_id=None):
     """Creates a vuln web.
 
     Args:
@@ -1260,7 +1320,9 @@ def update_vuln_web(workspace_name, command_id, id, name, description,
                              category=category,
                              status=status,
                              type='VulnerabilityWeb',
-                             policyviolations=policyviolations,                                                                                                                                               external_id=external_id)
+                             policyviolations=policyviolations,
+                             tags=tags,
+                             external_id=external_id)
 
 def create_note(workspace_name, command_id, object_type, object_id, name, text, owned=None, owner="",
                 description="", metadata=None):
@@ -1456,6 +1518,57 @@ def update_command(workspace_name, command_id, command, tool, import_source
                              type="CommandRunInformation")
 
 
+def create_executive_report(workspace_name, id, name, tags=[], title="", enterprise="", scope="", objectives="",
+                            summary="", confirmed=False, template_name="", conclusions="", recommendations="", date=None,
+                            owner="", grouped=False):
+    """Creates a Executive report.
+
+    Args:
+        workspace_name (str): the name of the workspace where the vuln web will be saved.
+        id (str): the id of the executive report. Must be unique.
+        name (str) the name of the executive report.
+        tags (lst) Generate report only with vulns include that tags.
+        title (str) Title of executive report
+        enterprise (str) Enterprise of executive report
+        scope (str) Scope of executive report
+        objectives (str) Objectives of executive report
+        summary (str) Summary of executive report
+        confirmed (bool) Only vulns confirmed in executive report.
+        template_name (str) Name of template (With extension) Ej: generic_default.docx
+        conclusions (str) Conclusions of executive report
+        recommendations (str) Recomendations of executive report
+        owner (str) Owner of executive report (Valid user)
+
+    Returns:
+        A dictionary with the server's response.
+    """
+
+    total_vulns = get_report_count_vulns(workspace_name, confirmed=confirmed, tags=tags)
+
+    return _put(
+        _create_server_get_url(workspace_name, "report"),
+        update=False,
+        expected_response=201,
+        _id=id,
+        name=name,
+        tags=tags,
+        title=title,
+        enterprise=enterprise,
+        scope=scope,
+        objectives=objectives,
+        summary=summary,
+        confirmed=confirmed,
+        template_name=template_name,
+        conclusions=conclusions,
+        recommendations=recommendations,
+        status="processing",
+        date=date,
+        owner=owner,
+        totalVulns=total_vulns,
+        grouped=grouped,
+        type="Reports")
+
+
 def create_workspace(workspace_name, description, start_date, finish_date,
                      customer=None, duration=None):
     """Create a workspace.
@@ -1476,6 +1589,7 @@ def create_workspace(workspace_name, description, start_date, finish_date,
                               name=workspace_name,
                               description=description,
                               customer=customer,
+                              users=[],
                               duration=duration,
                               type="Workspace")
 
@@ -1536,7 +1650,6 @@ def login_user(uri, uname, upass):
         return None
     except requests.adapters.ReadTimeout:
         return None
-
 
 def is_authenticated(uri, cookies):
     try:

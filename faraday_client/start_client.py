@@ -12,13 +12,16 @@ from builtins import input
 
 import os
 import sys
-import imp
+import json
 import shutil
 import getpass
 import argparse
 import requests
 import requests.exceptions
 import logging
+from base64 import b64decode
+
+from nacl.public import PrivateKey, PublicKey, Box
 
 from faraday.config.configuration import getInstanceConfiguration
 from faraday.config.constant import (
@@ -34,7 +37,18 @@ from faraday.config.constant import (
     CONST_FARADAY_ZSH_FARADAY,
     CONST_REQUIREMENTS_FILE,
     CONST_FARADAY_FOLDER_LIST,
+    CONST_LICENSE,
+    CONST_LICENSE_CONFIG,
+    CONST_INFO_PK,
+    CONST_CLI_SK,
+    CONST_CLI_PK,
+    CONST_LICENSES_DB
 )
+from faraday.utils import (
+    license,
+)
+from faraday.utils.common import date_expired
+from faraday.utils.license import check_license
 
 CONST_FARADAY_HOME_PATH = os.path.expanduser('~/.faraday')
 from faraday.utils import dependencies
@@ -54,6 +68,16 @@ USER_HOME = os.path.expanduser(CONST_USER_HOME)
 FARADAY_BASE = os.path.dirname(faraday.__file__)
 os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  # Use double dirname to obtain parent directory
 FARADAY_CLIENT_BASE = os.path.join(FARADAY_BASE, 'client')
+FARADAY_LICENSE = os.path.join(FARADAY_BASE, CONST_LICENSE)
+FARADAY_USER_LICENSE = os.path.join(os.getenv('FARADAY_LICENSE_HOME', os.path.expanduser(CONST_FARADAY_HOME_PATH)), CONST_LICENSE)
+FARADAY_LICENSE_CONFIG = os.path.join(FARADAY_BASE, CONST_LICENSE_CONFIG)
+FARADAY_INFO_PK = os.path.join(FARADAY_BASE, CONST_INFO_PK)
+FARADAY_USER_INFO_PK= os.path.join(os.getenv('FARADAY_LICENSE_HOME', os.path.expanduser(CONST_FARADAY_HOME_PATH)), CONST_INFO_PK)
+FARADAY_CLI_SK = os.path.join(FARADAY_BASE, CONST_CLI_SK)
+FARADAY_USER_CLI_SK = os.path.join(os.getenv('FARADAY_LICENSE_HOME', os.path.expanduser(CONST_FARADAY_HOME_PATH)), CONST_CLI_SK)
+FARADAY_CLI_PK = os.path.join(FARADAY_BASE, CONST_CLI_PK)
+FARADAY_USER_CLI_PK = os.path.join(os.getenv('FARADAY_LICENSE_HOME', os.path.expanduser(CONST_FARADAY_HOME_PATH)), CONST_CLI_PK)
+
 
 FARADAY_USER_HOME = os.path.expanduser(CONST_FARADAY_HOME_PATH)
 
@@ -122,7 +146,8 @@ def getParserArgs():
                         action="store_true",
                         dest="disable_excepthook",
                         default=False,
-                        help="Disable the application exception hook that allows to send error reports to developers.")
+                        help="Disable the application exception hook that allows to send error \
+                        reports to developers.")
 
     parser.add_argument('--login',
                         action="store_true",
@@ -130,9 +155,7 @@ def getParserArgs():
                         default=False,
                         help="Enable prompt for authentication Database credentials")
 
-    parser.add_argument('--dev-mode',
-                        action="store_true",
-                        dest="dev_mode",
+    parser.add_argument('--dev-mode', action="store_true", dest="dev_mode",
                         default=False,
                         help="Enable dev mode. This will use the user config and plugin folder.")
 
@@ -146,7 +169,8 @@ def getParserArgs():
                         action="store",
                         dest="gui",
                         default="gtk",
-                        help="Select interface to start Faraday. Supported values are 'gtk' and 'no' (no GUI at all). Defaults to GTK")
+                        help="Select interface to start faraday. Supported values are "
+                              "gtk and 'no' (no GUI at all). Defaults to GTK")
 
     parser.add_argument('--cli',
                         action="store_true",
@@ -185,6 +209,10 @@ def getParserArgs():
                         help='Skip dependency check')
     parser.add_argument('--keep-old', action='store_true', help='Keep old object in CLI mode if Faraday find a conflict')
     parser.add_argument('--keep-new', action='store_true', help='Keep new object in CLI mode if Faraday find a conflict (DEFAULT ACTION)')
+
+    parser.add_argument('--license-path',
+                        help='Path to the licence .tar.gz',
+                        default=None)
 
     parser.add_argument('-v', '--version', action='version',
                         version='Faraday v{version}'.format(version=f_version))
@@ -397,6 +425,60 @@ def checkFolder(folder):
         os.makedirs(folder)
 
 
+def checkLicense():
+
+    try:
+        getInstanceConfiguration().setVersion(f_version)
+
+        files = {FARADAY_USER_LICENSE: FARADAY_LICENSE,
+                 FARADAY_USER_INFO_PK: FARADAY_INFO_PK,
+                 FARADAY_USER_CLI_SK: FARADAY_CLI_SK,
+                 FARADAY_USER_CLI_PK: FARADAY_CLI_PK}
+
+        for user_file, lic_file in files.items():
+            if (not os.path.isfile(user_file)):
+                if (not os.path.isfile(lic_file)):
+                    get_logger("launcher").error(
+                        ("You're missing some license files."
+                         "\nIf you have a valid license "
+                         "make sure they files are in "
+                         "[your-faraday-installation]/doc/ "
+                         "or in ~/.faraday/doc/"
+                         "\nIf you don't have a valid license, "
+                         "please contact customer support"))
+                    sys.exit(-1)
+                shutil.copy(lic_file, user_file)
+
+        license = b64decode(open(FARADAY_USER_LICENSE, 'r').read())
+        info_pk = PublicKey(b64decode(open(FARADAY_USER_INFO_PK, 'r').read()))
+        cli_sk = PrivateKey(b64decode(open(FARADAY_USER_CLI_SK, 'r').read()))
+
+        box = Box(cli_sk, info_pk)
+        license = box.decrypt(license)
+        conf = json.loads(license)
+        doc = {"mws": conf["mws"], "mus": conf["mus"],
+               "cdate": conf["creation_date"], "ver": getInstanceConfiguration().getVersion(),
+               "email": conf["email"], "lic_db": CONST_LICENSES_DB}
+
+        CONF = getInstanceConfiguration()
+        CONF.setLimits((doc["mws"], doc["mus"]))
+        CONF.setLicenseEmail(conf["email"])
+        CONF.setLicenseDate(conf["creation_date"])
+
+        ex_date = date_expired(conf["creation_date"])
+
+        if ex_date['expired']:
+            logger.warning(
+                "\n[!] Your license has expired.\nPlease visit https://www.faradaysec.com/users/ to extend your license.\n")
+        elif ex_date['near']:
+            logger.warning(
+                "\n[!] Your current license is due to expire soon.\nPlease visit https://www.faradaysec.com/users/ to extend your license before it expires.\n")
+    except Exception:
+        get_logger("launcher").error(
+            "It seems that something's wrong with your license\nPlease contact customer support")
+        sys.exit(-1)
+
+
 def printBanner():
     """
     Prints Faraday's ascii banner.
@@ -421,21 +503,21 @@ def checkUpdates():
     resp = u"OK"
     try:
 
-        getInstanceConfiguration().setVersion(f_version)
-        getInstanceConfiguration().setAppname("Faraday - Penetration Test IDE Community")
-        parameter = {"version": getInstanceConfiguration().getVersion()}
+        appname = "Faraday - Penetration Test IDE "
+        ver_k = {'p': 'Professional', 'c': 'Corporate'}
+        version = getInstanceConfiguration().getVersion()
 
-        resp = requests.get(uri, params=parameter, timeout=1, verify=True)
-        resp = resp.text.strip()
+        getInstanceConfiguration().setAppname(appname + ver_k[version.split("-")[0]])
+
+        cli_pk = open(FARADAY_USER_CLI_PK, 'r').read()
+        getInstanceConfiguration().setKey(cli_pk)
+
+        error_code, _ = check_license(getInstanceConfiguration().getVersion(),getInstanceConfiguration().getKey())
+        if error_code == -1:
+            sys.exit(error_code)
+
     except Exception as e:
         logger.error(e)
-    version = getInstanceConfiguration().getVersion()
-    if 'b' in version.split("+")[0]:
-        return
-    if not resp == u'OK':
-        logger.info("You have available updates. Run ./faraday.py --update to catchup!")
-    else:
-        logger.info("No updates available, enjoy Faraday.")
 
 
 def check_faraday_version():
@@ -447,7 +529,7 @@ def check_faraday_version():
 
 
 def try_login_user(server_uri, api_username, api_password):
-    
+
     try:
         session_cookie = login_user(server_uri, api_username, api_password)
         return session_cookie
@@ -466,7 +548,6 @@ def doLoginLoop(force_login=False):
     """
 
     try:
-
         CONF = getInstanceConfiguration()
         old_server_url = CONF.getAPIUrl()
         api_username = CONF.getAPIUsername()
@@ -500,8 +581,8 @@ def doLoginLoop(force_login=False):
                 CONF.saveConfig()
 
                 user_info = get_user_info()
-                if (user_info is None) or (not user_info) or ('username' not in user_info):
-                    print('Login failed, please try again. You have %d more attempts' % (3 - attempt))
+                if (user_info is None) or (not user_info) or ('username' not in user_info) or 'roles' not in user_info or 'client' in user_info['roles']:
+                    print("You can't login as a client. You have %s attempt(s) left." % (3 - attempt))
                     continue
 
                 logger.info('Login successful: {0}'.format(api_username))
@@ -549,10 +630,16 @@ def main():
     args = getParserArgs()
     setupFolders(CONST_FARADAY_FOLDER_LIST)
     printBanner()
+    logger.info("Dependencies met.")
     if args.cert_path:
         os.environ[REQUESTS_CA_BUNDLE_VAR] = args.cert_path
     checkConfiguration(args.gui)
     setConf()
+
+    if args.license_path:
+        license.install_from_tgz(args.license_path)
+    checkLicense()
+
     login(args.login)
     check_faraday_version()
     checkUpdates()

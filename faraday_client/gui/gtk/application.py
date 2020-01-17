@@ -56,7 +56,7 @@ from faraday.config.configuration import getInstanceConfiguration
 from faraday.server.utils.logger import get_logger
 from faraday.client.gui.gtk.appwindow import AppWindow
 
-from faraday.client.persistence.server.server import is_authenticated, check_faraday_version, Unauthorized
+from faraday.client.persistence.server.server import is_authenticated, check_faraday_version, Unauthorized, get_user_info
 
 from faraday.client.gui.gtk.server import ServerIO
 from faraday.client.gui.gtk.dialogs import aboutDialog
@@ -291,13 +291,25 @@ class GuiApp(Gtk.Application, FaradayUi):
                                                 workspace_model,
                                                 self.change_workspace)
         else:
-            dialog = ForceNewWorkspaceDialog(self.window,
-                                             self.createWorkspace,
-                                             self.workspace_manager,
-                                             self.ws_sidebar,
-                                             self.exit_faraday)
-            self.force_new_workspace_dialog = dialog
 
+            user_info = get_user_info()
+            if user_info['role'] != "admin":
+                def exit(*args, **kwargs):
+                    logger.info("Exit because there are no workspaces found, and user is not admin")
+                    GObject.idle_add(self.window.destroy)
+                    GObject.idle_add(self.on_quit)
+                error_message = "You don't have permissions or no workspace is available.\n"\
+                                "Please contact faraday admin to create a workspace or to assign permissions."
+                dialog = errorDialog(self.window, error_message)
+                dialog.connect("destroy", exit)
+                return
+            else:
+                dialog = ForceNewWorkspaceDialog(self.window,
+                                                 self.createWorkspace,
+                                                 self.workspace_manager,
+                                                 self.ws_sidebar,
+                                                 self.exit_faraday)
+                self.force_new_workspace_dialog = dialog
         dialog.connect("destroy", change_flag)
         dialog.show_all()
 
@@ -345,6 +357,17 @@ class GuiApp(Gtk.Application, FaradayUi):
         Returns the success status of the operation, False for not successful,
         True for successful
         """
+
+        def certs_ok(server_uri):
+            """Returns True if URI started with https and cert if valid
+            or if URI dind't start with https. False if URI started
+            with https but didn't pass the checkSSL test.
+            """
+            if server_uri.startswith("https://"):
+                return checkSSL(server_uri)
+            else:
+                return True
+
         if parent is None:
             parent = self.window
 
@@ -359,6 +382,7 @@ class GuiApp(Gtk.Application, FaradayUi):
                 errorDialog(self.window,
                             "The SSL certificate validation has failed")
             success = False
+
         else:
             try:
                 check_faraday_version()
@@ -374,6 +398,7 @@ class GuiApp(Gtk.Application, FaradayUi):
             self.open_last_workspace()
             success = True
             self.lost_connection_dialog_raised = False
+
         return success
 
     def handle_connection_lost(self, button=None, dialog=None):
@@ -956,7 +981,7 @@ class GuiApp(Gtk.Application, FaradayUi):
                 "go_to_faq": "https://faradaysec.com/help/faq",
                 "go_to_troubleshooting": "https://faradaysec.com/help/troubleshooting",
                 "go_to_demos": "https://faradaysec.com/help/demos",
-                "go_to_issues": "https://faradaysec.com/help/issues",
+                "go_to_issues": "https://faradaysec.com/support",
                 "go_to_forum": "https://forum.faradaysec.com",
                 "go_to_irc": "https://faradaysec.com/help/irc",
                 "go_to_twitter": "https://faradaysec.com/help/twitter",
@@ -978,7 +1003,7 @@ class GuiApp(Gtk.Application, FaradayUi):
         if active_workspace:
             command = fplugin_utils.build_faraday_plugin_command(plugin, active_workspace.getName())
             fd = terminal.get_pty().get_fd()
-            os.write(fd, command)
+            os.write(fd, command.encode())
 
 
 # I'm Py3

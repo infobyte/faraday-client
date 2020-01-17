@@ -12,6 +12,8 @@ import os
 import gi  # pylint: disable=import-error
 
 from faraday.config.configuration import getInstanceConfiguration
+from faraday.utils.common import date_expired
+from faraday.client.model.guiapi import notification_center
 from faraday.client.start_client import FARADAY_CLIENT_BASE
 
 gi.require_version('Gtk', '3.0')
@@ -58,6 +60,7 @@ class AppWindow(Gtk.ApplicationWindow):
 
         window = self.create_window_main_structure()
         self.add(window)
+        self.check_license()
 
         self.append_remove_terminal_button_to_notebook()
         self.show_all()
@@ -104,7 +107,23 @@ class AppWindow(Gtk.ApplicationWindow):
         remove_terminal_button.set_image(remove_terminal_icon)
         remove_terminal_button.set_relief(Gtk.ReliefStyle.NONE)
         remove_terminal_button.show()
+
         self.notebook.set_action_widget(remove_terminal_button, Gtk.PackType.END)
+
+    def check_license(self):
+        ex_date = date_expired(CONF.getLicenseDate())
+
+        if ex_date['expired']:
+            notification_center.showDialog("\n[!] Your license has expired. \n"
+                                           "Please visit https:/www.faradaysec"
+                                           ".com/users/ to extend your license"
+                                           "\n")
+        if ex_date['near']:
+            notification_center.showDialog("\n[!] Your current license is due"
+                                           " to expire soon. \n Please visit "
+                                           "https://faradaysec.com/users/ to "
+                                           "extend your license before "
+                                           "it expires. \n")
 
     def receive_hosts(self, hosts):
         """Attaches the hosts to an object value, so it can be used by

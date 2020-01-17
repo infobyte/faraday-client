@@ -10,38 +10,38 @@ from __future__ import print_function
 
 import os
 import sys
-import signal
 import json
+import signal
+import logging
 
-from faraday.server import TimerClass
+import faraday.client.apis.rest.api as restapi
+
+from faraday.server.threads.license import LicenseCheck
 
 try:
     from Queue import Queue
 except ImportError:
     from queue import Queue
-import logging
-
-from faraday.client.model.controller import ModelController
-from faraday.client.managers.workspace_manager import WorkspaceManager
-from faraday.client.plugins.controller import PluginController
-from faraday.client.persistence.server.server import login_user
 
 import faraday.client.model.api
 import faraday.client.model.guiapi
-import faraday.client.apis.rest.api as restapi
 import faraday.client.model.log
+
 from faraday.client.plugins.manager import PluginManager
 from faraday.client.managers.mapper_manager import MapperManager
-from faraday.client.utils.error_report import exception_handler
-from faraday.client.utils.error_report import installThreadExcepthook
+from faraday.client.managers.workspace_manager import WorkspaceManager
+from faraday.client.model.controller import ModelController
+from faraday.client.persistence.server.server import login_user
+from faraday.client.plugins.controller import PluginController
+from faraday.utils.error_report import exception_handler
+from faraday.utils.error_report import installThreadExcepthook
 
 from faraday.client.gui.gui_app import UiFactory
 from faraday.client.model.cli_app import CliApp
 
 from faraday.config.configuration import getInstanceConfiguration
+
 CONF = getInstanceConfiguration()
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -105,8 +105,8 @@ class MainApplication:
                                         self._plugin_controller,
                                         self.args.gui)
 
-        self.timer = TimerClass()
-        self.timer.start()
+        self.license_check_thread = LicenseCheck()
+        self.license_check_thread.start()
 
     def on_connection_lost(self):
         """All it does is send a notification to the notification center"""
@@ -172,7 +172,7 @@ class MainApplication:
         if self._model_controller.isAlive():
             # runs only if thread has started, i.e. self._model_controller.start() is run first
             self._model_controller.join()
-        self.timer.stop()
+        self.license_check_thread.stop()
         faraday.client.model.api.devlog("Waiting for controller threads to end...")
         return exit_code
 

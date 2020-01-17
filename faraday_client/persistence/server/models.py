@@ -23,7 +23,8 @@ from faraday.client.persistence.server.utils import (force_unique,
                                       get_vuln_web_properties,
                                       get_note_properties,
                                       get_credential_properties,
-                                      get_command_properties)
+                                      get_command_properties,
+                                      get_report_properties)
 
 from faraday.client.model.diff import ModelObjectDiff, MergeSolver
 from faraday.client.model.conflict import ConflictUpdate
@@ -478,6 +479,11 @@ def create_command(workspace_name, command, command_id):
     command_properties = get_command_properties(command)
     return server.create_command(workspace_name, **command_properties)
 
+
+@_ignore_in_changes
+def create_report(workspace_name, report):
+    report_properties = get_report_properties(report)
+    return server.create_executive_report(workspace_name, **report_properties)
 
 @_ignore_in_changes
 def update_command(workspace_name, command, command_id):
@@ -1443,6 +1449,56 @@ class Command:
 
     def getWorkspace(self):
         return self.workspace
+
+
+
+class Report(ModelBase):
+
+    class_signature = 'Reports'
+    def __init__(self, report, workspace_name):
+
+        self._server_id = report.get('_id', '')
+        self.id = report.get('id')
+        self.name = report.get('name')
+        self.tags = report.get('tags')
+        self.title = report.get('title')
+        self.enterprise = report.get('enterprise')
+        self.scope = report.get('scope')
+        self.objectives = report.get('objectives')
+        self.summary = report.get('summary')
+        self.confirmed = report.get('confirmed')
+        self.template_name = report.get('template_name')
+        self.conclusions = report.get('conclusions')
+        self.recommendations = report.get('recommendations')
+        self.status = report.get('status')
+        self.date = report.get('date')
+
+        self.owner = report.get('owner')
+        self.totalVulns = report.get('totalVulns')
+        self.grouped = report.get('grouped')
+
+    def setID(self, parent_id):
+        if  self.id and self.id != -1:
+            return None
+        self.id = get_hash((self.name, str(self.date)))
+
+    def getID(self): return self.id
+    def getName(self): return self.name
+    def getTags(self): return self.tags
+    def getTitle(self): return self.title
+    def getEnterprise(self): return self.enterprise
+    def getScope(self): return self.scope
+    def getObjectives(self): return self.objectives
+    def getSummary(self): return self.summary
+    def getConfirmed(self): return self.confirmed
+    def getTemplateName(self): return self.template_name
+    def getConclusions(self): return self.conclusions
+    def getRecommendations(self): return self.recommendations
+    def getStatus(self): return self.status
+    def getDate(self): return self.date
+    def getOwner(self): return self.owner
+    def getTotalVulns(self): return self.totalVulns
+    def getGrouped(self): return self.grouped
 
 
 class _Workspace:
