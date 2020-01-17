@@ -1551,14 +1551,6 @@ def is_authenticated(uri, cookies):
     except requests.adapters.ReadTimeout:
         return False
 
-def check_faraday_version():
-    """Raise RuntimeError if client and server aren't running the same version"""
-    info = server_info()
-
-    faraday_directory = os.path.dirname(os.path.realpath('faraday.py'))
-
-    if info is not None and f_version != info['Version']:
-        raise RuntimeError('Client and server versions do not match')
 
 def check_server_url(url_to_test):
     """Return True if the url_to_test is indeed a valid Faraday Server URL.
