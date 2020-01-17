@@ -7,8 +7,8 @@ import re
 import os
 from collections import defaultdict
 
-from faraday.client.plugins.plugin import PluginByExtension
-from faraday.client.plugins.plugins_utils import filter_services, get_all_protocols
+from faraday_client.plugins.plugin import PluginByExtension
+from faraday_client.plugins.plugins_utils import filter_services, get_all_protocols
 
 
 current_path = os.path.abspath(os.getcwd())

@@ -15,9 +15,9 @@ from tornado.httpserver import HTTPServer  # pylint: disable=import-error
 from tornado.ioloop import IOLoop  # pylint: disable=import-error
 from tornado import gen # pylint: disable=import-error
 
-from faraday.client.model.visitor import VulnsLookupVisitor
+from faraday_client.config.configuration import getInstanceConfiguration
+from faraday_client.model.visitor import VulnsLookupVisitor
 
-from faraday.config.configuration import getInstanceConfiguration
 CONF = getInstanceConfiguration()
 
 

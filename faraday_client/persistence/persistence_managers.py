@@ -18,13 +18,13 @@ try:
 except ImportError:
     from urllib.parse import urlparse
 import traceback
-from faraday.client.persistence.server import server
+from faraday_client.persistence.server import server
 
 from faraday.utils.common import RestkitCookies
-from faraday.client.managers.all import ViewsManager
+from faraday_client.managers.all import ViewsManager
 
 from faraday.config.constant import CONST_BLACKDBS
-from faraday.config.configuration import getInstanceConfiguration
+from faraday_client.config.configuration import getInstanceConfiguration
 
 CONF = getInstanceConfiguration()
 

@@ -4,7 +4,7 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import logging
-from faraday.client.persistence.server.models import create_object, get_object, update_object, delete_object
+from faraday_client.persistence.server.models import create_object, get_object, update_object, delete_object
 
 # NOTE: This class is intended to be instantiated by the
 # service or controller that needs it.
@@ -28,7 +28,7 @@ class MapperManager:
         if '_id' in saved_raw_obj or 'id' in saved_raw_obj:
             return saved_raw_obj.get('_id', None) or saved_raw_obj['id']
         raise RuntimeError('Could not retrieve id from server.')
-    
+
     def update(self, obj, command_id=None):
         if update_object(self.workspace_name, obj.class_signature, obj, command_id):
             return True

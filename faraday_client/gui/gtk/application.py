@@ -11,6 +11,7 @@ from __future__ import print_function
 from past.builtins import basestring
 
 import os
+import requests
 import sys
 import threading
 import traceback
@@ -46,51 +47,64 @@ except ImportError as e:
            "Check that you have GTK+3 and Vte installed.")
     sys.exit(1)
 
-import faraday.client.model.guiapi
-import faraday.client.model.api
-import faraday.client.model.log
+import faraday_client.model.guiapi
+import faraday_client.model.api
+import faraday_client.model.log
 
-from faraday.client.gui.gui_app import FaradayUi
+from faraday_client.gui.gui_app import FaradayUi
 
-from faraday.config.configuration import getInstanceConfiguration
-from faraday.server.utils.logger import get_logger
-from faraday.client.gui.gtk.appwindow import AppWindow
+from faraday_client.config.configuration import getInstanceConfiguration
+from faraday_client.utils.logger import get_logger
+from faraday_client.gui.gtk.appwindow import AppWindow
 
-from faraday.client.persistence.server.server import is_authenticated, check_faraday_version, Unauthorized, get_user_info
+from faraday_client.persistence.server.server import is_authenticated, check_faraday_version, Unauthorized, get_user_info
 
-from faraday.client.gui.gtk.server import ServerIO
-from faraday.client.gui.gtk.dialogs import aboutDialog
-from faraday.client.gui.gtk.dialogs import ConflictsDialog
-from faraday.client.gui.gtk.dialogs import ForceChooseWorkspaceDialog
-from faraday.client.gui.gtk.dialogs import ForceNewWorkspaceDialog
-from faraday.client.gui.gtk.dialogs import ForcePreferenceWindowDialog
-from faraday.client.gui.gtk.dialogs import HostInfoDialog
-from faraday.client.gui.gtk.dialogs import ImportantErrorDialog
-from faraday.client.gui.gtk.dialogs import ForceLoginDialog
-from faraday.client.gui.gtk.dialogs import NewWorkspaceDialog
-from faraday.client.gui.gtk.dialogs import NotificationsDialog
-from faraday.client.gui.gtk.dialogs import PluginOptionsDialog
-from faraday.client.gui.gtk.dialogs import PreferenceWindowDialog
-from faraday.client.gui.gtk.dialogs import FaradayPluginsDialog
-from faraday.client.gui.gtk.dialogs import errorDialog
+from faraday_client.gui.gtk.server import ServerIO
+from faraday_client.gui.gtk.dialogs import aboutDialog
+from faraday_client.gui.gtk.dialogs import ConflictsDialog
+from faraday_client.gui.gtk.dialogs import ForceChooseWorkspaceDialog
+from faraday_client.gui.gtk.dialogs import ForceNewWorkspaceDialog
+from faraday_client.gui.gtk.dialogs import ForcePreferenceWindowDialog
+from faraday_client.gui.gtk.dialogs import HostInfoDialog
+from faraday_client.gui.gtk.dialogs import ImportantErrorDialog
+from faraday_client.gui.gtk.dialogs import ForceLoginDialog
+from faraday_client.gui.gtk.dialogs import NewWorkspaceDialog
+from faraday_client.gui.gtk.dialogs import NotificationsDialog
+from faraday_client.gui.gtk.dialogs import PluginOptionsDialog
+from faraday_client.gui.gtk.dialogs import PreferenceWindowDialog
+from faraday_client.gui.gtk.dialogs import FaradayPluginsDialog
+from faraday_client.gui.gtk.dialogs import errorDialog
 
-from faraday.client.gui.gtk.mainwidgets import Sidebar
-from faraday.client.gui.gtk.mainwidgets import WorkspaceSidebar
-from faraday.client.gui.gtk.mainwidgets import HostsSidebar
-from faraday.client.gui.gtk.mainwidgets import ConsoleLog
-from faraday.client.gui.gtk.mainwidgets import Terminal
-from faraday.client.gui.gtk.mainwidgets import Statusbar
+from faraday_client.gui.gtk.mainwidgets import Sidebar
+from faraday_client.gui.gtk.mainwidgets import WorkspaceSidebar
+from faraday_client.gui.gtk.mainwidgets import HostsSidebar
+from faraday_client.gui.gtk.mainwidgets import ConsoleLog
+from faraday_client.gui.gtk.mainwidgets import Terminal
+from faraday_client.gui.gtk.mainwidgets import Statusbar
 
-from faraday.client.gui.loghandler import GUIHandler
-from faraday.server.utils.logger import add_handler
-from faraday.client.start_client import FARADAY_CLIENT_BASE
-from faraday.utils.common import checkSSL
+from faraday_client.gui.loghandler import GUIHandler
+from faraday_client.utils.logger import add_handler
+from faraday_client.start_client import FARADAY_CLIENT_BASE
 
-from faraday.client.plugins import fplugin_utils
+from faraday_client.plugins import fplugin_utils
+
 
 CONF = getInstanceConfiguration()
 
 logger = logging.getLogger(__name__)
+
+
+def checkSSL(uri):
+    """
+    This method checks SSL validation
+    It only returns True if the certificate is valid
+    and the http server returned a 200 OK
+    """
+    try:
+        res = requests.get(uri, timeout=5)
+        return res.ok
+    except Exception:
+        return False
 
 
 class GuiApp(Gtk.Application, FaradayUi):
@@ -159,19 +173,19 @@ class GuiApp(Gtk.Application, FaradayUi):
 
         if name in self.workspace_manager.getWorkspacesNames():
             error_str = "A workspace with name %s already exists" % name
-            faraday.client.model.api.log(error_str, "ERROR")
+            faraday_client.model.api.log(error_str, "ERROR")
             errorDialog(self.window, error_str)
             creation_ok = False
         else:
-            faraday.client.model.api.log("Creating workspace '%s'" % name)
-            faraday.client.model.api.devlog("Looking for the delegation class")
+            faraday_client.model.api.log("Creating workspace '%s'" % name)
+            faraday_client.model.api.devlog("Looking for the delegation class")
             manager = self.getWorkspaceManager()
             try:
                 name = manager.createWorkspace(name, description)
                 self.change_workspace(name)
                 creation_ok = True
             except Exception as e:
-                faraday.client.model.guiapi.notification_center.showDialog(str(e))
+                faraday_client.model.guiapi.notification_center.showDialog(str(e))
                 creation_ok = False
 
         return creation_ok
@@ -181,13 +195,13 @@ class GuiApp(Gtk.Application, FaradayUi):
         a signal will be incoming vis postUpdates() and force the user to
         select another workspace."""
         try:
-            faraday.client.model.api.log("Removing Workspace: %s" % ws_name)
+            faraday_client.model.api.log("Removing Workspace: %s" % ws_name)
             self.getWorkspaceManager().removeWorkspace(ws_name)
             self.ws_sidebar.clear_sidebar()
             self.ws_sidebar.refresh_sidebar()
         except Exception as ex:
             traceback_str = traceback.format_exc()
-            faraday.client.model.api.log("An exception was captured while deleting "
+            faraday_client.model.api.log("An exception was captured while deleting "
                           "workspace %s\n%s" % (ws_name, traceback_str),
                           "ERROR")
 
@@ -792,13 +806,13 @@ class GuiApp(Gtk.Application, FaradayUi):
             self.loghandler.setLevel(logging.DEBUG)
         else:
             self.loghandler.setLevel(logging.INFO)
-        faraday.client.model.guiapi.setMainApp(self)
+        faraday_client.model.guiapi.setMainApp(self)
         add_handler(self.loghandler)
         self.loghandler.registerGUIOutput(self.window)
 
-        notifier = faraday.client.model.log.getNotifier()
+        notifier = faraday_client.model.log.getNotifier()
         notifier.widget = self.window
-        faraday.client.model.guiapi.notification_center.registerWidget(self.window)
+        faraday_client.model.guiapi.notification_center.registerWidget(self.window)
 
         if self.serverIO.server_info() is None:
 

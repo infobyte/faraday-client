@@ -8,7 +8,7 @@ See the file 'doc/LICENSE' for the license information
 # Author: @EzequielTBH
 from builtins import str
 
-from faraday.client.plugins import core
+from faraday_client.plugins import core
 import json
 import re
 

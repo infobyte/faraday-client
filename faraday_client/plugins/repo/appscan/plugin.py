@@ -8,7 +8,7 @@ See the file 'doc/LICENSE' for the license information
 """
 
 import socket
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_client.plugins.plugin import PluginXMLFormat
 from lxml import objectify
 try:
     from urlparse import urlparse
@@ -85,7 +85,7 @@ class AppscanParser():
         res = {}
         for issue_type in self.obj_xml["issue-type-group"]["item"]:
             res[issue_type.attrib['id']] = {
-                'name': issue_type.name.text, 
+                'name': issue_type.name.text,
                 'advisory': issue_type["advisory"]["ref"].text,
                 'fix-recommendation': issue_type["fix-recommendation"]["ref"].text
                 }

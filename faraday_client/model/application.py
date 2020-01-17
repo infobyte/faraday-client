@@ -14,32 +14,27 @@ import json
 import signal
 import logging
 
-import faraday.client.apis.rest.api as restapi
+import faraday_client.apis.rest.api as restapi
 
-from faraday.server.threads.license import LicenseCheck
+from queue import Queue
 
-try:
-    from Queue import Queue
-except ImportError:
-    from queue import Queue
+import faraday_client.model.api
+import faraday_client.model.guiapi
+import faraday_client.model.log
+from faraday_client.config.configuration import getInstanceConfiguration
 
-import faraday.client.model.api
-import faraday.client.model.guiapi
-import faraday.client.model.log
+from faraday_client.plugins.manager import PluginManager
+from faraday_client.managers.mapper_manager import MapperManager
+from faraday_client.managers.workspace_manager import WorkspaceManager
+from faraday_client.model.controller import ModelController
+from faraday_client.persistence.server.server import login_user
+from faraday_client.plugins.controller import PluginController
+from faraday_client.utils.error_report import exception_handler
+from faraday_client.utils.error_report import installThreadExcepthook
 
-from faraday.client.plugins.manager import PluginManager
-from faraday.client.managers.mapper_manager import MapperManager
-from faraday.client.managers.workspace_manager import WorkspaceManager
-from faraday.client.model.controller import ModelController
-from faraday.client.persistence.server.server import login_user
-from faraday.client.plugins.controller import PluginController
-from faraday.utils.error_report import exception_handler
-from faraday.utils.error_report import installThreadExcepthook
+from faraday_client.gui.gui_app import UiFactory
+from faraday_client.model.cli_app import CliApp
 
-from faraday.client.gui.gui_app import UiFactory
-from faraday.client.model.cli_app import CliApp
-
-from faraday.config.configuration import getInstanceConfiguration
 
 CONF = getInstanceConfiguration()
 logger = logging.getLogger(__name__)
@@ -105,12 +100,10 @@ class MainApplication:
                                         self._plugin_controller,
                                         self.args.gui)
 
-        self.license_check_thread = LicenseCheck()
-        self.license_check_thread.start()
 
     def on_connection_lost(self):
         """All it does is send a notification to the notification center"""
-        faraday.client.model.guiapi.notification_center.DBConnectionProblem()
+        faraday_client.model.guiapi.notification_center.DBConnectionProblem()
 
     def enableExceptHook(self):
         sys.excepthook = exception_handler
@@ -120,24 +113,24 @@ class MainApplication:
         try:
             signal.signal(signal.SIGINT, self.ctrlC)
 
-            faraday.client.model.api.devlog("Starting application...")
-            faraday.client.model.api.devlog("Setting up remote API's...")
+            faraday_client.model.api.devlog("Starting application...")
+            faraday_client.model.api.devlog("Setting up remote API's...")
 
             if not self.args.workspace:
                 workspace = CONF.getLastWorkspace()
                 self.args.workspace = workspace
 
-            faraday.client.model.api.setUpAPIs(
+            faraday_client.model.api.setUpAPIs(
                 self._model_controller,
                 self._workspace_manager,
                 CONF.getApiConInfoHost(),
                 CONF.getApiConInfoPort())
-            faraday.client.model.guiapi.setUpGUIAPIs(self._model_controller)
+            faraday_client.model.guiapi.setUpGUIAPIs(self._model_controller)
 
-            faraday.client.model.api.devlog("Starting model controller daemon...")
+            faraday_client.model.api.devlog("Starting model controller daemon...")
 
             self._model_controller.start()
-            faraday.client.model.api.startAPIServer()
+            faraday_client.model.api.startAPIServer()
             restapi.startAPIs(
                 self._plugin_controller,
                 self._model_controller,
@@ -145,7 +138,7 @@ class MainApplication:
                 CONF.getApiRestfulConInfoPort()
             )
 
-            faraday.client.model.api.devlog("Faraday ready...")
+            faraday_client.model.api.devlog("Faraday ready...")
 
             exit_code = self.app.run(self.args)
 
@@ -164,16 +157,15 @@ class MainApplication:
         Exits the application with the provided code.
         It also waits until all app threads end.
         """
-        faraday.client.model.api.log("Closing Faraday...")
-        faraday.client.model.api.devlog("stopping model controller thread...")
-        faraday.client.model.api.stopAPIServer()
+        faraday_client.model.api.log("Closing Faraday...")
+        faraday_client.model.api.devlog("stopping model controller thread...")
+        faraday_client.model.api.stopAPIServer()
         restapi.stopServer()
         self._model_controller.stop()
         if self._model_controller.isAlive():
             # runs only if thread has started, i.e. self._model_controller.start() is run first
             self._model_controller.join()
-        self.license_check_thread.stop()
-        faraday.client.model.api.devlog("Waiting for controller threads to end...")
+        faraday_client.model.api.devlog("Waiting for controller threads to end...")
         return exit_code
 
     def quit(self):

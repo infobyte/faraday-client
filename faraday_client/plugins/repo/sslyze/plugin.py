@@ -1,7 +1,7 @@
 import re
 import os
 import random
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_client.plugins.plugin import PluginXMLFormat
 
 try:
     from lxml import etree as ET
@@ -17,9 +17,9 @@ WEAK_CIPHER_LIST = [
     "TLS_RSA_WITH_AES_256_CBC_SHA",
     "TLS_RSA_WITH_AES_256_CBC_SHA256",
     "TLS_RSA_WITH_AES_256_GCM_SHA384",
-    "TLS_RSA_WITH_3DES_EDE_CBC_SHA", 
+    "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
     "TLS_RSA_WITH_CAMELLIA_256_CBC_SHA",
-    "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA" 
+    "TLS_RSA_WITH_CAMELLIA_128_CBC_SHA"
 ]
 
 
@@ -33,7 +33,7 @@ class SslyzeXmlParser:
         self.heart_bleed = self.get_heartbleed(self.parser)
         self.open_ssl_ccs = self.get_openssl_ccs(self.parser)
 
-    def parse_xml(self, xml_output):  
+    def parse_xml(self, xml_output):
         try:
             tree = ET.fromstring(xml_output)
             return tree
@@ -43,7 +43,7 @@ class SslyzeXmlParser:
 
     def get_target(self, tree):
         return tree.xpath('//target')
-                
+
     def get_hostname_validation(self, tree):
         return tree.xpath('//hostnameValidation')
 
@@ -75,7 +75,7 @@ class SslyzeXmlParser:
                         if cipher.attrib['name'] in WEAK_CIPHER_LIST:
                             if not cipher.attrib['name'] in weak_cipher[protocol.tag]:
                                 weak_cipher[protocol.tag].append(cipher.attrib['name'])
-                            
+
         return weak_cipher
 
     def get_heartbleed(self, tree):
@@ -115,26 +115,26 @@ class SslyzePlugin(PluginXMLFormat):
         port = parser.target[0].attrib['port']
         protocol = parser.target[0].attrib['tlsWrappedProtocol']
         cipher = parser.cipher_suite
-        
+
         # Creating host
         host_id = self.createAndAddHost(ip)
-        # Creating service CHANGE NAME                              
+        # Creating service CHANGE NAME
         service_id = self.createAndAddServiceToHost(
-            host_id, 
+            host_id,
             name=protocol,
-            protocol=protocol, 
+            protocol=protocol,
             ports=[port],
             )
-   
+
         # Checking if certificate matches
         certificate = parser.certificate[0].attrib['certificateMatchesServerHostname']
         server_hostname = parser.certificate[0].attrib['serverHostname']
         if certificate.lower() == 'false':
             self.createAndAddVulnToService(
-                host_id, 
-                service_id, 
-                name="Certificate mismatch", 
-                desc="Certificate does not match server hostname {}".format(server_hostname), 
+                host_id,
+                service_id,
+                name="Certificate mismatch",
+                desc="Certificate does not match server hostname {}".format(server_hostname),
                 severity="info")
         #Ciphers
         cipher = parser.cipher_suite
@@ -142,32 +142,32 @@ class SslyzePlugin(PluginXMLFormat):
         for key in cipher:
             for value in cipher[key]:
                 self.createAndAddVulnToService(
-                    host_id, 
-                    service_id, 
+                    host_id,
+                    service_id,
                     name=value,
-                    desc="In protocol [{}], weak cipher suite: {}".format(key, value), 
+                    desc="In protocol [{}], weak cipher suite: {}".format(key, value),
                     severity="low")
-                        
+
         #Heartbleed
         heartbleed = parser.heart_bleed
 
         if heartbleed[0][0].attrib['isVulnerable'].lower() == 'true':
             self.createAndAddVulnToService(
-                host_id, 
-                service_id, 
+                host_id,
+                service_id,
                 name="OpenSSL Heartbleed",
-                desc="OpenSSL Heartbleed is vulnerable", 
+                desc="OpenSSL Heartbleed is vulnerable",
                 severity="critical")
-                                
+
         #OpenSsl CCS Injection
         openssl_ccs = parser.open_ssl_ccs
 
         if openssl_ccs[0][0].attrib['isVulnerable'].lower() == 'true':
             self.createAndAddVulnToService(
-                host_id, 
-                service_id, 
+                host_id,
+                service_id,
                 name="OpenSSL CCS Injection",
-                desc="OpenSSL CCS Injection is vulnerable", 
+                desc="OpenSSL CCS Injection is vulnerable",
                 severity="medium")
 
     def processCommandString(self, username, current_path, command_string):
@@ -189,7 +189,7 @@ class SslyzePlugin(PluginXMLFormat):
             return re.sub(arg_match.group(1),
                           r"--xml_out %s" % self._output_file_path,
                           command_string)
-                        
+
 
 def createPlugin():
     return SslyzePlugin()

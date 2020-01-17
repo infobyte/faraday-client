@@ -12,14 +12,12 @@ import traceback
 import deprecation
 from threading import Thread
 
-import faraday.server.config
-import faraday.client.model.api
-import faraday.client.model.common
-from faraday import __version__ as faraday_version
-from faraday import __license_version__ as license_version
-from faraday.client.model.common import factory
-from faraday.client.persistence.server.models import get_host, update_host
-from faraday.client.persistence.server.models import (
+import faraday_client.model.api
+import faraday_client.model.common
+from faraday_client import __version__ as f_client_version
+from faraday_client.model.common import factory
+from faraday_client.persistence.server.models import get_host, update_host
+from faraday_client.persistence.server.models import (
     Host,
     Service,
     Vuln,
@@ -27,13 +25,13 @@ from faraday.client.persistence.server.models import (
     Credential,
     Note
 )
-from faraday.client.model import Modelactions
+from faraday_client.model import Modelactions
 
-from faraday.config.configuration import getInstanceConfiguration
+from faraday_client.config.configuration import getInstanceConfiguration
 
 
 CONF = getInstanceConfiguration()
-VERSION = license_version.split('-')[0].split('rc')[0]
+VERSION = f_client_version
 logger = logging.getLogger(__name__)
 
 
@@ -185,7 +183,7 @@ class PluginBase:
         return host_obj.getID()
 
     @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
-                            current_version=faraday_version,
+                            current_version=f_client_version,
                             details="Interface object removed. Use host or service instead")
     def createAndAddInterface(
         self, host_id, name="", mac="00:00:00:00:00:00",
@@ -217,7 +215,7 @@ class PluginBase:
         return host_id
 
     @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
-                            current_version=faraday_version,
+                            current_version=f_client_version,
                             details="Interface object removed. Use host or service instead. Service will be attached to Host!")
     def createAndAddServiceToInterface(self, host_id, interface_id, name,
                                        protocol="tcp?", ports=None,
@@ -232,7 +230,7 @@ class PluginBase:
             )
             status = 'open'
 
-        serv_obj = faraday.client.model.common.factory.createModelObject(
+        serv_obj = faraday_client.model.common.factory.createModelObject(
             Service.class_signature,
             name, protocol=protocol, ports=ports, status=status,
             version=version, description=description,
@@ -256,7 +254,7 @@ class PluginBase:
             )
             status = 'open'
 
-        serv_obj = faraday.client.model.common.factory.createModelObject(
+        serv_obj = faraday_client.model.common.factory.createModelObject(
             Service.class_signature,
             name, protocol=protocol, ports=ports, status=status,
             version=version, description=description,
@@ -271,7 +269,7 @@ class PluginBase:
                                severity="", resolution="", data="", external_id=None):
         if not ref:
             ref = []
-        vuln_obj = faraday.client.model.common.factory.createModelObject(
+        vuln_obj = faraday_client.model.common.factory.createModelObject(
             Vuln.class_signature,
             name, data=data, desc=desc, refs=ref, severity=severity,
             resolution=resolution, confirmed=False,
@@ -283,14 +281,14 @@ class PluginBase:
         return vuln_obj.getID()
 
     @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
-                            current_version=faraday_version,
+                            current_version=f_client_version,
                             details="Interface object removed. Use host or service instead. Vuln will be added to Host")
     def createAndAddVulnToInterface(self, host_id, interface_id, name,
                                     desc="", ref=None, severity="",
                                     resolution="", data=""):
         if not ref:
             ref = []
-        vuln_obj = faraday.client.model.common.factory.createModelObject(
+        vuln_obj = faraday_client.model.common.factory.createModelObject(
             Vuln.class_signature,
             name, data=data, desc=desc, refs=ref, severity=severity,
             resolution=resolution, confirmed=False,
@@ -305,7 +303,7 @@ class PluginBase:
                                   ref=None, severity="", resolution="", data="", external_id=None):
         if not ref:
             ref = []
-        vuln_obj = faraday.client.model.common.factory.createModelObject(
+        vuln_obj = faraday_client.model.common.factory.createModelObject(
             Vuln.class_signature,
             name, data=data, desc=desc, refs=ref, severity=severity,
             resolution=resolution, confirmed=False,
@@ -324,7 +322,7 @@ class PluginBase:
                                      params="", query="", category="", data="", external_id=None):
         if not ref:
             ref = []
-        vulnweb_obj = faraday.client.model.common.factory.createModelObject(
+        vulnweb_obj = faraday_client.model.common.factory.createModelObject(
             VulnWeb.class_signature,
             name, data=data, desc=desc, refs=ref, severity=severity,
             resolution=resolution, website=website, path=path,
@@ -342,7 +340,7 @@ class PluginBase:
         return None
 
     @deprecation.deprecated(deprecated_in="3.0", removed_in="3.5",
-                            current_version=faraday_version,
+                            current_version=f_client_version,
                             details="Interface object removed. Use host or service instead. Note will be added to Host")
     def createAndAddNoteToInterface(self, host_id, interface_id, name, text):
         return None
@@ -356,7 +354,7 @@ class PluginBase:
     def createAndAddCredToService(self, host_id, service_id, username,
                                   password):
 
-        cred_obj = faraday.client.model.common.factory.createModelObject(
+        cred_obj = faraday_client.model.common.factory.createModelObject(
             Credential.class_signature,
             username, password=password, parent_id=service_id, parent_type='Service',
             workspace_name=self.workspace)
@@ -458,28 +456,28 @@ class PluginProcess(Thread):
 
     def run(self):
         proc_name = self.name
-        faraday.client.model.api.devlog("-" * 40)
-        faraday.client.model.api.devlog(f"proc_name = {proc_name}")
-        faraday.client.model.api.devlog(f"Starting run method on PluginProcess")
-        faraday.client.model.api.devlog(f"parent process: {os.getppid()}")
-        faraday.client.model.api.devlog(f"process id: {os.getpid()}")
-        faraday.client.model.api.devlog("-" * 40)
+        faraday_client.model.api.devlog("-" * 40)
+        faraday_client.model.api.devlog(f"proc_name = {proc_name}")
+        faraday_client.model.api.devlog(f"Starting run method on PluginProcess")
+        faraday_client.model.api.devlog(f"parent process: {os.getppid()}")
+        faraday_client.model.api.devlog(f"process id: {os.getpid()}")
+        faraday_client.model.api.devlog("-" * 40)
         done = False
         while not done and not self._must_stop:
             output, command_id = self.output_queue.get()
             self.plugin.setCommandID(command_id)
             if output is not None:
-                faraday.client.model.api.devlog(f"{proc_name}: New Output")
+                faraday_client.model.api.devlog(f"{proc_name}: New Output")
                 try:
                     if isinstance(output, bytes):
                         output = output.decode()
                     self.plugin.processOutput(output)
                 except Exception as ex:
-                    faraday.client.model.api.devlog("Plugin raised an exception:")
-                    faraday.client.model.api.devlog(traceback.format_exc())
+                    faraday_client.model.api.devlog("Plugin raised an exception:")
+                    faraday_client.model.api.devlog(traceback.format_exc())
             else:
                 done = True
-                faraday.client.model.api.devlog(f"{proc_name}: Exiting")
+                faraday_client.model.api.devlog(f"{proc_name}: Exiting")
             self.output_queue.task_done()
             time.sleep(0.1)
 

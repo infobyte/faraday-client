@@ -16,10 +16,10 @@ import threading
 import requests
 import hashlib
 import platform
-import faraday.client.model.guiapi
+import faraday_client.model.guiapi
 from io import StringIO
-from faraday.client.gui.customevents import ShowExceptionCustomEvent
-from faraday.config.configuration import getInstanceConfiguration
+from faraday_client.gui.customevents import ShowExceptionCustomEvent
+from faraday_client.config.configuration import getInstanceConfiguration
 import json
 import time
 
@@ -82,7 +82,7 @@ def exception_handler(type, value, tb):
 
 
     event = ShowExceptionCustomEvent(description, reportToDevelopers, error_name)
-    faraday.client.model.guiapi.postCustomEvent(event)
+    faraday_client.model.guiapi.postCustomEvent(event)
     text.seek(0)
     text.truncate()
     del text

@@ -9,7 +9,7 @@ import os
 import socket
 
 from urllib.parse import urlparse
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_client.plugins.plugin import PluginXMLFormat
 try:
     import xml.etree.cElementTree as ET
     import xml.etree.ElementTree as ET_ORIG
@@ -293,7 +293,7 @@ class WapitiPlugin(PluginXMLFormat):
         This method will discard the output the shell sends, it will read it from
         the xml where it expects it to be present.
         """
-    
+
         parser = WapitiXmlParser(output)
         for item in parser.items:
             host_id = self.createAndAddHost(item.ip, hostnames=[item.hostname])
@@ -303,14 +303,14 @@ class WapitiPlugin(PluginXMLFormat):
                     vuln_id = self.createAndAddVulnWebToService(host_id,
                         service_id,
                         vuln['id'],
-                        desc=vuln['description'], 
+                        desc=vuln['description'],
                         ref=vuln['references'],
                         resolution=vuln['solution'],
-                        severity=entry['level'], 
-                        website=entry['curl_command'], 
-                        path=entry['path'], 
+                        severity=entry['level'],
+                        website=entry['curl_command'],
+                        path=entry['path'],
                         request=entry['http_request'],
-                        method=entry['method'], 
+                        method=entry['method'],
                         params=entry['parameter'])
 
     def processCommandString(self, username, current_path, command_string):

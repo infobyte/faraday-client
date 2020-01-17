@@ -4,11 +4,10 @@
 from __future__ import absolute_import
 
 import requests
-from gi.repository import Gtk  # pylint: disable=import-error
-from faraday.server.utils.logger import get_logger
+from faraday_client.utils.logger import get_logger
 from functools import wraps
-from faraday.client.gui.gtk.compatibility import CompatibleScrolledWindow as GtkScrolledWindow
-from faraday.client.persistence.server.server_io_exceptions import ServerRequestException
+from faraday_client.gui.gtk.compatibility import CompatibleScrolledWindow as GtkScrolledWindow
+from faraday_client.persistence.server.server_io_exceptions import ServerRequestException
 
 def safe_io_with_server(response_in_emergency):
     """A function that takes a response_in_emergency. It will return

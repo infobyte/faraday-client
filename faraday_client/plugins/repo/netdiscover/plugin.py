@@ -3,7 +3,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import core
+from faraday_client.plugins import core
 import pprint
 import re
 
@@ -28,7 +28,7 @@ class NetdiscoverPlugin(core.PluginBase):
     def parseOutputString(self, output, debug=False):
         #regexp get ip, mac and hostname
         reg = re.findall(r"(([0-9]+\.?){4})\s+(([0-9a-f]+\:?){6})((\s+[0-9]+){2})(.*)", output)
-        
+
         if output.find('Finished!') != -1 and len(reg) > 0:
 
             for stdout in reg:

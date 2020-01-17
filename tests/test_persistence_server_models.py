@@ -6,7 +6,7 @@ See the file 'doc/LICENSE' for the license information
 '''
 from __future__ import absolute_import
 
-import faraday.client.persistence.server.models as models
+import faraday_client.persistence.server.models as models
 import pytest
 import responses
 import requests
@@ -24,7 +24,7 @@ class TestVulnPersistanceModelsFuncions(GenericAPITest):
 
     @responses.activate
     @patch('faraday.config.configuration.getInstanceConfiguration')
-    @patch('faraday.client.persistence.server.server.SERVER_URL', 'http://localhost:5985')
+    @patch('faraday_client.persistence.server.server.SERVER_URL', 'http://localhost:5985')
     def test_persistence_server_update_vuln(self, getInstanceConfigurationMock):
         fo = self.first_object
         conf_mock = Mock()
@@ -99,7 +99,7 @@ class TestVulnWebPersistanceModelsFuncions(GenericAPITest):
 
     @responses.activate
     @patch('faraday.config.configuration.getInstanceConfiguration')
-    @patch('faraday.client.persistence.server.server.SERVER_URL', 'http://localhost:5985')
+    @patch('faraday_client.persistence.server.server.SERVER_URL', 'http://localhost:5985')
     def test_persistence_server_update_vuln_web(self, getInstanceConfigurationMock):
         fo = self.first_object
 

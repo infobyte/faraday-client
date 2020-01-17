@@ -9,13 +9,15 @@ from __future__ import absolute_import
 
 import os
 import shutil
+import socket
+import struct
+import sys
 import logging
 
-import faraday.client.model.common
-from faraday.config.configuration import getInstanceConfiguration
-import faraday.client.model.log
-from faraday.client.model import Modelactions
-from faraday.utils.common import socket, gateway
+import faraday_client.model.common
+import faraday_client.model.log
+from faraday_client.config.configuration import getInstanceConfiguration
+from faraday_client.model import Modelactions
 
 CONF = getInstanceConfiguration()
 
@@ -85,7 +87,7 @@ def _setUpAPIServer(hostname=None, port=None):
         for hostname in hostnames:
 
             try:
-                _xmlrpc_api_server = faraday.client.model.common.XMLRPCServer((hostname,CONF.getApiConInfoPort()))
+                _xmlrpc_api_server = faraday_client.model.common.XMLRPCServer((hostname,CONF.getApiConInfoPort()))
                 # Registers the XML-RPC introspection functions system.listMethods, system.methodHelp and system.methodSignature.
                 _xmlrpc_api_server.register_introspection_functions()
 
@@ -392,6 +394,7 @@ def newCred(username, password, parent_id=None):
 def getConflicts():
     return __model_controller.getConflicts()
 
+
 #-------------------------------------------------------------------------------
 # EVIDENCE
 #-------------------------------------------------------------------------------
@@ -422,17 +425,24 @@ def addEvidence(file_path):
 
     return False
 
+
 def checkEvidence(file_path):
     """
     Copy evidence file to the repository
     """
     if not os.path.isfile(file_path):
+        filename = os.path.basename(file_path)
+        ###: Ver de sacar ese nombre evidences del config
+
+        dpath = "%s/evidences/" % (__model_controller._persistence_dir)
+        dpathfilename = "%s%s" % (dpath, filename)
         devlog("[addEvidence] - File evidence (" + dpathfilename +") doesnt exists abort adding")
     else:
         __model_controller._check_evidences.append(file_path)
         return True
 
     return False
+
 
 def cleanEvidence():
     """
@@ -496,10 +506,10 @@ def devlog(msg):
     logger.debug(msg)
 
 def showDialog(msg, level="Information"):
-    return faraday.client.model.log.getNotifier().showDialog(msg, level)
+    return faraday_client.model.log.getNotifier().showDialog(msg, level)
 
 def showPopup(msg, level="Information"):
-    return faraday.client.model.log.getNotifier().showPopup(msg, level)
+    return faraday_client.model.log.getNotifier().showPopup(msg, level)
 
 
 # Plugin status
@@ -527,5 +537,29 @@ def getLocalDefaultGateway():
 def getActiveWorkspace():
     return __workspace_manager.getActiveWorkspace()
 
+def gateway():
+    ip=""
+    if sys.platform in ['linux','linux2']:
+        with open("/proc/net/route") as fh:
+            for line in fh:
+                fields = line.strip().split()
+                if fields[1] != '00000000' or not int(fields[3], 16) & 2:
+                    continue
+                ip=socket.inet_ntoa(struct.pack("<L", int(fields[2], 16)))
+                mac=get_macaddress(ip)
+                return [str(ip),str(mac)]
+    elif sys.platform in ['darwin']:
+        return None
+    else:
+        return None
 
-# I'm Py3
+
+def get_macaddress(host):
+    if sys.platform in ['linux','linux2']:
+        with open("/proc/net/arp") as fh:
+            for line in fh:
+                fields = line.strip().split()
+                if fields[0] == host:
+                    return fields[3]
+    else:
+        return None

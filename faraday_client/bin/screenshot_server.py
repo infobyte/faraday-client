@@ -9,8 +9,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 import os
 import sys
-from faraday.client.persistence.server.server_io_exceptions import ResourceDoesNotExist
-from faraday.client.persistence.server import models
+from faraday_client.persistence.server.server_io_exceptions import ResourceDoesNotExist
+from faraday_client.persistence.server import models
 
 __description__ = 'Takes a Screenshot of the ip:ports of a given protocol'
 __prettyname__ = 'Screenshot_server'

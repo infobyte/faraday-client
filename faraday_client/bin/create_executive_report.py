@@ -10,8 +10,8 @@ from __future__ import print_function
 
 from time import time
 from json import load
-from faraday.client.model.common import factory
-from faraday.client.persistence.server import models, server
+from faraday_client.model.common import factory
+from faraday_client.persistence.server import models, server
 
 
 __description__ = "Creates a new executive report in current workspace"

@@ -7,9 +7,9 @@ See the file 'doc/LICENSE' for the license information
 """
 from __future__ import absolute_import
 
-from faraday.client.managers.reports_managers import ReportManager
+from faraday_client.config.configuration import getInstanceConfiguration
+from faraday_client.managers.reports_managers import ReportManager
 
-from faraday.config.configuration import getInstanceConfiguration
 CONF = getInstanceConfiguration()
 
 
@@ -17,9 +17,9 @@ class UiFactory:
     @staticmethod
     def create(model_controller, plugin_manager, workspace_manager, plugin_controller, gui="gtk"):
         if gui == "gtk":
-            from faraday.client.gui.gtk.application import GuiApp  # pylint:disable=import-outside-toplevel
+            from faraday_client.gui.gtk.application import GuiApp  # pylint:disable=import-outside-toplevel
         else:
-            from faraday.client.gui.nogui.application import GuiApp  # pylint:disable=import-outside-toplevel
+            from faraday_client.gui.nogui.application import GuiApp  # pylint:disable=import-outside-toplevel
 
         return GuiApp(model_controller, plugin_manager, workspace_manager, plugin_controller)
 

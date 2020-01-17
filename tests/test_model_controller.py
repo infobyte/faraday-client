@@ -14,9 +14,9 @@ import time
 from unittest import mock
 import pytest
 
-from faraday.client.managers.mapper_manager import MapperManager
-from faraday.client.model import Modelactions
-from faraday.client.model.controller import ModelController
+from faraday_client.managers.mapper_manager import MapperManager
+from faraday_client.model import Modelactions
+from faraday_client.model.controller import ModelController
 from tests.factories import (
     WorkspaceFactory,
     VulnerabilityFactory,
@@ -163,7 +163,7 @@ def test_end_pluging_multiple_times():
 
 
 @pytest.mark.parametrize("url_endpoint, test_data", list(TEST_CASES.items()))
-@mock.patch('faraday.client.persistence.server.server._get')
+@mock.patch('faraday_client.persistence.server.server._get')
 def test_find(get, url_endpoint, test_data, session):
     if 'api_result' in test_data:
         get.return_value = test_data['api_result']

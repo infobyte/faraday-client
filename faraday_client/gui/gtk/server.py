@@ -11,9 +11,9 @@ from __future__ import absolute_import
 import time
 import threading
 
-from faraday.client.model.guiapi import notification_center
-from faraday.client.gui.gtk.decorators import safe_io_with_server
-from faraday.client.persistence.server import models, server_io_exceptions
+from faraday_client.model.guiapi import notification_center
+from faraday_client.gui.gtk.decorators import safe_io_with_server
+from faraday_client.persistence.server import models, server_io_exceptions
 
 
 class ServerIO:

@@ -4,8 +4,8 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday.client.plugins.plugin import PluginXMLFormat
-from faraday.client.model import api
+from faraday_client.plugins.plugin import PluginXMLFormat
+from faraday_client.model import api
 import re
 import os
 import sys
@@ -183,7 +183,7 @@ class Item:
 
         self.resolution = self.remedialprocedure
         self.resolution +=  "\nRemedial Actions: " + self.remedialactions if self.remedialactions is not None else ""
-        
+
 
         self.desc = cleaner_results(self.get_text_from_subnode("description"))
         self.desc += "\nImpact: " + self.impact if self.impact else ""

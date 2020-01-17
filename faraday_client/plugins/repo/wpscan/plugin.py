@@ -4,7 +4,7 @@ Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday.client.plugins import core
+from faraday_client.plugins import core
 import re
 import os
 import socket

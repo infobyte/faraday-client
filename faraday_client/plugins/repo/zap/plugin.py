@@ -7,7 +7,7 @@ import re
 import os
 import socket
 import sys
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_client.plugins.plugin import PluginXMLFormat
 
 
 try:

@@ -8,7 +8,7 @@ from __future__ import absolute_import
 
 import logging
 
-from faraday.client.managers.reports_managers import ReportProcessor
+from faraday_client.managers.reports_managers import ReportProcessor
 
 logger = logging.getLogger(__name__)
 

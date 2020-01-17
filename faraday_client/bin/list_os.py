@@ -12,7 +12,7 @@ from __future__ import print_function
 __description__ = 'Lists all scanned OSs'
 __prettyname__ = 'Get All OSs'
 
-from faraday.client.persistence.server import models
+from faraday_client.persistence.server import models
 
 
 def main(workspace='', args=None, parser=None):

@@ -17,7 +17,7 @@ import logging
 
 from importlib.machinery import SourceFileLoader
 
-from faraday.config.configuration import getInstanceConfiguration
+from faraday_client.config.configuration import getInstanceConfiguration
 
 CONF = getInstanceConfiguration()
 

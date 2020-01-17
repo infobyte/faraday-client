@@ -6,7 +6,7 @@ from zipfile import ZipFile
 
 import html2text
 from lxml import objectify
-from faraday.client.plugins import core
+from faraday_client.plugins import core
 
 
 class FortifyPlugin(core.PluginBase):
@@ -83,7 +83,7 @@ class FortifyPlugin(core.PluginBase):
 
 
 class FortifyParser:
-    """  
+    """
     Parser for fortify on demand
     """
 

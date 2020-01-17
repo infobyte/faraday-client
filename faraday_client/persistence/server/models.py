@@ -12,11 +12,11 @@ import logging
 from time import time
 import traceback
 from threading import Lock, Condition, RLock, Event
-from faraday.client.persistence.server import server
-from faraday.client.persistence.server.server_io_exceptions import (WrongObjectSignature,
+from faraday_client.persistence.server import server
+from faraday_client.persistence.server.server_io_exceptions import (WrongObjectSignature,
                                                      CantAccessConfigurationWithoutTheClient)
 
-from faraday.client.persistence.server.utils import (force_unique,
+from faraday_client.persistence.server.utils import (force_unique,
                                       get_host_properties,
                                       get_service_properties,
                                       get_vuln_properties,
@@ -26,8 +26,8 @@ from faraday.client.persistence.server.utils import (force_unique,
                                       get_command_properties,
                                       get_report_properties)
 
-from faraday.client.model.diff import ModelObjectDiff, MergeSolver
-from faraday.client.model.conflict import ConflictUpdate
+from faraday_client.model.diff import ModelObjectDiff, MergeSolver
+from faraday_client.model.conflict import ConflictUpdate
 from functools import wraps
 from difflib import Differ
 
@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 def _conf():
     if FARADAY_UP:
-        from faraday.config.configuration import getInstanceConfiguration  # pylint:disable=import-outside-toplevel
+        from faraday_client.config.configuration import getInstanceConfiguration  # pylint:disable=import-outside-toplevel
         return getInstanceConfiguration()
     else:
         raise CantAccessConfigurationWithoutTheClient

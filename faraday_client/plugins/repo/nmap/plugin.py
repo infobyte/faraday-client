@@ -5,7 +5,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_client.plugins.plugin import PluginXMLFormat
 import re
 import os
 import sys

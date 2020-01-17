@@ -8,8 +8,8 @@ See the file 'doc/LICENSE' for the license information
 from __future__ import absolute_import
 
 import threading
-from faraday.client.gui.gui_app import FaradayUi
-import faraday.client.gui.customevents as events
+from faraday_client.gui.gui_app import FaradayUi
+import faraday_client.gui.customevents as events
 
 
 class NotificationCenter():

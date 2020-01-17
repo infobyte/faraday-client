@@ -3,8 +3,8 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import core
-from faraday.client.model import api
+from faraday_client.plugins import core
+from faraday_client.model import api
 import re
 import os
 
@@ -35,7 +35,7 @@ class ListurlsParser:
         lists = output.split("\r\n")
         i = 0
         self.items = []
-        
+
         if re.search("Could not reach", output) is not None:
             self.fail = True
             return

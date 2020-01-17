@@ -5,7 +5,7 @@ See the file 'doc/LICENSE' for the license information
 """
 import re
 import socket
-from faraday.client.plugins import core
+from faraday_client.plugins import core
 
 __author__ = "Roberto Focke"
 __copyright__ = "Copyright (c) 2017, Infobyte LLC"

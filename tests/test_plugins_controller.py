@@ -12,7 +12,7 @@ import unittest
 from queue import Queue
 from unittest.mock import MagicMock as mock
 
-import faraday.client.plugins.controller
+import faraday_client.plugins.controller
 
 
 class PluginControllerUnitTest(unittest.TestCase):
@@ -45,7 +45,7 @@ class PluginControllerUnitTest(unittest.TestCase):
         self.pending_actions = Queue()
         self.not_plugin_manager = create_not_plugin_manager()
         self.not_mappers_manager = create_not_mappers_manager()
-        self.controller = faraday.client.plugins.controller.PluginController('PluginController',
+        self.controller = faraday_client.plugins.controller.PluginController('PluginController',
                                                               self.not_plugin_manager,
                                                               self.not_mappers_manager,
                                                               self.pending_actions)

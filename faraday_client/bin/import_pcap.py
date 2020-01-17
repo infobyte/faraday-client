@@ -8,8 +8,8 @@ See the file 'doc/LICENSE' for the license information
 """
 import os
 
-from faraday.client.model.common import factory
-from faraday.client.persistence.server import models
+from faraday_client.model.common import factory
+from faraday_client.persistence.server import models
 
 PCAP_IMPORTED = False
 

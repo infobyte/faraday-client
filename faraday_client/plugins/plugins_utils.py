@@ -9,7 +9,7 @@ from __future__ import absolute_import
 import os
 import logging
 
-from faraday.client.start_client import FARADAY_CLIENT_BASE
+from faraday_client.start_client import FARADAY_CLIENT_BASE
 
 SERVICE_MAPPER = None
 

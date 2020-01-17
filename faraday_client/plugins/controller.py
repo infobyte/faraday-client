@@ -17,17 +17,17 @@ import logging
 from threading import Thread
 from multiprocessing import JoinableQueue, Process
 
-from faraday.config.configuration import getInstanceConfiguration
-from faraday.client.plugins.plugin import PluginProcess
-import faraday.client.model.api
-from faraday.client.model.commands_history import CommandRunInformation
-from faraday.client.model import Modelactions
+from faraday_client.config.configuration import getInstanceConfiguration
+from faraday_client.plugins.plugin import PluginProcess
+import faraday_client.model.api
+from faraday_client.model.commands_history import CommandRunInformation
+from faraday_client.model import Modelactions
 
-from faraday.config.constant import (
+from faraday_client.config.constant import (
     CONST_FARADAY_ZSH_OUTPUT_PATH,
 )
 
-from faraday.client.start_client import (
+from faraday_client.start_client import (
     CONST_FARADAY_HOME_PATH,
 )
 CONF = getInstanceConfiguration()
@@ -195,25 +195,25 @@ class PluginController(Thread):
 
     def _setupActionDispatcher(self):
         self._actionDispatcher = {
-            Modelactions.ADDHOST: faraday.client.model.api.addHost,
-            Modelactions.ADDSERVICEHOST: faraday.client.model.api.addServiceToHost,
+            Modelactions.ADDHOST: faraday_client.model.api.addHost,
+            Modelactions.ADDSERVICEHOST: faraday_client.model.api.addServiceToHost,
             #Vulnerability
-            Modelactions.ADDVULNHOST: faraday.client.model.api.addVulnToHost,
-            Modelactions.ADDVULNSRV: faraday.client.model.api.addVulnToService,
+            Modelactions.ADDVULNHOST: faraday_client.model.api.addVulnToHost,
+            Modelactions.ADDVULNSRV: faraday_client.model.api.addVulnToService,
             #VulnWeb
-            Modelactions.ADDVULNWEBSRV: faraday.client.model.api.addVulnWebToService,
+            Modelactions.ADDVULNWEBSRV: faraday_client.model.api.addVulnWebToService,
             #Note
-            Modelactions.ADDNOTEHOST: faraday.client.model.api.addNoteToHost,
-            Modelactions.ADDNOTESRV: faraday.client.model.api.addNoteToService,
-            Modelactions.ADDNOTENOTE: faraday.client.model.api.addNoteToNote,
+            Modelactions.ADDNOTEHOST: faraday_client.model.api.addNoteToHost,
+            Modelactions.ADDNOTESRV: faraday_client.model.api.addNoteToService,
+            Modelactions.ADDNOTENOTE: faraday_client.model.api.addNoteToNote,
             #Creds
-            Modelactions.ADDCREDSRV:  faraday.client.model.api.addCredToService,
+            Modelactions.ADDCREDSRV:  faraday_client.model.api.addCredToService,
             #LOG
-            Modelactions.LOG: faraday.client.model.api.log,
-            Modelactions.DEVLOG: faraday.client.model.api.devlog,
+            Modelactions.LOG: faraday_client.model.api.log,
+            Modelactions.DEVLOG: faraday_client.model.api.devlog,
             # Plugin state
-            Modelactions.PLUGINSTART: faraday.client.model.api.pluginStart,
-            Modelactions.PLUGINEND: faraday.client.model.api.pluginEnd
+            Modelactions.PLUGINSTART: faraday_client.model.api.pluginStart,
+            Modelactions.PLUGINEND: faraday_client.model.api.pluginEnd
         }
 
     def updatePluginSettings(self, plugin_id, new_settings):
@@ -241,7 +241,7 @@ class PluginController(Thread):
             if not self._is_command_malformed(cmd, modified_cmd_string):
 
                 cmd_info = CommandRunInformation(
-                    **{'workspace': faraday.client.model.api.getActiveWorkspace().name,
+                    **{'workspace': faraday_client.model.api.getActiveWorkspace().name,
                         'itime': time.time(),
                         'import_source': 'shell',
                         'command': cmd.split()[0],
@@ -275,7 +275,7 @@ class PluginController(Thread):
             logger.warning("Unknown Plugin ID: %s", plugin_id)
             return False
         if not ws_name:
-            ws_name = faraday.client.model.api.getActiveWorkspace().name
+            ws_name = faraday_client.model.api.getActiveWorkspace().name
 
         cmd_info = CommandRunInformation(
             **{'workspace': ws_name,
