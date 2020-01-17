@@ -7,13 +7,12 @@ See the file 'doc/LICENSE' for the license information
 import re
 import time
 
-from faraday.client.model.workspace import Workspace
-from faraday.client.persistence.server.models import create_workspace, get_workspaces_names, get_workspace, delete_workspace
-from faraday.client.persistence.server.server_io_exceptions import Unauthorized
-from faraday.client.model.guiapi import notification_center
+from faraday_client.model.workspace import Workspace
+from faraday_client.persistence.server.models import create_workspace, get_workspaces_names, get_workspace, delete_workspace
+from faraday_client.persistence.server.server_io_exceptions import Unauthorized
+from faraday_client.model.guiapi import notification_center
 
-from faraday.config.configuration import getInstanceConfiguration
-from faraday.config.constant import CONST_BLACKDBS
+from faraday_client.config.configuration import getInstanceConfiguration
 CONF = getInstanceConfiguration()
 
 
@@ -104,7 +103,7 @@ class WorkspaceManager:
         """Returns True if the ws_name is valid, else if it's not"""
         letters_or_numbers = r"^[a-z0-9][a-z0-9\_\$()\+\-\/]*$"
         regex_name = re.match(letters_or_numbers, ws_name)
-        if regex_name and regex_name.string not in CONST_BLACKDBS:
+        if regex_name:
             return True
         else:
             return False

@@ -11,7 +11,7 @@ from __future__ import print_function
 
 from builtins import input
 
-from faraday.client.persistence.server import models
+from faraday_client.persistence.server import models
 
 __description__ = 'Deletes all stored hosts'
 __prettyname__ = 'Delete All Hosts'

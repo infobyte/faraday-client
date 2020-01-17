@@ -8,7 +8,7 @@ from __future__ import print_function
 from builtins import input
 
 import re
-from faraday.client.persistence.server import models
+from faraday_client.persistence.server import models
 
 __description__ = "Delete all vulnerabilities matched with regex"
 __prettyname__ = "Delete all vulnerabilities with (...)"

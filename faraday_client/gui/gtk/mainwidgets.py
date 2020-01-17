@@ -23,9 +23,9 @@ except ValueError:
 
 from gi.repository import Gtk, Gdk, GLib, Pango, GdkPixbuf, Vte  # pylint: disable=import-error
 
-from faraday.client.gui.gtk.decorators import scrollable
-from faraday.client.gui.gtk.compatibility import CompatibleVteTerminal as VteTerminal
-from faraday.client.gui.gtk.compatibility import CompatibleScrolledWindow as GtkScrolledWindow
+from faraday_client.gui.gtk.decorators import scrollable
+from faraday_client.gui.gtk.compatibility import CompatibleVteTerminal as VteTerminal
+from faraday_client.gui.gtk.compatibility import CompatibleScrolledWindow as GtkScrolledWindow
 
 
 class Terminal(VteTerminal):
@@ -38,7 +38,7 @@ class Terminal(VteTerminal):
         """Initialize terminal with infinite scrollback, no bell, connecting
         all keys presses to copy_or_past, and starting faraday-terminal
         """
-        from faraday.client.start_client import FARADAY_BASE, FARADAY_CLIENT_BASE  # pylint:disable=import-outside-toplevel
+        from faraday_client.start_client import FARADAY_BASE, FARADAY_CLIENT_BASE  # pylint:disable=import-outside-toplevel
         VteTerminal.__init__(self)
         self.set_scrollback_lines(-1)
         self.set_audible_bell(0)

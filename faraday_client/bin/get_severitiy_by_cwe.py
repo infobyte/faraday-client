@@ -12,7 +12,7 @@ import json
 
 import requests
 
-from faraday.client.persistence.server import models
+from faraday_client.persistence.server import models
 
 __description__ = 'Get Vulns filtered by Severity and change Severity based in CWE'
 __prettyname__ = 'Get Severity By CWE'

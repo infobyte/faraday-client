@@ -9,12 +9,12 @@ from __future__ import absolute_import
 
 import time
 
-from faraday.client.gui.gui_app import FaradayUi
-from faraday.client.gui.nogui.eventwatcher import EventWatcher
-import faraday.client.model.guiapi
+from faraday_client.gui.gui_app import FaradayUi
+from faraday_client.gui.nogui.eventwatcher import EventWatcher
+import faraday_client.model.guiapi
 from faraday.server.utils.logger import get_logger
 
-from faraday.config.configuration import getInstanceConfiguration
+from faraday_client.config.configuration import getInstanceConfiguration
 CONF = getInstanceConfiguration()
 
 
@@ -26,9 +26,9 @@ class GuiApp(FaradayUi):
                            workspace_manager,
                            plugin_controller)
         self._stop = False
-        faraday.client.model.guiapi.setMainApp(self)
+        faraday_client.model.guiapi.setMainApp(self)
         self.event_watcher = EventWatcher()
-        faraday.client.model.guiapi.notification_center.registerWidget(self.event_watcher)
+        faraday_client.model.guiapi.notification_center.registerWidget(self.event_watcher)
 
     def run(self, args):
         workspace = args.workspace

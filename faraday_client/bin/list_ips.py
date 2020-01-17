@@ -7,7 +7,7 @@ See the file 'doc/LICENSE' for the license information
 from __future__ import absolute_import
 from __future__ import print_function
 
-from faraday.client.persistence.server import models
+from faraday_client.persistence.server import models
 
 __description__ = 'List all scanned IPs'
 __prettyname__ = 'Get All IPs'

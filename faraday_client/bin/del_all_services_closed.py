@@ -3,7 +3,7 @@ Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.persistence.server import models
+from faraday_client.persistence.server import models
 from faraday.utils.user_input import query_yes_no
 
 __description__ = 'Deletes all services with a non open port'

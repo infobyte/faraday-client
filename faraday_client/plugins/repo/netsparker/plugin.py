@@ -4,8 +4,8 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday.client.plugins.plugin import PluginXMLFormat
-from faraday.client.model import api
+from faraday_client.plugins.plugin import PluginXMLFormat
+from faraday_client.model import api
 import re
 import os
 import sys
@@ -158,7 +158,7 @@ class Item:
             self.ref.extend(list(set(re.findall('https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', self.reference))))
         if self.cvss:
             self.ref.append(self.cvss)
-    
+
         self.data = ""
         self.data += "\nKnowVulns: " + \
             "\n".join(self.kvulns) if self.kvulns else ""
@@ -222,14 +222,14 @@ class NetsparkerPlugin(PluginXMLFormat):
             if first:
                 ip = self.resolve(i.hostname)
                 h_id = self.createAndAddHost(ip, hostnames=[ip])
-                
+
                 s_id = self.createAndAddServiceToHost(h_id, str(i.port),
                                                            protocol = str(i.protocol),
                                                            ports=[str(i.port)],
                                                            status="open")
                 first = False
-            
-            v_id = self.createAndAddVulnWebToService(h_id, s_id, i.name, ref=i.ref, website=i.hostname, 
+
+            v_id = self.createAndAddVulnWebToService(h_id, s_id, i.name, ref=i.ref, website=i.hostname,
                                                      severity=i.severity, desc=BeautifulSoup(i.desc, "lxml").text,
                                                       path=i.url, method=i.method, request=i.request, response=i.response,
                                                      resolution=BeautifulSoup(i.resolution, "lxml").text,pname=i.param, data=i.data)

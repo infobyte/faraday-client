@@ -19,8 +19,8 @@ from http.server import BaseHTTPRequestHandler
 
 from collections import defaultdict
 
-from faraday.client.plugins.plugin import PluginTerminalOutput
-from faraday.client.plugins.plugin_utils import get_vulnweb_url_fields
+from faraday_client.plugins.plugin import PluginTerminalOutput
+from faraday_client.plugins.plugin_utils import get_vulnweb_url_fields
 
 try:
     import xml.etree.cElementTree as ET

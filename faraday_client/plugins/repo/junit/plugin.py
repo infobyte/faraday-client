@@ -4,8 +4,8 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday.client.plugins import core
-from faraday.client.model import api
+from faraday_client.plugins import core
+from faraday_client.model import api
 import os
 from lxml import etree
 
@@ -32,7 +32,7 @@ __status__ = "Development"
 This plugin has been designed to be used with python-unittest2/paramiko script to perform security compliancy verification. It enables to have displayed both security scans results (nmap,
 nessus, ..) and security verification compliancy (CIS-CAT, compagny's product security requirement) by Faraday-IPE
 
-This plugin requires that a element "host" is added to <testcase/> (sed -i 's/<testcase/<testcase host=\"192.168.1.1\"/' junit.xml) 
+This plugin requires that a element "host" is added to <testcase/> (sed -i 's/<testcase/<testcase host=\"192.168.1.1\"/' junit.xml)
 
  <testsuite errors="0" failures="1" name="AccountsWithSuperuserPrivilegesShallBeDisabledByDefault-20170118090010" skipped="0" tests="1" time="0.144">
                 <testcase host="192.168.1.1" classname="AccountsWithSuperuserPrivilegesShallBeDisabledByDefault" name="test_sshdRootLogin" time="0.144">
@@ -67,7 +67,7 @@ class JunitXmlParser:
             self.items = list(self.get_items(tree))
         else:
             self.items = []
-    
+
     def parse_xml(self, xml_output):
         """
         Open and parse an xml file.
@@ -132,7 +132,7 @@ class JunitPlugin(core.PluginBase):
         self.framework_version = "1.0.0"
         self.options = None
         self._current_output = None
-        self._command_regex = None 
+        self._command_regex = None
 
     def parseOutputString(self, output, debug=False):
 

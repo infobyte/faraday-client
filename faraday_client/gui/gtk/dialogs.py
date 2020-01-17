@@ -13,18 +13,23 @@ from past.builtins import basestring
 import webbrowser
 import gi  # pylint: disable=import-error
 import os
-from faraday.client.start_client import FARADAY_CLIENT_BASE
+from faraday_client.start_client import FARADAY_CLIENT_BASE
 gi.require_version('Gtk', '3.0')
 
-from faraday.client.persistence.server.server import ResourceDoesNotExist
+from faraday_client.persistence.server.server import ResourceDoesNotExist
 from gi.repository import Gtk, GdkPixbuf, Gdk  # pylint: disable=import-error
-from faraday.config.configuration import getInstanceConfiguration
-from faraday.client.persistence.server.server import is_authenticated, login_user, get_user_info, check_server_url
-from faraday.client.model import guiapi
-from faraday.client.gui.gtk.decorators import scrollable
+from faraday_client.config.configuration import getInstanceConfiguration
+from faraday_client.persistence.server.server import (
+    is_authenticated,
+    login_user,
+    get_user_info,
+    check_server_url
+)
+from faraday_client.model import guiapi
+from faraday_client.gui.gtk.decorators import scrollable
 
-from faraday.client.gui.gtk.compatibility import CompatibleScrolledWindow as GtkScrolledWindow
-from faraday.client.plugins import fplugin_utils
+from faraday_client.gui.gtk.compatibility import CompatibleScrolledWindow as GtkScrolledWindow
+from faraday_client.plugins import fplugin_utils
 
 CONF = getInstanceConfiguration()
 
@@ -106,7 +111,6 @@ class PreferenceWindowDialog(Gtk.Dialog):
         # if that didn't work...
         loginDialog = LoginDialog(self)
         return loginDialog.run(3, repourl, self)
-
 
     def on_click_cancel(self, button=None):
         self.destroy()
@@ -206,6 +210,7 @@ class LoginDialog(Gtk.Dialog):
                 newUser = self.getUser()
                 newPass = self.getPassword()
                 session_cookie = login_user(url, newUser, newPass)
+
                 if not session_cookie:
                     if attempt != attempts-1:
                         errorDialog(self, ("Invalid credentials!. You "
@@ -218,6 +223,16 @@ class LoginDialog(Gtk.Dialog):
                     CONF.setDBSessionCookies(session_cookie)
 
                     user_info = get_user_info()
+
+                    try:
+                        if 'client' in user_info['userCtx']['roles']:
+                            errorDialog(self, ("You can't login as a client. "
+                                               "You have " +
+                                               str(attempts - 1 - attempt) +
+                                               " attempt(s) left."))
+                            continue
+                    except (TypeError, KeyError):
+                        pass
 
                     self.destroy()
 
@@ -1709,9 +1724,15 @@ class aboutDialog(Gtk.AboutDialog):
             os.path.join(icons, "about.png"))
         self.set_logo(faraday_icon)
         self.set_program_name("Faraday")
-        self.set_comments("Penetration Test IDE -"
-                          " Infobyte LLC. - All rights reserved")
-        faraday_website = "http://www.infobytesec.com/faraday.html"
+
+        app_name = str(CONF.getAppname())
+        version = str(CONF.getVersion())
+
+        self.set_comments(app_name + " " + version + " " +
+                          "\n FaradaySec LLC. All rights reserved."
+                          )
+
+        faraday_website = "http://www.faradaysec.com/faraday.html"
         self.set_website(faraday_website)
         self.set_website_label("Learn more about Faraday")
 

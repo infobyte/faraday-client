@@ -5,7 +5,7 @@ See the file 'doc/LICENSE' for the license information
 """
 import csv
 from io import StringIO
-from faraday.client.plugins import core
+from faraday_client.plugins import core
 
 
 def calculate_severity(number):

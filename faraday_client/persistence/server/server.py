@@ -40,15 +40,15 @@ except: # For Python 3
 
 import requests
 
-from faraday import __version__ as f_version
-from faraday.client.persistence.server.utils import force_unique
-from faraday.client.persistence.server.server_io_exceptions import (WrongObjectSignature,
+from faraday_client import __version__ as f_version
+from faraday_client.persistence.server.utils import force_unique
+from faraday_client.persistence.server.server_io_exceptions import (WrongObjectSignature,
                                                      CantCommunicateWithServerError,
                                                      ConflictInDatabase,
                                                      ResourceDoesNotExist,
                                                      Unauthorized)
 
-from faraday.client.persistence.server.changes_stream import (
+from faraday_client.persistence.server.changes_stream import (
     CouchChangesStream,
     WebsocketsChangesStream
 )
@@ -77,7 +77,7 @@ OBJECT_TYPE_END_POINT_MAPPER = {
 
 
 def _conf():
-    from faraday.config.configuration import getInstanceConfiguration  # pylint:disable=import-outside-toplevel
+    from faraday_client.config.configuration import getInstanceConfiguration  # pylint:disable=import-outside-toplevel
     CONF = getInstanceConfiguration()
 
     # If you are running this libs outside of Faraday, cookies are not setted.

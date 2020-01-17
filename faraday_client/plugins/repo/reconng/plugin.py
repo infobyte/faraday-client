@@ -12,7 +12,7 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
 
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_client.plugins.plugin import PluginXMLFormat
 
 __author__ = 'Leonardo Lazzaro'
 __copyright__ = 'Copyright (c) 2017, Infobyte LLC'

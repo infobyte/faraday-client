@@ -3,8 +3,8 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins.plugin import PluginXMLFormat
-from faraday.client.model import api
+from faraday_client.plugins.plugin import PluginXMLFormat
+from faraday_client.model import api
 import re
 import os
 import sys
@@ -360,7 +360,7 @@ class MetasploitPlugin(PluginXMLFormat):
             self.hostnames = []
             if item.host:
                 self.hostnames = [item.host]
-            
+
             h_id = self.createAndAddHost(item.ip, os=item.os, hostnames=self.hostnames)
 
             if item.id + "_" in item.notesByService:

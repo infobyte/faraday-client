@@ -5,7 +5,7 @@ from re import search
 
 from setuptools import setup, find_packages
 
-with open('faraday/__init__.py', 'rt', encoding='utf8') as f:
+with open('faraday_client/__init__.py', 'rt', encoding='utf8') as f:
     version = search(r'__version__ = \'(.*?)\'', f.read()).group(1)
 
 

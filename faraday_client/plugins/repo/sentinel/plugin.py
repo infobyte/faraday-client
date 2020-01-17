@@ -3,8 +3,8 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import core
-from faraday.config.configuration import getInstanceConfiguration
+from faraday_client.plugins import core
+from faraday_client.config.configuration import getInstanceConfiguration
 import requests
 import xmlrpc.client
 import json
@@ -74,7 +74,7 @@ class SentinelPlugin(core.PluginBase):
 
             for vuln in vulnData['collection']:
 
-                vuln_information  = self.getVulnInformation(element.get('href', 'unknown')) 
+                vuln_information  = self.getVulnInformation(element.get('href', 'unknown'))
 
                 desc = vuln_information.get("description", "").get("description_prepend", "")
                 solution = vuln_information.get("solution", "").get("solution_prepend", "")
@@ -82,16 +82,16 @@ class SentinelPlugin(core.PluginBase):
                 id = vuln_information.get("id", uuid.uuid4())
 
                 vulnUrlComplete = self.vulnURL + siteId + "&vuln_id=" + id
-                
+
                 cvss = "CVSS: " + vuln_information.get("cvss_score", "")
                 siteName = "Site-Name: " + vuln_information.get("site_name", "Unknown")
 
                 found = vuln.get('found', '0000-00-00T00:00:00Z')
                 tested = vuln.get('tested', '0000-00-00T00:00:00Z')
                 request = vuln.get('request', {})#{}
-                
+
                 state = "State: " + vuln.get('state', 'Unknown')
-                
+
 
                 if(len(request)>0):
 
@@ -99,20 +99,20 @@ class SentinelPlugin(core.PluginBase):
                     method = request.get('method', "Unknown")
                     headers = request.get("headers", [])
                     reqHeader = ""
-            
+
                     if(headers == None):
                         headers = []
-            
+
                     for parts in headers:
                         reqHeader += parts.get("name", "") + ":" + parts.get("value", "")+"\n"
-            
+
                     body = request.get("body", {})#{}
-            
+
                     if(len(body)>0):
                         bodyContent = body.get('content', "")
-            
+
                 response = vuln.get('response', {})#{}
-            
+
                 if(len(response)>0):
 
                     status = str(response.get("status", ""))
@@ -147,7 +147,7 @@ class SentinelPlugin(core.PluginBase):
                     res += resBodyContent
 
                 name = vulnClass+" ID: "+id
-                
+
                 self.faraday_api.createAndAddVulnWebToService(hostId,
                                                             serviceId, name,
                                                             desc + data,

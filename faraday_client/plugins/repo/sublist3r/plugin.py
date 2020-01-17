@@ -9,7 +9,7 @@ import shlex
 import socket
 import argparse
 import tempfile
-from faraday.client.plugins.plugin import PluginTerminalOutput
+from faraday_client.plugins.plugin import PluginTerminalOutput
 
 
 __author__ = "Matías Lang"

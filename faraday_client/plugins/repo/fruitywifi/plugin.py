@@ -4,7 +4,7 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
-from faraday.client.plugins import core
+from faraday_client.plugins import core
 import re
 import os, json
 import traceback
@@ -33,14 +33,14 @@ class FruityWiFiPlugin(core.PluginBase):
         self.options = None
         self._current_output = None
         self.target = None
-        
+
         self._command_regex = re.compile(
             r'^(fruitywifi).*?')
-        
+
         self.addSetting("Token", str, "e5dab9a69988dd65e578041416773149ea57a054")
         self.addSetting("Server", str, "http://127.0.0.1:8000")
         self.addSetting("Severity", str, "high")
-    
+
     def getSeverity(self, severity):
         if severity.lower() == "critical" or severity == "4":
             return 4
@@ -54,7 +54,7 @@ class FruityWiFiPlugin(core.PluginBase):
             return 0
         else:
             return 5
-    
+
     def createHostInterfaceVuln(self, ip_address, macaddress, hostname, desc, vuln_name, severity):
         h_id = self.createAndAddHost(ip_address)
         if self._isIPV4(ip_address):
@@ -76,18 +76,18 @@ class FruityWiFiPlugin(core.PluginBase):
                 ref=["http://www.fruitywifi.com/"],
                 severity=severity
                 )
-    
+
     def parseOutputString(self, output, debug=False):
-        
-        try:            
+
+        try:
             output = json.loads(output)
-            
+
             if len(output) > 0:
-                
+
                 if len(output[0]) == 3:
-                    
+
                     severity = self.getSeverity(self.getSetting("Severity"))
-                    
+
                     for item in output:
                         ip_address = item[0]
                         macaddress = item[1]
@@ -98,27 +98,27 @@ class FruityWiFiPlugin(core.PluginBase):
                                " has been connected to FruityWiFi\n"
                         desc += "More information:"
                         desc += "\nname: " + hostname
-                        
+
                         self.createHostInterfaceVuln(ip_address, macaddress, hostname, desc, vuln_name, severity)
-            
+
                 elif len(output[0]) == 5:
                     for item in output:
                         ip_address = item[0]
                         macaddress = item[1]
                         hostname = item[2]
-                        vuln_name = item[3] 
+                        vuln_name = item[3]
                         severity = item[4]
-            
+
                         desc = "Client ip: " + ip_address + \
                                " has been connected to FruityWiFi\n"
                         desc += "More information:"
                         desc += "\nname: " + hostname
-            
+
                         self.createHostInterfaceVuln(ip_address, macaddress, hostname, desc, vuln_name, severity)
-                        
+
         except:
             traceback.print_exc()
-            
+
         return True
 
     def _isIPV4(self, ip):
@@ -129,10 +129,10 @@ class FruityWiFiPlugin(core.PluginBase):
 
     def processCommandString(self, username, current_path, command_string, debug=False):
         """
-        """        
+        """
         #params = command_string.replace("fruitywifi","")
         params = "-t %s -s %s" % (self.getSetting("Token"), self.getSetting("Server"))
-        
+
         return "python " + os.path.dirname(__file__) + "/fruitywifi.py " + params
         #return None
 

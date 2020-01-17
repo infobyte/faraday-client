@@ -16,13 +16,13 @@ import argparse
 import readline
 from queue import Queue
 
-from faraday.client.plugins import fplugin_utils
+from faraday_client.plugins import fplugin_utils
 
 from colorama import Fore
-from faraday.config.configuration import getInstanceConfiguration
-from faraday.client.managers.mapper_manager import MapperManager
-from faraday.client.model.controller import ModelController
-from faraday.client.persistence.server.server import login_user
+from faraday_client.config.configuration import getInstanceConfiguration
+from faraday_client.managers.mapper_manager import MapperManager
+from faraday_client.model.controller import ModelController
+from faraday_client.persistence.server.server import login_user
 
 CONF = getInstanceConfiguration()
 

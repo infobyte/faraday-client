@@ -11,13 +11,13 @@ from __future__ import absolute_import
 import os
 import gi  # pylint: disable=import-error
 
-from faraday.config.configuration import getInstanceConfiguration
-from faraday.client.start_client import FARADAY_CLIENT_BASE
+from faraday_client.config.configuration import getInstanceConfiguration
+from faraday_client.model.guiapi import notification_center
+from faraday_client.start_client import FARADAY_CLIENT_BASE
 
 gi.require_version('Gtk', '3.0')
 
 from gi.repository import GLib, Gio, Gtk, GObject, Gdk  # pylint: disable=import-error
-from faraday.client.gui.gtk.dialogs import ImportantErrorDialog
 
 CONF = getInstanceConfiguration()
 
@@ -104,6 +104,7 @@ class AppWindow(Gtk.ApplicationWindow):
         remove_terminal_button.set_image(remove_terminal_icon)
         remove_terminal_button.set_relief(Gtk.ReliefStyle.NONE)
         remove_terminal_button.show()
+
         self.notebook.set_action_widget(remove_terminal_button, Gtk.PackType.END)
 
     def receive_hosts(self, hosts):
@@ -340,6 +341,3 @@ class AppWindow(Gtk.ApplicationWindow):
         is not sure if he wants to exit"""
         self.delete_tab()
         terminal.start_faraday()
-
-
-# I'm Py3

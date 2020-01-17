@@ -13,7 +13,7 @@ import logging
 
 from colorama import Fore
 
-from faraday.config.configuration import getInstanceConfiguration
+from faraday_client.config.configuration import getInstanceConfiguration
 
 CONF = getInstanceConfiguration()
 logger = logging.getLogger(__name__)

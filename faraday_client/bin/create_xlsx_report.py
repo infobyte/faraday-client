@@ -22,7 +22,7 @@ except ImportError:
 from requests import Session
 from tqdm import tqdm
 
-from faraday.client.persistence.server import models
+from faraday_client.persistence.server import models
 
 __description__ = 'Creates a xls report from current workspace'
 __prettyname__ = 'Create XLS Report'
@@ -190,11 +190,11 @@ def get_data_from_vuln(workbook, vuln):
         color = color_format(workbook, bg_color='#df3936')
     elif data in ['critical', 'infeasible']:
         color = color_format(workbook, bg_color='#932ebe')
-    elif data=='unclassified': 
+    elif data=='unclassified':
         color = color_format(workbook, bg_color='#999999')
     elif not data:
         data = ''
-        color = color_format(workbook, bg_color='#999999')       
+        color = color_format(workbook, bg_color='#999999')
 
     return data.capitalize(), color
 
@@ -270,7 +270,7 @@ def main(workspace='', args=None, parser=None):
                 if vuln['impact']['confidentiality']:
                     impact_list.append('Confidentiality')
                 impact = ', '.join(impact_list)
-                
+
                 worksheet.write(row, 6, impact, content_center_format)
 
                 # Writing Action/Measure
@@ -279,7 +279,7 @@ def main(workspace='', args=None, parser=None):
                 # Writing Risk
                 severity = get_data_from_vuln(workbook, vuln['severity'])
                 worksheet.write(row, 8, severity[0], severity[1])
-                
+
                 # Writing Ease of Resolution
                 ease = get_data_from_vuln(workbook, vuln['easeofresolution'])
                 worksheet.write(row, 9, ease[0], ease[1])
@@ -310,7 +310,7 @@ def main(workspace='', args=None, parser=None):
                             # Writing CVSS Vector and CVSS Version
                             vector_v2 = re.findall(
                                 r"AV:[NAL]\/AC:[LMH]\/A[Uu]:[NSM]\/C:[NPC]\/I:[NPC]\/A:[NPC]", ref)
-                            if vector_v2: 
+                            if vector_v2:
                                 # CVSS Version 2
                                 worksheet.write(row, 22, vector_v2[0], content_center_format)
                                 worksheet.write(row, 23, 'V2', content_center_format)

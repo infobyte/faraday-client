@@ -10,7 +10,7 @@ import functools
 from colorama import Fore
 import sys
 
-from faraday.client.persistence.server import models
+from faraday_client.persistence.server import models
 
 __description__ = 'Filter services by port or service name'
 __prettyname__ = 'Filter services'

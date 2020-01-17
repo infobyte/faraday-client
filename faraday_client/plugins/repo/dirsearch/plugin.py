@@ -13,8 +13,8 @@ import tempfile
 import urllib.parse as urlparse
 
 
-from faraday.client.plugins.plugin import PluginTerminalOutput
-from faraday.client.plugins.plugin_utils import get_vulnweb_url_fields
+from faraday_client.plugins.plugin import PluginTerminalOutput
+from faraday_client.plugins.plugin_utils import get_vulnweb_url_fields
 
 
 __author__ = "Matías Lang"

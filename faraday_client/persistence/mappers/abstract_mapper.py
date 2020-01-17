@@ -8,8 +8,8 @@ from __future__ import absolute_import
 
 import requests
 
-from faraday.client.persistence.persistence_managers import DbConnector
-from faraday.config.configuration import getInstanceConfiguration
+from faraday_client.persistence.persistence_managers import DbConnector
+from faraday_client.config.configuration import getInstanceConfiguration
 
 CONF = getInstanceConfiguration()
 
@@ -67,7 +67,7 @@ class AbstractMapper:
         doc = self.pmanager.find_in_server(self.resource, id)
         if not doc:
             return None
-        
+
         obj = self.mapped_class(*self.dummy_args, **self.dummy_kwargs)
 
         obj.setID(doc.get("_id"))

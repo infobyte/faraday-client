@@ -10,6 +10,9 @@ import sys
 import traceback
 import threading
 import logging
+
+from faraday_client.config.configuration import getInstanceConfiguration
+
 try:
     import xmlrpclib
     from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
@@ -18,11 +21,10 @@ except ImportError:
     from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 
 try:
-    from faraday.client.model import api
+    from faraday_client.model import api
 except AttributeError as e:
     import api
 
-from faraday.config.configuration import getInstanceConfiguration
 CONF = getInstanceConfiguration()
 logger = logging.getLogger(__name__)
 

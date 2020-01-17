@@ -8,7 +8,7 @@ import os
 import json
 import shutil
 
-from faraday.config.constant import CONST_FARADAY_HOME_PATH
+from faraday_client.config.constant import CONST_FARADAY_HOME_PATH
 
 try:
     import xml.etree.cElementTree as ET

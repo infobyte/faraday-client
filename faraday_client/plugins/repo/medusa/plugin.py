@@ -3,8 +3,8 @@ Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import core
-from faraday.client.model import api
+from faraday_client.plugins import core
+from faraday_client.model import api
 import re
 import os
 import sys
@@ -38,17 +38,17 @@ class MedusaParser:
 
         lines = xml_output.splitlines()
         self.items = []
-        
+
         for l in lines:
 
             reg = re.search(
                 "ACCOUNT FOUND: \[([^$]+)\] Host: ([^$]+) User: ([^$]+) Password: ([^$]+) \[SUCCESS\]",
                 l)
-            
+
             print("REG" + str(reg))
 
             if reg:
-        
+
                 item = {
                 'service': reg.group(1),
                 'host': reg.group(2),
@@ -92,7 +92,7 @@ class MedusaPlugin(core.PluginBase):
         self.port = ""
 
         global current_path
-        
+
         self._output_file_path = os.path.join(
             self.data_path,
             "medusa_output-%s.txt" % self._rid)
@@ -106,9 +106,9 @@ class MedusaPlugin(core.PluginBase):
         output being sent is valid.
         """
         parser = MedusaParser(output)
-        
+
         for item in parser.items:
-        
+
             h_id = self.createAndAddHost(item['ip'])
             if self._isIPV4(item['ip']):
                 i_id = self.createAndAddInterface(

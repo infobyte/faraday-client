@@ -2,7 +2,7 @@ import re
 import string
 from urllib.parse import urljoin, urlparse
 
-from faraday.client.plugins import core
+from faraday_client.plugins import core
 
 
 class WfuzzPlugin(core.PluginBase):

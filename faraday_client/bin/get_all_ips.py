@@ -4,7 +4,7 @@ Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
 import re
-from faraday.client.persistence.server import models
+from faraday_client.persistence.server import models
 
 __description__ = "Get all scanned interfaces"
 __prettyname__ = "Get All IPs Interfaces"

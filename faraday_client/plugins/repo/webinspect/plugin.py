@@ -3,8 +3,8 @@ Faraday Penetration Test IDE
 Copyright (C) 2018 Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins import core
-from faraday.client.plugins.plugin_utils import get_vulnweb_url_fields
+from faraday_client.plugins import core
+from faraday_client.plugins.plugin_utils import get_vulnweb_url_fields
 import re
 
 try:
@@ -46,7 +46,7 @@ class WebInspectParser():
             return text
         except:
             return ""
-    
+
     def parse(self):
 
         map_objects_fields = {
@@ -124,7 +124,7 @@ class WebInspectPlugin(core.PluginBase):
         self.version = "1.0.0"
 
     def parseOutputString(self, output, debug=False):
-        
+
         parser = WebInspectParser(output)
         vulns = parser.parse()
 
@@ -141,7 +141,7 @@ class WebInspectPlugin(core.PluginBase):
                 vuln.get("Service").get("name"),
                 protocol=vuln.get("Service").get("name"),
                 ports=[vuln.get("Service").get("port")])
-            
+
             self.createAndAddVulnWebToService(
                 host_id, service_id,
                 vuln.get("Vuln").get("name"),

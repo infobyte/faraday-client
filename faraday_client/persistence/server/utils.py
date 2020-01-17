@@ -15,7 +15,7 @@ import socket
 logger = logging.getLogger(__name__)
 
 
-from faraday.client.persistence.server.server_io_exceptions import MoreThanOneObjectFoundByID
+from faraday_client.persistence.server.server_io_exceptions import MoreThanOneObjectFoundByID
 
 
 def force_unique(lst):

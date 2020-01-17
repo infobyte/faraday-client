@@ -5,12 +5,12 @@ See the file 'doc/LICENSE' for the license information
 
 """
 
-from faraday.client.plugins.plugin import PluginXMLFormat
+from faraday_client.plugins.plugin import PluginXMLFormat
 import re
 import os
 import socket
 
-import faraday.client.plugins.repo.nessus.dotnessus_v2 as dotnessus_v2
+import faraday_client.plugins.repo.nessus.dotnessus_v2 as dotnessus_v2
 
 
 

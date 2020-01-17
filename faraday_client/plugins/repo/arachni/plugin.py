@@ -6,8 +6,8 @@ Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 """
-from faraday.client.plugins.plugin import PluginXMLFormat
-from faraday.client.model import api
+from faraday_client.plugins.plugin import PluginXMLFormat
+from faraday_client.model import api
 import socket
 import os
 import random

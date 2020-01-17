@@ -8,8 +8,8 @@ See the file 'doc/LICENSE' for the license information
 from __future__ import absolute_import
 from __future__ import print_function
 
-from faraday.client.model.common import factory
-from faraday.client.persistence.server import models
+from faraday_client.model.common import factory
+from faraday_client.persistence.server import models
 
 __description__ = 'Creates new credentials'
 __prettyname__ = 'Create Credentials'

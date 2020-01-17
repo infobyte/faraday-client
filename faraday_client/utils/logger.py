@@ -6,7 +6,7 @@ import logging
 import logging.handlers
 import errno
 
-CONST_FARADAY_HOME_PATH = '/Users/lcubo/.faraday_client'
+from faraday_client.config.constant import CONST_FARADAY_HOME_PATH
 
 LOG_FILE = os.path.expanduser(os.path.join(
     CONST_FARADAY_HOME_PATH,

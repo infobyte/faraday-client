@@ -9,7 +9,7 @@ from __future__ import absolute_import
 
 import time
 
-from faraday.config.configuration import getInstanceConfiguration
+from faraday_client.config.configuration import getInstanceConfiguration
 CONF = getInstanceConfiguration()
 
 
