@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 
 """The setup script."""
+from re import search
 
 from setuptools import setup, find_packages
+
+with open('faraday/__init__.py', 'rt', encoding='utf8') as f:
+    version = search(r'__version__ = \'(.*?)\'', f.read()).group(1)
+
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -44,7 +49,7 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/infobyte/faraday_client',
-    version='1.0.0',
+    version=version,
     zip_safe=False,
     entry_points={  # Optional
           'console_scripts': [

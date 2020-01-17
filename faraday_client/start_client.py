@@ -12,19 +12,16 @@ from builtins import input
 
 import os
 import sys
-import json
 import shutil
 import getpass
 import argparse
 import requests
 import requests.exceptions
 import logging
-from base64 import b64decode
 
-from nacl.public import PrivateKey, PublicKey, Box
 
-from faraday.config.configuration import getInstanceConfiguration
-from faraday.config.constant import (
+from faraday_client.config.configuration import getInstanceConfiguration
+from faraday_client.config.constant import (
     CONST_USER_HOME,
     CONST_FARADAY_PLUGINS_PATH,
     CONST_FARADAY_PLUGINS_REPO_PATH,
@@ -37,47 +34,24 @@ from faraday.config.constant import (
     CONST_FARADAY_ZSH_FARADAY,
     CONST_REQUIREMENTS_FILE,
     CONST_FARADAY_FOLDER_LIST,
-    CONST_LICENSE,
-    CONST_LICENSE_CONFIG,
-    CONST_INFO_PK,
-    CONST_CLI_SK,
-    CONST_CLI_PK,
-    CONST_LICENSES_DB
 )
-from faraday.utils import (
-    license,
-)
-from faraday.utils.common import date_expired
-from faraday.utils.license import check_license
+from faraday_client.utils.logger import set_logging_level, get_logger
 
 CONST_FARADAY_HOME_PATH = os.path.expanduser('~/.faraday')
-from faraday.utils import dependencies
-from faraday.server.utils.logger import get_logger, set_logging_level
-from faraday.utils.user_input import query_yes_no
 
-from faraday import __version__ as f_version
-from faraday.client.persistence.server import server
-from faraday.client.persistence.server.server import login_user, get_user_info
+from faraday_client import __version__
+from faraday_client.persistence.server import server
+from faraday_client.persistence.server.server import login_user, get_user_info
 
-import faraday
+import faraday_client
 
 from colorama import Fore, Back, Style
 
 USER_HOME = os.path.expanduser(CONST_USER_HOME)
 # find_module returns if search is successful, the return value is a 3-element tuple (file, pathname, description):
-FARADAY_BASE = os.path.dirname(faraday.__file__)
+FARADAY_BASE = os.path.dirname(faraday_client.__file__)
 os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  # Use double dirname to obtain parent directory
-FARADAY_CLIENT_BASE = os.path.join(FARADAY_BASE, 'client')
-FARADAY_LICENSE = os.path.join(FARADAY_BASE, CONST_LICENSE)
-FARADAY_USER_LICENSE = os.path.join(os.getenv('FARADAY_LICENSE_HOME', os.path.expanduser(CONST_FARADAY_HOME_PATH)), CONST_LICENSE)
-FARADAY_LICENSE_CONFIG = os.path.join(FARADAY_BASE, CONST_LICENSE_CONFIG)
-FARADAY_INFO_PK = os.path.join(FARADAY_BASE, CONST_INFO_PK)
-FARADAY_USER_INFO_PK= os.path.join(os.getenv('FARADAY_LICENSE_HOME', os.path.expanduser(CONST_FARADAY_HOME_PATH)), CONST_INFO_PK)
-FARADAY_CLI_SK = os.path.join(FARADAY_BASE, CONST_CLI_SK)
-FARADAY_USER_CLI_SK = os.path.join(os.getenv('FARADAY_LICENSE_HOME', os.path.expanduser(CONST_FARADAY_HOME_PATH)), CONST_CLI_SK)
-FARADAY_CLI_PK = os.path.join(FARADAY_BASE, CONST_CLI_PK)
-FARADAY_USER_CLI_PK = os.path.join(os.getenv('FARADAY_LICENSE_HOME', os.path.expanduser(CONST_FARADAY_HOME_PATH)), CONST_CLI_PK)
-
+FARADAY_CLIENT_BASE = FARADAY_BASE
 
 FARADAY_USER_HOME = os.path.expanduser(CONST_FARADAY_HOME_PATH)
 
@@ -215,38 +189,10 @@ def getParserArgs():
                         default=None)
 
     parser.add_argument('-v', '--version', action='version',
-                        version='Faraday v{version}'.format(version=f_version))
+                        version='Faraday Client v{version}'.format(version=__version__))
 
     return parser.parse_args()
 
-
-def check_dependencies_or_exit():
-    """
-    Dependency resolver based on a previously specified CONST_REQUIREMENTS_FILE.
-    Currently checks a list of dependencies from a file and exits if they are not met.
-    """
-
-    installed_deps, missing_deps, conflict_deps = dependencies.check_dependencies(requirements_file=FARADAY_REQUIREMENTS_FILE)
-
-    logger.info("Checking dependencies...")
-
-    if conflict_deps:
-        logger.info("Some dependencies are old. Update them with \"pip install -r requirements_server.txt -U\"")
-
-    if missing_deps:
-
-        install_deps = query_yes_no("Do you want to install them?", default="no")
-
-        if install_deps:
-            dependencies.install_packages(missing_deps)
-            logger.info("Dependencies installed. Please launch Faraday Server again.")
-            sys.exit(0)
-        else:
-            logger.error("Dependencies not met. Please refer to the documentation in order to install them. [%s]",
-                         ", ".join(missing_deps))
-            sys.exit(1)
-
-    logger.info("Dependencies met")
 
 def setConf():
     """
@@ -276,7 +222,7 @@ def setConf():
     CONF.setApiRestfulConInfoPort(port_rest)
 
 
-def startFaraday():
+def start_faraday_client():
     """Application startup.
 
     Starts a MainApplication with the previously parsed arguments, and handles
@@ -425,60 +371,6 @@ def checkFolder(folder):
         os.makedirs(folder)
 
 
-def checkLicense():
-
-    try:
-        getInstanceConfiguration().setVersion(f_version)
-
-        files = {FARADAY_USER_LICENSE: FARADAY_LICENSE,
-                 FARADAY_USER_INFO_PK: FARADAY_INFO_PK,
-                 FARADAY_USER_CLI_SK: FARADAY_CLI_SK,
-                 FARADAY_USER_CLI_PK: FARADAY_CLI_PK}
-
-        for user_file, lic_file in files.items():
-            if (not os.path.isfile(user_file)):
-                if (not os.path.isfile(lic_file)):
-                    get_logger("launcher").error(
-                        ("You're missing some license files."
-                         "\nIf you have a valid license "
-                         "make sure they files are in "
-                         "[your-faraday-installation]/doc/ "
-                         "or in ~/.faraday/doc/"
-                         "\nIf you don't have a valid license, "
-                         "please contact customer support"))
-                    sys.exit(-1)
-                shutil.copy(lic_file, user_file)
-
-        license = b64decode(open(FARADAY_USER_LICENSE, 'r').read())
-        info_pk = PublicKey(b64decode(open(FARADAY_USER_INFO_PK, 'r').read()))
-        cli_sk = PrivateKey(b64decode(open(FARADAY_USER_CLI_SK, 'r').read()))
-
-        box = Box(cli_sk, info_pk)
-        license = box.decrypt(license)
-        conf = json.loads(license)
-        doc = {"mws": conf["mws"], "mus": conf["mus"],
-               "cdate": conf["creation_date"], "ver": getInstanceConfiguration().getVersion(),
-               "email": conf["email"], "lic_db": CONST_LICENSES_DB}
-
-        CONF = getInstanceConfiguration()
-        CONF.setLimits((doc["mws"], doc["mus"]))
-        CONF.setLicenseEmail(conf["email"])
-        CONF.setLicenseDate(conf["creation_date"])
-
-        ex_date = date_expired(conf["creation_date"])
-
-        if ex_date['expired']:
-            logger.warning(
-                "\n[!] Your license has expired.\nPlease visit https://www.faradaysec.com/users/ to extend your license.\n")
-        elif ex_date['near']:
-            logger.warning(
-                "\n[!] Your current license is due to expire soon.\nPlease visit https://www.faradaysec.com/users/ to extend your license before it expires.\n")
-    except Exception:
-        get_logger("launcher").error(
-            "It seems that something's wrong with your license\nPlease contact customer support")
-        sys.exit(-1)
-
-
 def printBanner():
     """
     Prints Faraday's ascii banner.
@@ -508,13 +400,6 @@ def checkUpdates():
         version = getInstanceConfiguration().getVersion()
 
         getInstanceConfiguration().setAppname(appname + ver_k[version.split("-")[0]])
-
-        cli_pk = open(FARADAY_USER_CLI_PK, 'r').read()
-        getInstanceConfiguration().setKey(cli_pk)
-
-        error_code, _ = check_license(getInstanceConfiguration().getVersion(),getInstanceConfiguration().getKey())
-        if error_code == -1:
-            sys.exit(error_code)
 
     except Exception as e:
         logger.error(e)
@@ -636,18 +521,11 @@ def main():
     checkConfiguration(args.gui)
     setConf()
 
-    if args.license_path:
-        license.install_from_tgz(args.license_path)
-    checkLicense()
-
     login(args.login)
     check_faraday_version()
     checkUpdates()
-    startFaraday()
+    start_faraday_client()
 
 
 if __name__ == '__main__':
     main()
-
-
-# I'm Py3
