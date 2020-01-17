@@ -10,11 +10,12 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [ ]
+with open('requirements.txt') as requirements:
+    requirements = [requirement.strip('\n') for requirement in requirements.readlines()]
 
-setup_requirements = [ ]
+setup_requirements = []
 
-test_requirements = [ ]
+test_requirements = []
 
 setup(
     author="Matias Lang",
@@ -42,7 +43,12 @@ setup(
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/cript0nauta/faraday_client',
+    url='https://github.com/infobyte/faraday_client',
     version='1.0.0',
     zip_safe=False,
+    entry_points={  # Optional
+          'console_scripts': [
+              'faraday-client=faraday_client.start_client:main',
+          ],
+      },
 )
