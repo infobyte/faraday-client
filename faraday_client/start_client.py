@@ -12,7 +12,6 @@ from builtins import input
 
 import os
 import sys
-import imp
 import shutil
 import getpass
 import argparse
@@ -20,8 +19,9 @@ import requests
 import requests.exceptions
 import logging
 
-from faraday.config.configuration import getInstanceConfiguration
-from faraday.config.constant import (
+
+from faraday_client.config.configuration import getInstanceConfiguration
+from faraday_client.config.constant import (
     CONST_USER_HOME,
     CONST_FARADAY_PLUGINS_PATH,
     CONST_FARADAY_PLUGINS_REPO_PATH,
@@ -35,25 +35,23 @@ from faraday.config.constant import (
     CONST_REQUIREMENTS_FILE,
     CONST_FARADAY_FOLDER_LIST,
 )
+from faraday_client.utils.logger import set_logging_level, get_logger
 
 CONST_FARADAY_HOME_PATH = os.path.expanduser('~/.faraday')
-from faraday.utils import dependencies
-from faraday.server.utils.logger import get_logger, set_logging_level
-from faraday.utils.user_input import query_yes_no
 
-from faraday import __version__ as f_version
-from faraday.client.persistence.server import server
-from faraday.client.persistence.server.server import login_user, get_user_info
+from faraday_client import __version__
+from faraday_client.persistence.server import server
+from faraday_client.persistence.server.server import login_user, get_user_info
 
-import faraday
+import faraday_client
 
 from colorama import Fore, Back, Style
 
 USER_HOME = os.path.expanduser(CONST_USER_HOME)
 # find_module returns if search is successful, the return value is a 3-element tuple (file, pathname, description):
-FARADAY_BASE = os.path.dirname(faraday.__file__)
+FARADAY_BASE = os.path.dirname(faraday_client.__file__)
 os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  # Use double dirname to obtain parent directory
-FARADAY_CLIENT_BASE = os.path.join(FARADAY_BASE, 'client')
+FARADAY_CLIENT_BASE = FARADAY_BASE
 
 FARADAY_USER_HOME = os.path.expanduser(CONST_FARADAY_HOME_PATH)
 
@@ -122,7 +120,8 @@ def getParserArgs():
                         action="store_true",
                         dest="disable_excepthook",
                         default=False,
-                        help="Disable the application exception hook that allows to send error reports to developers.")
+                        help="Disable the application exception hook that allows to send error \
+                        reports to developers.")
 
     parser.add_argument('--login',
                         action="store_true",
@@ -130,9 +129,7 @@ def getParserArgs():
                         default=False,
                         help="Enable prompt for authentication Database credentials")
 
-    parser.add_argument('--dev-mode',
-                        action="store_true",
-                        dest="dev_mode",
+    parser.add_argument('--dev-mode', action="store_true", dest="dev_mode",
                         default=False,
                         help="Enable dev mode. This will use the user config and plugin folder.")
 
@@ -146,7 +143,8 @@ def getParserArgs():
                         action="store",
                         dest="gui",
                         default="gtk",
-                        help="Select interface to start Faraday. Supported values are 'gtk' and 'no' (no GUI at all). Defaults to GTK")
+                        help="Select interface to start faraday. Supported values are "
+                              "gtk and 'no' (no GUI at all). Defaults to GTK")
 
     parser.add_argument('--cli',
                         action="store_true",
@@ -186,39 +184,15 @@ def getParserArgs():
     parser.add_argument('--keep-old', action='store_true', help='Keep old object in CLI mode if Faraday find a conflict')
     parser.add_argument('--keep-new', action='store_true', help='Keep new object in CLI mode if Faraday find a conflict (DEFAULT ACTION)')
 
+    parser.add_argument('--license-path',
+                        help='Path to the licence .tar.gz',
+                        default=None)
+
     parser.add_argument('-v', '--version', action='version',
-                        version='Faraday v{version}'.format(version=f_version))
+                        version='Faraday Client v{version}'.format(version=__version__))
 
     return parser.parse_args()
 
-
-def check_dependencies_or_exit():
-    """
-    Dependency resolver based on a previously specified CONST_REQUIREMENTS_FILE.
-    Currently checks a list of dependencies from a file and exits if they are not met.
-    """
-
-    installed_deps, missing_deps, conflict_deps = dependencies.check_dependencies(requirements_file=FARADAY_REQUIREMENTS_FILE)
-
-    logger.info("Checking dependencies...")
-
-    if conflict_deps:
-        logger.info("Some dependencies are old. Update them with \"pip install -r requirements_server.txt -U\"")
-
-    if missing_deps:
-
-        install_deps = query_yes_no("Do you want to install them?", default="no")
-
-        if install_deps:
-            dependencies.install_packages(missing_deps)
-            logger.info("Dependencies installed. Please launch Faraday Server again.")
-            sys.exit(0)
-        else:
-            logger.error("Dependencies not met. Please refer to the documentation in order to install them. [%s]",
-                         ", ".join(missing_deps))
-            sys.exit(1)
-
-    logger.info("Dependencies met")
 
 def setConf():
     """
@@ -248,7 +222,7 @@ def setConf():
     CONF.setApiRestfulConInfoPort(port_rest)
 
 
-def startFaraday():
+def start_faraday_client():
     """Application startup.
 
     Starts a MainApplication with the previously parsed arguments, and handles
@@ -421,21 +395,14 @@ def checkUpdates():
     resp = u"OK"
     try:
 
-        getInstanceConfiguration().setVersion(f_version)
-        getInstanceConfiguration().setAppname("Faraday - Penetration Test IDE Community")
-        parameter = {"version": getInstanceConfiguration().getVersion()}
+        appname = "Faraday - Penetration Test IDE "
+        ver_k = {'p': 'Professional', 'c': 'Corporate'}
+        version = getInstanceConfiguration().getVersion()
 
-        resp = requests.get(uri, params=parameter, timeout=1, verify=True)
-        resp = resp.text.strip()
+        getInstanceConfiguration().setAppname(appname + ver_k[version.split("-")[0]])
+
     except Exception as e:
         logger.error(e)
-    version = getInstanceConfiguration().getVersion()
-    if 'b' in version.split("+")[0]:
-        return
-    if not resp == u'OK':
-        logger.info("You have available updates. Run ./faraday.py --update to catchup!")
-    else:
-        logger.info("No updates available, enjoy Faraday.")
 
 
 def check_faraday_version():
@@ -447,7 +414,7 @@ def check_faraday_version():
 
 
 def try_login_user(server_uri, api_username, api_password):
-    
+
     try:
         session_cookie = login_user(server_uri, api_username, api_password)
         return session_cookie
@@ -466,7 +433,6 @@ def doLoginLoop(force_login=False):
     """
 
     try:
-
         CONF = getInstanceConfiguration()
         old_server_url = CONF.getAPIUrl()
         api_username = CONF.getAPIUsername()
@@ -500,8 +466,8 @@ def doLoginLoop(force_login=False):
                 CONF.saveConfig()
 
                 user_info = get_user_info()
-                if (user_info is None) or (not user_info) or ('username' not in user_info):
-                    print('Login failed, please try again. You have %d more attempts' % (3 - attempt))
+                if (user_info is None) or (not user_info) or ('username' not in user_info) or 'roles' not in user_info or 'client' in user_info['roles']:
+                    print("You can't login as a client. You have %s attempt(s) left." % (3 - attempt))
                     continue
 
                 logger.info('Login successful: {0}'.format(api_username))
@@ -549,18 +515,17 @@ def main():
     args = getParserArgs()
     setupFolders(CONST_FARADAY_FOLDER_LIST)
     printBanner()
+    logger.info("Dependencies met.")
     if args.cert_path:
         os.environ[REQUESTS_CA_BUNDLE_VAR] = args.cert_path
     checkConfiguration(args.gui)
     setConf()
+
     login(args.login)
     check_faraday_version()
     checkUpdates()
-    startFaraday()
+    start_faraday_client()
 
 
 if __name__ == '__main__':
     main()
-
-
-# I'm Py3
