@@ -390,28 +390,6 @@ _/ ____\_____  ____________     __| _/_____   ___.__.
     logger.info("Starting Faraday IDE.")
 
 
-def checkUpdates():
-    uri = getInstanceConfiguration().getUpdatesUri()
-    resp = u"OK"
-    try:
-
-        appname = "Faraday - Penetration Test IDE "
-        ver_k = {'p': 'Professional', 'c': 'Corporate'}
-        version = getInstanceConfiguration().getVersion()
-
-        getInstanceConfiguration().setAppname(appname + ver_k[version.split("-")[0]])
-
-    except Exception as e:
-        logger.error(e)
-
-
-def check_faraday_version():
-    try:
-        server.check_faraday_version()
-    except RuntimeError:
-        get_logger("launcher").error(
-            "The server is running a different Faraday version than the client you are running. Version numbers must match!")
-
 
 def try_login_user(server_uri, api_username, api_password):
 
@@ -455,7 +433,6 @@ def doLoginLoop(force_login=False):
 
             api_username = input("Username (press enter for faraday): ") or "faraday"
             api_password = getpass.getpass('Password: ')
-
             session_cookie = try_login_user(new_server_url, api_username, api_password)
 
             if session_cookie:
@@ -466,13 +443,15 @@ def doLoginLoop(force_login=False):
                 CONF.saveConfig()
 
                 user_info = get_user_info()
-                if (user_info is None) or (not user_info) or ('username' not in user_info) or 'roles' not in user_info or 'client' in user_info['roles']:
-                    print("You can't login as a client. You have %s attempt(s) left." % (3 - attempt))
+                if not user_info:
                     continue
-
-                logger.info('Login successful: {0}'.format(api_username))
-                break
-
+                else:
+                    if 'roles' in user_info:
+                        if 'client' in user_info['roles']:
+                            print("You can't login as a client. You have %s attempt(s) left." % (3 - attempt))
+                            continue
+                    logger.info('Login successful: {0}'.format(api_username))
+                    break
             print('Login failed, please try again. You have %d more attempts' % (3 - attempt))
 
         else:
@@ -522,8 +501,6 @@ def main():
     setConf()
 
     login(args.login)
-    check_faraday_version()
-    checkUpdates()
     start_faraday_client()
 
 

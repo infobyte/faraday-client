@@ -7,7 +7,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 from __future__ import absolute_import
-from __future__ import print_function
+
 from past.builtins import basestring
 
 import os
@@ -57,7 +57,7 @@ from faraday_client.config.configuration import getInstanceConfiguration
 from faraday_client.utils.logger import get_logger
 from faraday_client.gui.gtk.appwindow import AppWindow
 
-from faraday_client.persistence.server.server import is_authenticated, check_faraday_version, Unauthorized, get_user_info
+from faraday_client.persistence.server.server import is_authenticated, Unauthorized, get_user_info
 
 from faraday_client.gui.gtk.server import ServerIO
 from faraday_client.gui.gtk.dialogs import aboutDialog
@@ -398,14 +398,6 @@ class GuiApp(Gtk.Application, FaradayUi):
             success = False
 
         else:
-            try:
-                check_faraday_version()
-            except RuntimeError:
-                errorDialog(parent,
-                            "The server ir running a different Faraday version then the "
-                            "client you are runnung. Version numbers must match!")
-                success = False
-                return success
             CONF.setAPIUrl(server_url)
             CONF.saveConfig()
             self.reload_workspaces()
