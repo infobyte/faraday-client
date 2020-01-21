@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Faraday Penetration Test IDE
 Copyright (C) 2016  Infobyte LLC (http://www.infobytesec.com/)
