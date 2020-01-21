@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
@@ -9,14 +8,14 @@ from __future__ import absolute_import
 
 
 class ModelObjectContainer(dict):
-                                   
+
     """Used to provide a consistent interface while adding model objects to the currently running environment"""
     def __init__(self, *args):
         self.container = {}
 
     def __setitem__(self, k, v):
-                                       
-        self.container.__setitem__(k, v) 
+
+        self.container.__setitem__(k, v)
 
     def __getitem__(self, k):
         return self.container.get(k)
@@ -44,7 +43,7 @@ class ModelObjectContainer(dict):
             if elem.__getattribute__(attrName) == attrValue:
                 return True
         return False
-        
+
     def __len__(self):
         return len(self.container)
 
