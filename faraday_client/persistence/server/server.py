@@ -1640,8 +1640,9 @@ def server_info():
 
 def login_user(uri, uname, upass):
     auth = {"email": uname, "password": upass}
+    headers = {'User-Agent': f'faraday-client/{f_version}'}
     try:
-        resp = requests.post(urlparse.urljoin(uri, "/_api/login"), json=auth)
+        resp = requests.post(urlparse.urljoin(uri, "/_api/login"), json=auth, headers=headers)
         if resp.status_code == 401:
             return None
         else:
