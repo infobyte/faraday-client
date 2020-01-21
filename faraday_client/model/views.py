@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Faraday Penetration Test IDE
 Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
@@ -10,7 +9,7 @@ class View:
     """A view for the data in a CouchDB"""
     def __init__(self):
         pass
-        
+
 
 class HostsServiceFrequencies(View):
     pass

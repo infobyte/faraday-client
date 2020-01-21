@@ -1,5 +1,3 @@
-#!/usr/bin/env python2.7
-# -*- coding: utf-8 -*-
 """
 Faraday Penetration Test IDE
 Copyright (C) 2017  Infobyte LLC (http://www.infobytesec.com/)
