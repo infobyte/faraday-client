@@ -524,8 +524,9 @@ def getLoggedUser():
     """
     Returns the currently logged username
     """
-    global __current_logged_user
-    return __current_logged_user
+    return CONF.getDBUser()
+    # global __current_logged_user
+    # return __current_logged_user
 #-------------------------------------------------------------------------------
 
 #TODO: implement!!!!!

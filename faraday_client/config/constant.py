@@ -24,7 +24,6 @@ CONST_FARADAY_BASE_CFG = "config/default.xml"
 CONST_FARADAY_USER_CFG = "config/config.xml"
 CONST_LICENSES_DB = "faraday_licenses"
 CONST_VULN_MODEL_DB = "cwe"
-CONST_BLACKDBS = ('cwe','reports', CONST_LICENSES_DB)
 
 CONST_USER_HOME = "~"
 CONST_USER_ZSHRC = "~/.zshrc"

@@ -48,7 +48,7 @@ def transform_dict_to_object(columns, register):
         if val in ["owned", "confirmed"]:
             value[val] = False
 
-        elif val in ["ports", "hostnames", "refs", "policyviolations"]:
+        elif val in ["ports", "hostnames", "refs", "policyviolations", "tags"]:
             value[val] = []
 
         elif key == "service_status":
@@ -77,7 +77,7 @@ def transform_dict_to_object(columns, register):
                 value["description"] = register[key]
                 value["desc"] = register[key]
 
-            elif val in ["refs", "hostnames", "policyviolations"]:
+            elif val in ["refs", "hostnames", "policyviolations", "tags"]:
                 value[val] = register[key].split(",")
 
             elif key == "service_status":
@@ -166,7 +166,6 @@ def parse_vulnerability(register):
         "vulnerability_resolution" : "resolution",
         "vulnerability_status" : "status",
         "vulnerability_policyviolations" : "policyviolations" #list
-
     }
 
     obj = transform_dict_to_object(columns, register)
@@ -205,7 +204,8 @@ def parse_vulnerability_web(register):
         "vulnerability_web_query" : "query",
         "vulnerability_web_resolution" : "resolution",
         "vulnerability_web_policyviolations" : "policyviolations", #list
-        "vulnerability_web_path" : "path"
+        "vulnerability_web_path" : "path",
+        "vulnerability_web_tags" : "tags" #list
     }
 
     obj = transform_dict_to_object(columns, register)

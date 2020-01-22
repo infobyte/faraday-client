@@ -43,11 +43,8 @@ class WorkspaceManager:
         except Unauthorized:
             raise WorkspaceException(
                 ("You're not authorized to create workspaces\n"
-                 "Make sure you're an admin and add your credentials"
-                 "to your user configuration "
-                 "file in $HOME/.faraday/config/user.xml\n"
-                 "For example: "
-                 "<couch_uri>http://john:password@127.0.0.1:5984</couch_uri>"))
+                 "Make sure you're an admin and you're logged in, "
+                 "running faraday with the --login option."))
         except Exception as e:
             raise WorkspaceException(str(e))
         self.mappersManager.createMappers(name)
@@ -67,10 +64,9 @@ class WorkspaceManager:
         except Unauthorized:
             raise WorkspaceException(
                 ("You're not authorized to access this workspace\n"
-                 "Add your credentials to your user configuration "
-                 "file in $HOME/.faraday/config/user.xml\n"
-                 "For example: "
-                 "<couch_uri>http://john:password@127.0.0.1:5984</couch_uri>"))
+                 "Make sure you're an authorized user for this "
+                 "workspace and you're logged in, "
+                 "running faraday with the --login option."))
         except Exception as e:
             notification_center.DBConnectionProblem(e)
             raise WorkspaceException(str(e))
