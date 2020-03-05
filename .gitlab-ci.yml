@@ -132,7 +132,7 @@ generate_rpm:
 
 generate_deb:
     image: registry.gitlab.com/faradaysec/integrationrepo
-    stage: build
+    stage: build_installers
     before_script:
         - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday-linux-installers-builder.git
         - mv py3.tar /
