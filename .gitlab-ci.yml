@@ -63,6 +63,7 @@ build_nix_python3:
     - 'nix-shell -p makeWrapper --command "makeWrapper /opt/faraday/bin/python /opt/faraday/bin/test --prefix GI_TYPELIB_PATH : $(find /nix/store -name "girepository-1.0" | tr "\n" ":")"'
     - nix-collect-garbage && /opt/faraday/bin/test -c "import gi;gi.require_version('Gtk', '3.0');gi.require_version('Vte', '2.91');from gi.repository import Gio, Gtk, GdkPixbuf, Vte, GLib, GObject, Gdk" # Test if GTK will work
     - tar rvf /py3.tar /opt/faraday
+    - tar rvf /py3.tar /nix
     - mv /py3.tar $CI_PROJECT_DIR
   artifacts:
     name: python3
