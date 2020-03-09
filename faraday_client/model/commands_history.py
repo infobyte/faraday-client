@@ -31,7 +31,10 @@ def get_private_ip():
     if ip:
         if not ip.startswith('127'):
             return ip
-    ip = socket.gethostbyname(socket.getfqdn())
+    try:
+        ip = socket.gethostbyname(socket.getfqdn())
+    except socket.gaierror:
+        ip = socket.getfqdn()
     if ip:
         if not ip.startswith('127'):
             return ip

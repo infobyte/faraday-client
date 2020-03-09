@@ -8,14 +8,11 @@ import os
 
 CONST_REQUIREMENTS_FILE = 'requirements.txt'
 CONST_FARADAY_HOME_PATH = os.path.join(os.getenv('FARADAY_HOME', os.path.expanduser('~/')), '.faraday')
-CONST_FARADAY_PLUGINS_PATH = 'plugins'
-CONST_FARADAY_PLUGINS_REPO_PATH = 'plugins/repo'
 CONST_FARADAY_IMAGES = 'images/'
 CONST_FARADAY_LOGS_PATH = 'logs/'
 CONST_FARADAY_FOLDER_LIST = [ "config", "data", "images",
                         "persistence", "plugins",
                         "report", "temp", "zsh", "logs" ]
-
 
 CONST_FARADAY_ZSHRC = "zsh/.zshrc"
 CONST_FARADAY_ZSH_FARADAY = "zsh/faraday.zsh"
@@ -28,6 +25,3 @@ CONST_VULN_MODEL_DB = "cwe"
 CONST_USER_HOME = "~"
 CONST_USER_ZSHRC = "~/.zshrc"
 CONST_ZSH_PATH = "zsh"
-
-
-# I'm Py3

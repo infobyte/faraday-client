@@ -4,6 +4,9 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+import json
+
+import requests
 from past.builtins import basestring
 from builtins import range
 
@@ -15,6 +18,7 @@ from threading import Thread
 from multiprocessing import JoinableQueue, Process
 
 from faraday_client.config.configuration import getInstanceConfiguration
+from faraday_client.persistence.server.server import _conf, _get_base_server_url
 from faraday_client.plugins.plugin import PluginProcess
 import faraday_client.model.api
 from faraday_client.model.commands_history import CommandRunInformation
@@ -27,6 +31,7 @@ from faraday_client.config.constant import (
 from faraday_client.start_client import (
     CONST_FARADAY_HOME_PATH,
 )
+
 CONF = getInstanceConfiguration()
 
 logger = logging.getLogger(__name__)
@@ -83,7 +88,7 @@ class PluginController(Thread):
     def __init__(self, id, plugin_manager, mapper_manager, pending_actions, end_event=None):
         super(PluginController, self).__init__(name="PluginControllerThread")
         self.plugin_manager = plugin_manager
-        self._plugins = plugin_manager.getPlugins()
+        self._plugins = list(plugin_manager.plugins())
         self.id = id
         self._actionDispatcher = None
         self._setupActionDispatcher()
@@ -163,24 +168,20 @@ class PluginController(Thread):
         :param isReport: Report or output from shell
         :return: None
         """
-        output_queue = JoinableQueue()
-        plugin.set_actions_queue(self.pending_actions)
-        self.plugin_process = PluginProcess(plugin, output_queue, isReport)
-        logger.info("Created plugin_process (%d) for plugin instance (%d)", id(self.plugin_process), id(plugin))
-        self.pending_actions.put((Modelactions.PLUGINSTART, plugin.id, command.getID()))
-        output_queue.put((output, command.getID()))
-        plugin_commiter = PluginCommiter(
-            output_queue,
-            output,
-            self.pending_actions,
-            plugin,
-            command,
-            self._mapper_manager,
-            self.end_event,
-        )
-        plugin_commiter.start()
-        # This process is stopped when plugin commiter joins output queue
-        self.plugin_process.start()
+        plugin.processOutput(output)
+        command.duration = time.time() - command.itime
+        plugin_result = plugin.get_json()
+        self.send_data(command.workspace, plugin_result)
+        #requests.put(f'{base_url}/v2/ws/{workspace}/', json=command.toDict())
+
+    def send_data(self, workspace, data):
+        cookies = _conf().getDBSessionCookies()
+        base_url = _get_base_server_url()
+        res = requests.post(f'{base_url}/_api/v2/ws/{workspace}/bulk_create/', cookies=cookies, json=json.loads(data))
+        if res.status_code != 201:
+            logger.error('Server responded with status code {0}. API response was {1}'.format(res.status_code, res.text))
+            return False
+        return True
 
     def _processAction(self, action, parameters):
         """
@@ -221,7 +222,7 @@ class PluginController(Thread):
             self._plugins[plugin_id].updateSettings(new_settings)
 
     def createPluginSet(self, pid):
-        self.plugin_sets[pid] = self.plugin_manager.getPlugins()
+        self.plugin_sets[pid] = self.plugin_manager.plugins()
 
     def processCommandInput(self, pid, cmd, pwd):
         """
@@ -268,7 +269,7 @@ class PluginController(Thread):
         return True
 
     def processReport(self, plugin_id, filepath, ws_name=None):
-        if plugin_id not in self._plugins:
+        if plugin_id not in [plugin[0] for plugin in self._plugins]:
             logger.warning("Unknown Plugin ID: %s", plugin_id)
             return False
         if not ws_name:
@@ -286,11 +287,11 @@ class PluginController(Thread):
         command_id = self._mapper_manager.save(cmd_info)
         cmd_info.setID(command_id)
 
-        if plugin_id in self._plugins:
+        if plugin_id in [plugin[0] for plugin in self._plugins]:
             logger.info('Processing report with plugin {0}'.format(plugin_id))
-            self._plugins[plugin_id].workspace = ws_name
             with open(filepath, 'rb') as output:
-                self.processOutput(self._plugins[plugin_id], output.read(), cmd_info, True)
+                plugin = [plugin[1] for plugin in self._plugins if plugin[0] == plugin_id].pop()
+                self.processOutput(plugin, output.read(), cmd_info, True)
             return command_id
 
         # Plugin to process this report not found, update duration of plugin process

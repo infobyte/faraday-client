@@ -23,8 +23,6 @@ import logging
 from faraday_client.config.configuration import getInstanceConfiguration
 from faraday_client.config.constant import (
     CONST_USER_HOME,
-    CONST_FARADAY_PLUGINS_PATH,
-    CONST_FARADAY_PLUGINS_REPO_PATH,
     CONST_FARADAY_IMAGES,
     CONST_FARADAY_USER_CFG,
     CONST_FARADAY_BASE_CFG,
@@ -35,7 +33,7 @@ from faraday_client.config.constant import (
     CONST_REQUIREMENTS_FILE,
     CONST_FARADAY_FOLDER_LIST,
 )
-from faraday_client.utils.logger import set_logging_level, get_logger
+from faraday_client.utils.logger import set_logging_level
 
 CONST_FARADAY_HOME_PATH = os.path.expanduser('~/.faraday')
 
@@ -54,10 +52,6 @@ os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  # Use double dirna
 FARADAY_CLIENT_BASE = FARADAY_BASE
 
 FARADAY_USER_HOME = os.path.expanduser(CONST_FARADAY_HOME_PATH)
-
-FARADAY_PLUGINS_PATH = os.path.join(FARADAY_USER_HOME, CONST_FARADAY_PLUGINS_PATH)
-
-FARADAY_PLUGINS_BASEPATH = os.path.join(FARADAY_CLIENT_BASE, CONST_FARADAY_PLUGINS_REPO_PATH)
 
 FARADAY_BASE_IMAGES = os.path.join(FARADAY_CLIENT_BASE, "data", CONST_FARADAY_IMAGES)
 
@@ -259,33 +253,6 @@ def start_faraday_client():
     return exit_status
 
 
-def setupPlugins(dev_mode=False):
-    """
-    Checks and handles Faraday's plugin status.
-
-    When dev_mode is True, the user enters in development mode and the plugins
-    will be replaced with the latest ones.
-
-    Otherwise, it checks if the plugin folders exists or not, and creates it
-    with its content.
-
-    TODO: When dependencies are not satisfied ask user if he wants to try and
-    run faraday with a inestability warning.
-    """
-
-    if dev_mode:
-        logger.warning("Running under plugin development mode!")
-        logger.warning("Using user plugins folder")
-    else:
-        if os.path.isdir(FARADAY_PLUGINS_PATH):
-            logger.info("Removing old plugins folder.")
-            shutil.rmtree(FARADAY_PLUGINS_PATH)
-        else:
-            logger.info("No plugins folder detected. Creating new one.")
-
-        shutil.copytree(FARADAY_PLUGINS_BASEPATH, FARADAY_PLUGINS_PATH)
-
-
 def setupZSH():
     """
     Checks and handles Faraday's integration with ZSH.
@@ -340,8 +307,6 @@ def checkConfiguration(gui_type):
     and ZSH integration.
     """
     logger.info("Checking configuration.")
-    logger.info("Setting up plugins.")
-    setupPlugins(args.dev_mode)
     logger.info("Setting up ZSH integration.")
     setupZSH()
     logger.info("Setting up user configuration.")
