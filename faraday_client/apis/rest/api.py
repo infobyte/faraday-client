@@ -317,7 +317,7 @@ class PluginControllerAPI(RESTApi):
                     try:
                         cmd = base64.b64decode(json_data.get('cmd')).decode()
                         pwd = base64.b64decode(json_data.get('pwd')).decode()
-                    except:
+                    except Exception as ex:
                         cmd = ''
                         pwd = ''
                     pid = json_data.get('pid')

@@ -28,7 +28,8 @@ def safe_io_with_server(response_in_emergency):
                         "URL is not correctly formated. Please change it and "
                         "remember to set it with a valid protocol, like http.\n"
                         "For example: http://faradayserver:port/")
-            except Exception:
+            except Exception as ex:
+                get_logger().exception(ex)
                 res = response_in_emergency
                 get_logger("Server-GTK IO").error("It looks like the Faraday Server is not running\n")
 
