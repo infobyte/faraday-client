@@ -138,7 +138,7 @@ class PluginController(Thread):
         return block_flag
 
     def _get_plugins_by_input(self, cmd, plugin_set):
-        for plugin in plugin_set.values():
+        for plugin_id, plugin in plugin_set:
             if isinstance(cmd, bytes):
                 cmd = cmd.decode()
             if plugin.canParseCommandString(cmd):
@@ -168,7 +168,7 @@ class PluginController(Thread):
         :param isReport: Report or output from shell
         :return: None
         """
-        plugin.processOutput(output)
+        plugin.processOutput(output.decode('utf8'))
         command.duration = time.time() - command.itime
         plugin_result = plugin.get_json()
         self.send_data(command.workspace, plugin_result)
@@ -222,7 +222,7 @@ class PluginController(Thread):
             self._plugins[plugin_id].updateSettings(new_settings)
 
     def createPluginSet(self, pid):
-        self.plugin_sets[pid] = self.plugin_manager.plugins()
+        self.plugin_sets[pid] = [plugin for plugin in self.plugin_manager.plugins()]
 
     def processCommandInput(self, pid, cmd, pwd):
         """
@@ -235,6 +235,7 @@ class PluginController(Thread):
         plugin = self._get_plugins_by_input(cmd, self.plugin_sets[pid])
 
         if plugin:
+            plugin.data_path = CONF.getDataPath()
             modified_cmd_string = plugin.processCommandString("", pwd, cmd)
             if not self._is_command_malformed(cmd, modified_cmd_string):
 

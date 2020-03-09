@@ -24,19 +24,12 @@ Warning:
 """
 from __future__ import absolute_import
 
-import urllib
-
-import os
 import json
 import logging
 from time import sleep
 
-try:
-    import urlparse
-    from urllib import urlencode
-except: # For Python 3
-    import urllib.parse as urlparse
-    from urllib.parse import urlencode
+import urllib.parse as urlparse
+from urllib.parse import urlencode
 
 
 import requests
@@ -50,7 +43,6 @@ from faraday_client.persistence.server.server_io_exceptions import (WrongObjectS
                                                      Unauthorized)
 
 from faraday_client.persistence.server.changes_stream import (
-    CouchChangesStream,
     WebsocketsChangesStream
 )
 
@@ -355,13 +347,6 @@ def _delete_from_server(workspace_name, faraday_object_type, faraday_object_id):
     return _delete(delete_url)
 
 
-@_add_session_cookies
-def _couch_changes(workspace_name, **params):
-    return CouchChangesStream(workspace_name,
-                              _create_couch_db_url(workspace_name),
-                              **params)
-
-
 def _get_faraday_ready_dictionaries(workspace_name, faraday_object_name,
                                     faraday_object_row_name, full_table=True,
                                     **params):
@@ -606,7 +591,9 @@ def get_objects(workspace_name, object_signature, **params):
 
 
 def _websockets_changes(workspace_name, **extra_params):
-    return WebsocketsChangesStream(workspace_name, 'localhost', **extra_params)
+    url = urlparse.urlparse(_get_base_server_url())
+    base_server, _ = url.netloc.split(':')
+    return WebsocketsChangesStream(workspace_name, f'{base_server}', **extra_params)
 
 
 # cha cha cha chaaaanges!
