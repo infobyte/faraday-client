@@ -79,6 +79,7 @@ class WebsocketsChangesStream(ChangesStream):
         self.changes_queue = Queue()
         self.workspace_name = workspace_name
         self._response = None
+        logger.info('Connecting to websocket url {0}'.format("ws://{0}:9000".format(self._base_url)))
         self.ws = websocket.WebSocketApp(
                 "ws://{0}:9000".format(self._base_url),
                 on_message=self.on_message,
@@ -116,8 +117,7 @@ class WebsocketsChangesStream(ChangesStream):
         self.changes_queue.put(message)
 
     def on_error(ws, error):
-        pass
-        print(error)
+        logger.error('Websocket connection error: {0}'.format(error))
 
     def on_close(self):
         pass
