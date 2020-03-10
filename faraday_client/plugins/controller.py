@@ -37,50 +37,6 @@ CONF = getInstanceConfiguration()
 logger = logging.getLogger(__name__)
 
 
-class PluginCommiter(Thread):
-
-    def __init__(self, output_queue, output, pending_actions, plugin, command, mapper_manager, end_event=None):
-        super(PluginCommiter, self).__init__(name="PluginCommiterThread")
-        self.output_queue = output_queue
-        self.pending_actions = pending_actions
-        self.stop = False
-        self.plugin = plugin
-        self.command = command
-        self.mapper_manager = mapper_manager
-        self.output = output
-        self._report_path = os.path.join(CONF.getReportPath(), command.workspace)
-        self._report_ppath = os.path.join(self._report_path, "process")
-        self._report_upath = os.path.join(self._report_path, "unprocessed")
-        self.end_event = end_event
-
-    def stop(self):
-        self.stop = True
-
-    def commit(self):
-        logger.info('Plugin end. Commiting to faraday server.')
-        self.pending_actions.put(
-            (Modelactions.PLUGINEND, self.plugin.id, self.command.getID()))
-        self.command.duration = time.time() - self.command.itime
-        self.mapper_manager.update(self.command)
-        if self.end_event:
-            self.end_event.set()
-
-    def run(self):
-        name = ''
-        try:
-            self.output_queue.join()
-            self.commit()
-            if b'\0' not in self.output and os.path.isfile(self.output):
-                # sometimes output is a filepath
-                name = os.path.basename(self.output)
-                os.rename(self.output,
-                    os.path.join(self._report_ppath, name))
-        except Exception as ex:
-            logger.exception(ex)
-            logger.warning('Something failed, moving file to unprocessed')
-            os.rename(self.output, os.path.join(self._report_upath, name))
-
-
 class PluginController(Thread):
     """
     TODO: Doc string.
@@ -302,6 +258,3 @@ class PluginController(Thread):
 
     def clearActivePlugins(self):
         self._active_plugins = {}
-
-
-# I'm Py3
