@@ -18,3 +18,4 @@ PyGObject==3.32.1
 Flask-Restless>=0.17.0
 lxml==4.3.3
 html2text==2019.8.11
+future>=0.18.2
