@@ -187,10 +187,6 @@ def main():
     # Only parse known args. Unknown ones will be passed on the the called script
     args, unknown = parser.parse_known_args()
 
-    # print("""\nTo login please provide your valid DB Credentials.\n""")
-    # username = raw_input('Username: ')
-    # password = getpass.getpass('Password: ')
-
     if not args.interactive:
         dispatch(args, unknown, parser.format_help(), args.username, args.password)
     else:

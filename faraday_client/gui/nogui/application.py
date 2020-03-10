@@ -8,6 +8,8 @@ from __future__ import absolute_import
 
 import time
 
+import click
+
 from faraday_client.gui.gui_app import FaradayUi
 from faraday_client.gui.nogui.eventwatcher import EventWatcher
 import faraday_client.model.guiapi
@@ -43,7 +45,7 @@ class GuiApp(FaradayUi):
             get_logger(self).error(str(e))
             valid = False
             for i in range(4):
-                workspace = raw_input("Please write the correct, Workspace): ")
+                workspace = click.prompt("Please write the correct, Workspace)")
                 try:
                     ws = super(GuiApp, self).openWorkspace(workspace)
                     valid = True
