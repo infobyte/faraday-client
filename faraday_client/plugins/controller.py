@@ -125,15 +125,28 @@ class PluginController(Thread):
         :return: None
         """
         plugin.processOutput(output.decode('utf8'))
+        base_url = _get_base_server_url()
+        cookies = _conf().getDBSessionCookies()
         command.duration = time.time() - command.itime
         plugin_result = plugin.get_json()
         self.send_data(command.workspace, plugin_result)
-        #requests.put(f'{base_url}/v2/ws/{workspace}/', json=command.toDict())
+        command_id = command.getID()
+        data = command.toDict()
+        data['tool'] = data['command']
+        data.pop('id_available')
+        res = requests.put(
+            f'{base_url}/_api/v2/ws/{command.workspace}/commands/{command_id}/',
+            json=data,
+            cookies=cookies)
+        logger.info('Sent command duration {res.status_code}')
 
     def send_data(self, workspace, data):
         cookies = _conf().getDBSessionCookies()
         base_url = _get_base_server_url()
-        res = requests.post(f'{base_url}/_api/v2/ws/{workspace}/bulk_create/', cookies=cookies, json=json.loads(data))
+        res = requests.post(
+            f'{base_url}/_api/v2/ws/{workspace}/bulk_create/',
+            cookies=cookies,
+            json=json.loads(data))
         if res.status_code != 201:
             logger.error('Server responded with status code {0}. API response was {1}'.format(res.status_code, res.text))
             return False
