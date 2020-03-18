@@ -54,6 +54,7 @@ setup(
     entry_points={  # Optional
           'console_scripts': [
               'faraday-client=faraday_client.start_client:main',
+              'fplugin=faraday_client.bin.fplugin:main',
           ],
       },
 )
