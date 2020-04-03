@@ -67,8 +67,6 @@ FARADAY_BASE_CONFIG_XML = os.path.join(FARADAY_BASE, CONST_FARADAY_BASE_CFG)
 
 USER_ZSHRC = os.path.expanduser(CONST_USER_ZSHRC)
 
-FARADAY_USER_IMAGES = os.path.join(FARADAY_USER_HOME, CONST_FARADAY_IMAGES)
-
 FARADAY_USER_ZSHRC = os.path.join(FARADAY_USER_HOME, CONST_FARADAY_ZSHRC)
 FARADAY_USER_ZSH_PATH = os.path.join(FARADAY_USER_HOME, CONST_ZSH_PATH)
 FARADAY_BASE_ZSH = os.path.join(FARADAY_CLIENT_BASE, CONST_FARADAY_ZSH_FARADAY)
@@ -322,15 +320,6 @@ def setupXMLConfig():
         logger.info("Using custom user configuration.")
 
 
-def setupImages():
-    """
-    Copy png icons
-    """
-    if os.path.exists(FARADAY_USER_IMAGES):
-        shutil.rmtree(FARADAY_USER_IMAGES)
-    shutil.copytree(FARADAY_BASE_IMAGES, FARADAY_USER_IMAGES)
-
-
 def checkConfiguration(gui_type):
     """
     Checks if the environment is ready to run Faraday.
@@ -346,8 +335,6 @@ def checkConfiguration(gui_type):
     setupZSH()
     logger.info("Setting up user configuration.")
     setupXMLConfig()
-    logger.info("Setting up icons for GTK interface.")
-    setupImages()
 
 
 def setupFolders(folderlist):
