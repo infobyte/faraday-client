@@ -138,7 +138,7 @@ class PluginController(Thread):
             f'{base_url}/_api/v2/ws/{command.workspace}/commands/{command_id}/',
             json=data,
             cookies=cookies)
-        logger.info('Sent command duration {res.status_code}')
+        logger.info(f'Sent command duration {res.status_code}')
 
     def send_data(self, workspace, data):
         cookies = _conf().getDBSessionCookies()
