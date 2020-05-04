@@ -14,7 +14,7 @@ import logging
 
 from importlib.machinery import SourceFileLoader
 
-from faraday_plugins.plugins.manager import PluginsManager
+from faraday_plugins.plugins.manager import PluginsManager, CommandAnalyzer
 
 from faraday_client.config.configuration import getInstanceConfiguration
 
@@ -30,6 +30,8 @@ class PluginManager:
         self._plugin_instances = {}
         self._plugin_settings = {}
         self.pending_actions = pending_actions
+        self._plugins_manager = PluginsManager()
+        self.commands_analyzer = CommandAnalyzer(self._plugins_manager)
         self._loadSettings()
 
     def addController(self, controller, id):
@@ -76,10 +78,8 @@ class PluginManager:
                 c_instance.updatePluginSettings(plugin_id, new_settings)
 
     def plugins(self):
-        plugins_manager = PluginsManager()
-        plugins = plugins_manager.get_plugins()
+        plugins = self._plugins_manager.get_plugins()
         for plugin_id, plugin in plugins:
             if plugin_id in self._plugin_settings:
                 plugin.updateSettings(self._plugin_settings[plugin_id]["settings"])
-
-        return plugins_manager.get_plugins()
+        return plugins

@@ -94,12 +94,10 @@ class PluginController(Thread):
         return block_flag
 
     def _get_plugins_by_input(self, cmd, plugin_set):
-        for plugin_id, plugin in plugin_set:
-            if isinstance(cmd, bytes):
-                cmd = cmd.decode()
-            if plugin.canParseCommandString(cmd):
-                return plugin
-        return None
+        if isinstance(cmd, bytes):
+            cmd = cmd.decode()
+        plugin = self.plugin_manager.commands_analyzer.get_plugin(cmd)
+        return plugin
 
     def getAvailablePlugins(self):
         """
@@ -124,7 +122,7 @@ class PluginController(Thread):
         :param isReport: Report or output from shell
         :return: None
         """
-        plugin.processOutput(output.decode('utf8'))
+        plugin.processOutput(output.decode('utf8'), delete_after=True)
         base_url = _get_base_server_url()
         cookies = _conf().getDBSessionCookies()
         command.duration = time.time() - command.itime
@@ -204,7 +202,6 @@ class PluginController(Thread):
         plugin = self._get_plugins_by_input(cmd, self.plugin_sets[pid])
 
         if plugin:
-            plugin.data_path = CONF.getDataPath()
             modified_cmd_string = plugin.processCommandString("", pwd, cmd)
             if not self._is_command_malformed(cmd, modified_cmd_string):
 
