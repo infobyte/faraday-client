@@ -67,8 +67,6 @@ FARADAY_BASE_CONFIG_XML = os.path.join(FARADAY_BASE, CONST_FARADAY_BASE_CFG)
 
 USER_ZSHRC = os.path.expanduser(CONST_USER_ZSHRC)
 
-FARADAY_USER_IMAGES = os.path.join(FARADAY_USER_HOME, CONST_FARADAY_IMAGES)
-
 FARADAY_USER_ZSHRC = os.path.join(FARADAY_USER_HOME, CONST_FARADAY_ZSHRC)
 FARADAY_USER_ZSH_PATH = os.path.join(FARADAY_USER_HOME, CONST_ZSH_PATH)
 FARADAY_BASE_ZSH = os.path.join(FARADAY_CLIENT_BASE, CONST_FARADAY_ZSH_FARADAY)
@@ -259,33 +257,6 @@ def start_faraday_client():
     return exit_status
 
 
-def setupPlugins(dev_mode=False):
-    """
-    Checks and handles Faraday's plugin status.
-
-    When dev_mode is True, the user enters in development mode and the plugins
-    will be replaced with the latest ones.
-
-    Otherwise, it checks if the plugin folders exists or not, and creates it
-    with its content.
-
-    TODO: When dependencies are not satisfied ask user if he wants to try and
-    run faraday with a inestability warning.
-    """
-
-    if dev_mode:
-        logger.warning("Running under plugin development mode!")
-        logger.warning("Using user plugins folder")
-    else:
-        if os.path.isdir(FARADAY_PLUGINS_PATH):
-            logger.info("Removing old plugins folder.")
-            shutil.rmtree(FARADAY_PLUGINS_PATH)
-        else:
-            logger.info("No plugins folder detected. Creating new one.")
-
-        shutil.copytree(FARADAY_PLUGINS_BASEPATH, FARADAY_PLUGINS_PATH)
-
-
 def setupZSH():
     """
     Checks and handles Faraday's integration with ZSH.
@@ -322,15 +293,6 @@ def setupXMLConfig():
         logger.info("Using custom user configuration.")
 
 
-def setupImages():
-    """
-    Copy png icons
-    """
-    if os.path.exists(FARADAY_USER_IMAGES):
-        shutil.rmtree(FARADAY_USER_IMAGES)
-    shutil.copytree(FARADAY_BASE_IMAGES, FARADAY_USER_IMAGES)
-
-
 def checkConfiguration(gui_type):
     """
     Checks if the environment is ready to run Faraday.
@@ -340,14 +302,10 @@ def checkConfiguration(gui_type):
     and ZSH integration.
     """
     logger.info("Checking configuration.")
-    logger.info("Setting up plugins.")
-    setupPlugins(args.dev_mode)
     logger.info("Setting up ZSH integration.")
     setupZSH()
     logger.info("Setting up user configuration.")
     setupXMLConfig()
-    logger.info("Setting up icons for GTK interface.")
-    setupImages()
 
 
 def setupFolders(folderlist):

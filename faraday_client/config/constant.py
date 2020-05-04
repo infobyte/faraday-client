@@ -13,7 +13,7 @@ CONST_FARADAY_PLUGINS_REPO_PATH = 'plugins/repo'
 CONST_FARADAY_IMAGES = 'images/'
 CONST_FARADAY_LOGS_PATH = 'logs/'
 CONST_FARADAY_FOLDER_LIST = [ "config", "data", "images",
-                        "persistence", "plugins",
+                        "persistence",
                         "report", "temp", "zsh", "logs" ]
 
 
