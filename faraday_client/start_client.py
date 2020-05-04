@@ -276,7 +276,11 @@ def setupZSH():
         f.write('ZDOTDIR=$OLDZDOTDIR' + '\n' + content)
     with open(FARADAY_USER_ZSHRC, "a") as f:
         f.write("source \"%s\"" % FARADAY_BASE_ZSH)
-    shutil.copy(FARADAY_BASE_ZSH, FARADAY_USER_ZSH_PATH)
+
+    # Don't use shutil.copy to ensure the destination file will be writable
+    with open(os.path.join(FARADAY_USER_ZSH_PATH, 'faraday.zsh'), 'w') as dst:
+        with open(FARADAY_BASE_ZSH) as src:
+            dst.write(src.read())
 
 
 def setupXMLConfig():
