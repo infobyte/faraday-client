@@ -257,33 +257,6 @@ def start_faraday_client():
     return exit_status
 
 
-def setupPlugins(dev_mode=False):
-    """
-    Checks and handles Faraday's plugin status.
-
-    When dev_mode is True, the user enters in development mode and the plugins
-    will be replaced with the latest ones.
-
-    Otherwise, it checks if the plugin folders exists or not, and creates it
-    with its content.
-
-    TODO: When dependencies are not satisfied ask user if he wants to try and
-    run faraday with a inestability warning.
-    """
-
-    if dev_mode:
-        logger.warning("Running under plugin development mode!")
-        logger.warning("Using user plugins folder")
-    else:
-        if os.path.isdir(FARADAY_PLUGINS_PATH):
-            logger.info("Removing old plugins folder.")
-            shutil.rmtree(FARADAY_PLUGINS_PATH)
-        else:
-            logger.info("No plugins folder detected. Creating new one.")
-
-        shutil.copytree(FARADAY_PLUGINS_BASEPATH, FARADAY_PLUGINS_PATH)
-
-
 def setupZSH():
     """
     Checks and handles Faraday's integration with ZSH.
@@ -329,8 +302,6 @@ def checkConfiguration(gui_type):
     and ZSH integration.
     """
     logger.info("Checking configuration.")
-    logger.info("Setting up plugins.")
-    setupPlugins(args.dev_mode)
     logger.info("Setting up ZSH integration.")
     setupZSH()
     logger.info("Setting up user configuration.")
