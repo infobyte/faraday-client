@@ -122,7 +122,7 @@ class PluginController(Thread):
         :param isReport: Report or output from shell
         :return: None
         """
-        plugin.processOutput(output.decode('utf8'), delete_after=True)
+        plugin.processOutput(output.decode('utf8'))
         base_url = _get_base_server_url()
         cookies = _conf().getDBSessionCookies()
         command.duration = time.time() - command.itime
@@ -216,7 +216,6 @@ class PluginController(Thread):
                 self._active_plugins[pid] = plugin, cmd_info
 
                 return plugin.id, modified_cmd_string
-
         return None, None
 
     def onCommandFinished(self, pid, exit_code, term_output):
