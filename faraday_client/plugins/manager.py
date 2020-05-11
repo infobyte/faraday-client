@@ -6,13 +6,8 @@ See the file 'doc/LICENSE' for the license information
 """
 from __future__ import absolute_import
 
-import os
-import re
-import sys
-import traceback
 import logging
 
-from importlib.machinery import SourceFileLoader
 
 from faraday_plugins.plugins.manager import PluginsManager, CommandAnalyzer
 
@@ -78,7 +73,7 @@ class PluginManager:
                 c_instance.updatePluginSettings(plugin_id, new_settings)
 
     def plugins(self):
-        plugins = self._plugins_manager.get_plugins()
+        plugins = list(self._plugins_manager.get_plugins())
         for plugin_id, plugin in plugins:
             if plugin_id in self._plugin_settings:
                 plugin.updateSettings(self._plugin_settings[plugin_id]["settings"])
