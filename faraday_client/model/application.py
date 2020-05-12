@@ -67,9 +67,8 @@ class MainApplication:
         pending_actions = Queue()
         self._model_controller = ModelController(self._mappers_manager, pending_actions)
 
-        from faraday_client.start_client import FARADAY_PLUGINS_BASEPATH
         self._plugin_manager = PluginManager(
-            FARADAY_PLUGINS_BASEPATH,
+            None,
             pending_actions=pending_actions,
         )
 
