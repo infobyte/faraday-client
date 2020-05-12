@@ -682,13 +682,10 @@ def getInstanceConfiguration():
         if not os.path.exists(config_dir):
             os.mkdir(config_dir)
 
-        faraday_server_config = os.path.join(config_dir, "server.ini")
-        if not os.path.isfile(faraday_server_config):
-            shutil.copy(DEFAULT_SERVER_INI, faraday_server_config)
-
         faraday_user_config = os.path.join(config_dir, "user.xml")
-        if not os.path.isfile(faraday_user_config):
-            shutil.copy(DEFAULT_XML, faraday_user_config)
+        with open(faraday_user_config, 'w') as dst:
+            with open(DEFAULT_XML) as src:
+                dst.write(src.read())
 
         if os.path.exists(os.path.join(config_dir, "user.xml")):
             the_config = Configuration(os.path.join(config_dir, "user.xml"))

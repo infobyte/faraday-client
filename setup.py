@@ -22,6 +22,17 @@ setup_requirements = []
 
 test_requirements = []
 
+try:
+    # When setuptools_scm is installed, it ignores the MANIFEST.in contents,
+    # so a developer won't notice the MANIFEST.in includes are incomplete.
+    # This can make some user bugs irrepoducible in a dev environment,
+    # and we don't want this!
+    # Taken from https://github.com/pypa/setuptools_scm/issues/190#issuecomment-351181286
+    import setuptools_scm.integration
+    setuptools_scm.integration.find_files = lambda _: []
+except ImportError:
+    pass
+
 setup(
     author="Matias Lang",
     author_email='matiasl@faradaysec.com',
@@ -54,6 +65,7 @@ setup(
     entry_points={  # Optional
           'console_scripts': [
               'faraday-client=faraday_client.start_client:main',
+              'fplugin=faraday_client.bin.fplugin:main',
           ],
       },
 )

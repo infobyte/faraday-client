@@ -77,7 +77,7 @@ def dispatch(args, unknown, user_help, username, password):
         else:
             sys.exit(1)
 
-    from faraday import client # pylint:disable=import-outside-toplevel
+    import faraday_client as client # pylint:disable=import-outside-toplevel
     faraday_directory = os.path.dirname(os.path.realpath(os.path.join(client.__file__)))
 
     plugin_path = os.path.join(faraday_directory, "bin/", args.command + '.py')
@@ -186,10 +186,6 @@ def main():
 
     # Only parse known args. Unknown ones will be passed on the the called script
     args, unknown = parser.parse_known_args()
-
-    # print("""\nTo login please provide your valid DB Credentials.\n""")
-    # username = raw_input('Username: ')
-    # password = getpass.getpass('Password: ')
 
     if not args.interactive:
         dispatch(args, unknown, parser.format_help(), args.username, args.password)

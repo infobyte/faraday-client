@@ -3,8 +3,13 @@ include HISTORY.rst
 include LICENSE
 include README.rst
 
-recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
 recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
+
+include faraday_client/zsh/faraday.zsh
+include faraday_client/zsh/faraday-terminal.zsh
+include faraday_client/gui/gtk/menubar.xml
+recursive-include faraday_client/data *
+include faraday_client/plugins/port_mapper.txt

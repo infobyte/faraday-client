@@ -11,7 +11,7 @@ CONST_FARADAY_HOME_PATH = os.path.join(os.getenv('FARADAY_HOME', os.path.expandu
 CONST_FARADAY_IMAGES = 'images/'
 CONST_FARADAY_LOGS_PATH = 'logs/'
 CONST_FARADAY_FOLDER_LIST = [ "config", "data", "images",
-                        "persistence", "plugins",
+                        "persistence",
                         "report", "temp", "zsh", "logs" ]
 
 CONST_FARADAY_ZSHRC = "zsh/.zshrc"
