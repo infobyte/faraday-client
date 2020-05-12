@@ -23,7 +23,7 @@ Warning:
     be always unique.
 """
 from __future__ import absolute_import
-
+import sys
 import json
 import logging
 from time import sleep
@@ -78,7 +78,7 @@ def _conf():
     # Fplugin run in other instance, so this dont generate any trouble.
     if not CONF.getDBSessionCookies() and not FARADAY_UPLOAD_REPORTS_WEB_COOKIE:
         server_url = CONF.getServerURI() if FARADAY_UP else SERVER_URL
-        cookie = login_user(server_url, CONF.getAPIUsername(), CONF.getAPIPassword())
+        cookie = login_user(server_url, CONF.getAPIUsername(), CONF.getAPIPassword(), None)
         CONF.setDBSessionCookies(cookie)
 
     return CONF
@@ -1625,13 +1625,27 @@ def server_info():
     except:
         return None
 
-def login_user(uri, uname, upass):
+def login_user(uri, uname, upass, u2fa_token=None):
     auth = {"email": uname, "password": upass}
     headers = {'User-Agent': f'faraday-client/{f_version}'}
     try:
         resp = requests.post(urlparse.urljoin(uri, "/_api/login"), json=auth, headers=headers)
         if resp.status_code == 401:
             return None
+        elif resp.status_code == 202:
+            if u2fa_token:
+                json_2fa = {"secret": u2fa_token}
+                resp_2fa = requests.post(urlparse.urljoin(uri, "/_api/confirmation"), json=json_2fa, headers=headers,
+                                         cookies=resp.cookies)
+                if resp_2fa.status_code == 200:
+                    return resp_2fa.cookies
+                else:
+                    logger.error("Invalid 2FA Token")
+                    return None
+            else:
+                logger.error("2FA Token Required. Use --2fa parameter")
+                sys.exit(1)
+                return None
         else:
             return resp.cookies
     except requests.adapters.ConnectionError:

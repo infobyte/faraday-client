@@ -123,6 +123,12 @@ def getParserArgs():
                         default=False,
                         help="Enable prompt for authentication Database credentials")
 
+    parser.add_argument('--2fa',
+                        action="store_true",
+                        dest="use_2fa",
+                        default=False,
+                        help="Enable use of 2FA auth")
+
     parser.add_argument('--dev-mode', action="store_true", dest="dev_mode",
                         default=False,
                         help="Enable dev mode. This will use the user config and plugin folder.")
@@ -356,10 +362,10 @@ _/ ____\_____  ____________     __| _/_____   ___.__.
 
 
 
-def try_login_user(server_uri, api_username, api_password):
+def try_login_user(server_uri, api_username, api_password, api_2fa):
 
     try:
-        session_cookie = login_user(server_uri, api_username, api_password)
+        session_cookie = login_user(server_uri, api_username, api_password, api_2fa)
         return session_cookie
     except requests.exceptions.SSLError:
         print("SSL certificate validation failed.\nYou can use the --cert option in Faraday to set the path of the cert")
@@ -369,7 +375,7 @@ def try_login_user(server_uri, api_username, api_password):
         sys.exit(-2)
 
 
-def doLoginLoop(force_login=False):
+def doLoginLoop(force_login=False, use_2fa=False):
     """
     Sets the username and passwords from the command line.
     If --login flag is set then username and password is set
@@ -398,7 +404,11 @@ def doLoginLoop(force_login=False):
 
             api_username = input("Username (press enter for faraday): ") or "faraday"
             api_password = getpass.getpass('Password: ')
-            session_cookie = try_login_user(new_server_url, api_username, api_password)
+            if use_2fa:
+                api_2fa = input("2FA Token: ")
+            else:
+                api_2fa = None
+            session_cookie = try_login_user(new_server_url, api_username, api_password, api_2fa)
 
             if session_cookie:
 
@@ -427,20 +437,24 @@ def doLoginLoop(force_login=False):
         sys.exit(0)
 
 
-def login(forced_login):
-
+def login(forced_login, use_2fa):
     CONF = getInstanceConfiguration()
     server_uri = CONF.getServerURI()
     api_username = CONF.getAPIUsername()
     api_password = CONF.getAPIPassword()
 
     if forced_login:
-        doLoginLoop(forced_login)
+        doLoginLoop(forced_login, use_2fa)
         return
+    else:
+        if use_2fa:
+            api_2fa = input("2FA Token: ")
+        else:
+            api_2fa = None
 
     if server_uri and api_username and api_password:
 
-        session_cookie = try_login_user(server_uri, api_username, api_password)
+        session_cookie = try_login_user(server_uri, api_username, api_password, api_2fa)
 
         if session_cookie:
             CONF.setDBSessionCookies(session_cookie)
@@ -465,7 +479,7 @@ def main():
     checkConfiguration(args.gui)
     setConf()
 
-    login(args.login)
+    login(args.login, args.use_2fa)
     start_faraday_client()
 
 
