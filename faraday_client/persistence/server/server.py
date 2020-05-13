@@ -31,7 +31,8 @@ from time import sleep
 import urllib.parse as urlparse
 from urllib.parse import urlencode
 
-
+from colorama import init, Fore
+init(autoreset=True)
 import requests
 
 from faraday_client import __version__ as f_version
@@ -78,7 +79,7 @@ def _conf():
     # Fplugin run in other instance, so this dont generate any trouble.
     if not CONF.getDBSessionCookies() and not FARADAY_UPLOAD_REPORTS_WEB_COOKIE:
         server_url = CONF.getServerURI() if FARADAY_UP else SERVER_URL
-        cookie = login_user(server_url, CONF.getAPIUsername(), CONF.getAPIPassword(), None)
+        cookie = login_user(server_url, CONF.getAPIUsername(), CONF.getAPIPassword())
         CONF.setDBSessionCookies(cookie)
 
     return CONF
@@ -1625,7 +1626,7 @@ def server_info():
     except:
         return None
 
-def login_user(uri, uname, upass, u2fa_token=None):
+def login_user(uri, uname, upass):
     auth = {"email": uname, "password": upass}
     headers = {'User-Agent': f'faraday-client/{f_version}'}
     try:
@@ -1633,18 +1634,17 @@ def login_user(uri, uname, upass, u2fa_token=None):
         if resp.status_code == 401:
             return None
         elif resp.status_code == 202:
-            if u2fa_token:
-                json_2fa = {"secret": u2fa_token}
-                resp_2fa = requests.post(urlparse.urljoin(uri, "/_api/confirmation"), json=json_2fa, headers=headers,
-                                         cookies=resp.cookies)
-                if resp_2fa.status_code == 200:
-                    return resp_2fa.cookies
-                else:
-                    logger.error("Invalid 2FA Token")
-                    return None
+            print(f"{Fore.YELLOW}2FA Authentication enabled!!")
+            u2fa_token = None
+            while not u2fa_token:
+                u2fa_token = input("2FA Token: ")
+            json_2fa = {"secret": u2fa_token}
+            resp_2fa = requests.post(urlparse.urljoin(uri, "/_api/confirmation"), json=json_2fa, headers=headers,
+                                     cookies=resp.cookies)
+            if resp_2fa.status_code == 200:
+                return resp_2fa.cookies
             else:
-                logger.error("2FA Token Required. Use --2fa parameter")
-                sys.exit(1)
+                logger.error("Invalid 2FA Token")
                 return None
         else:
             return resp.cookies
