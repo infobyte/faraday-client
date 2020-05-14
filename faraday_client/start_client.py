@@ -394,13 +394,18 @@ def doLoginLoop(force_login=False):
             except requests.exceptions.ConnectionError as e:
                 logger.error("Connection to Faraday server FAILED: %s", e)
                 sys.exit(1)
+        else:
+            logger.error(f"Connection to server over http is not allowed [{server_url}]")
+            print(f"{Fore.RED}Connection to server over http is not allowed [{server_url}], please use https")
+            sys.exit(1)
 
         CONF.setAPIUrl(server_url)
         if force_login:
             print("""\nTo login please provide your valid Faraday credentials.\nYou have 3 attempts.""")
         api_username = CONF.getAPIUsername()
         api_password = CONF.getAPIPassword()
-        for attempt in range(1, 4):
+        MAX_ATTEMPTS = 3
+        for attempt in range(1, MAX_ATTEMPTS + 1):
             if force_login or (not api_username or not api_password):
                 api_username = input("Username (press enter for faraday): ") or "faraday"
                 api_password = getpass.getpass('Password: ')
@@ -417,16 +422,16 @@ def doLoginLoop(force_login=False):
                     if 'roles' in user_info:
                         if 'client' in user_info['roles']:
                             if force_login:
-                                print("You can't login as a client. You have %s attempt(s) left." % (3 - attempt))
+                                print(f"You can't login as a client. You have {MAX_ATTEMPTS - attempt} attempt(s) left.")
                                 continue
                             else:
                                 print("You can't login as a client.")
                                 sys.exit(-1)
                     logger.info('Login successful: {0}'.format(api_username))
                     break
-            print('Login failed, please try again. You have %d more attempts' % (3 - attempt))
+            print(f'Login failed, please try again. You have {MAX_ATTEMPTS - attempt} more attempts')
         else:
-            logger.fatal('Invalid credentials, 3 attempts failed. Quitting Faraday...')
+            logger.fatal(f'Invalid credentials, {MAX_ATTEMPTS} attempts failed. Quitting Faraday...')
             sys.exit(-1)
     except KeyboardInterrupt:
         sys.exit(0)
