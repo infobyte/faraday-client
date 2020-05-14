@@ -79,9 +79,10 @@ class WebsocketsChangesStream(ChangesStream):
         self.changes_queue = Queue()
         self.workspace_name = workspace_name
         self._response = None
-        logger.info('Connecting to websocket url {0}'.format("ws://{0}:9000".format(self._base_url)))
+        websockets_url = f"wss://{self._base_url}/websockets"
+        logger.info(f'Connecting to websocket url {websockets_url}')
         self.ws = websocket.WebSocketApp(
-                "ws://{0}:9000".format(self._base_url),
+                websockets_url,
                 on_message=self.on_message,
                 on_error=self.on_error,
                 on_open=self.on_open,
