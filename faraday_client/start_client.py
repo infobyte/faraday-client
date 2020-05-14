@@ -38,12 +38,13 @@ from faraday_client.utils.logger import set_logging_level
 CONST_FARADAY_HOME_PATH = os.path.expanduser('~/.faraday')
 
 from faraday_client import __version__
-from faraday_client.persistence.server import server
 from faraday_client.persistence.server.server import login_user, get_user_info
 
 import faraday_client
 
-from colorama import Fore, Back, Style
+from colorama import init, Fore, Back, Style
+init(autoreset=True)
+from urllib.parse import urlparse
 
 USER_HOME = os.path.expanduser(CONST_USER_HOME)
 # find_module returns if search is successful, the return value is a 3-element tuple (file, pathname, description):
@@ -370,17 +371,30 @@ def doLoginLoop(force_login=False):
         old_server_url = CONF.getAPIUrl()
         if force_login:
             if old_server_url is None:
-                server_url = input("\nPlease enter the Faraday Server URL (Press enter for http://localhost:5985): ") \
-                                 or "http://localhost:5985"
+                server_url = input("\nPlease enter the Faraday Server URL (Press enter for https://localhost): ") \
+                                 or "https://localhost"
             else:
                 server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {old_server_url}): ")\
                                  or old_server_url
         else:
             if not old_server_url:
-                server_url = input("\nPlease enter the Faraday Server URL (Press enter for http://localhost:5985): ") \
-                             or "http://localhost:5985"
+                server_url = input("\nPlease enter the Faraday Server URL (Press enter for https://localhost): ") \
+                             or "https://localhost"
             else:
                 server_url = old_server_url
+        parsed_url = urlparse(server_url)
+        if parsed_url.scheme == "https":
+            logger.debug("Validate server ssl certificate [%s]", server_url)
+            try:
+                test_ssl_response = requests.get(server_url)
+            except requests.exceptions.SSLError as e:
+                logger.error("Invalid SSL Certificate, use --cert PUBLIC_CERTIFICATE for self signed certificates")
+                print(f"{Fore.RED}Invalid SSL Certificate, use --cert PUBLIC_CERTIFICATE_PATH for self signed certificates")
+                sys.exit(1)
+            except requests.exceptions.ConnectionError as e:
+                logger.error("Connection to Faraday server FAILED: %s", e)
+                sys.exit(1)
+
         CONF.setAPIUrl(server_url)
         if force_login:
             print("""\nTo login please provide your valid Faraday credentials.\nYou have 3 attempts.""")
