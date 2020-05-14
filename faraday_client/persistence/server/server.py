@@ -593,8 +593,7 @@ def get_objects(workspace_name, object_signature, **params):
 
 def _websockets_changes(workspace_name, **extra_params):
     url = urlparse.urlparse(_get_base_server_url())
-    base_server, _ = url.netloc.split(':')
-    return WebsocketsChangesStream(workspace_name, f'{base_server}', **extra_params)
+    return WebsocketsChangesStream(workspace_name, url.netloc, **extra_params)
 
 
 # cha cha cha chaaaanges!
