@@ -80,7 +80,7 @@ class WebsocketsChangesStream(ChangesStream):
         self.workspace_name = workspace_name
         self._response = None
         websockets_url = f"wss://{self._base_url}/websockets"
-        logger.info('Connecting to websocket url {websockets_url}')
+        logger.info(f'Connecting to websocket url {websockets_url}')
         self.ws = websocket.WebSocketApp(
                 websockets_url,
                 on_message=self.on_message,
