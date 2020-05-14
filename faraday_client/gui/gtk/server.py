@@ -143,7 +143,7 @@ class ServerIO:
         def test_server_connection():
             tolerance = 0
             while True:
-                time.sleep(1)
+                time.sleep(50)
                 test_was_successful = self.server_info() is not None
                 if test_was_successful:
                     tolerance = 0

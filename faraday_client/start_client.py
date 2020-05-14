@@ -23,8 +23,6 @@ import logging
 from faraday_client.config.configuration import getInstanceConfiguration
 from faraday_client.config.constant import (
     CONST_USER_HOME,
-    CONST_FARADAY_PLUGINS_PATH,
-    CONST_FARADAY_PLUGINS_REPO_PATH,
     CONST_FARADAY_IMAGES,
     CONST_FARADAY_USER_CFG,
     CONST_FARADAY_BASE_CFG,
@@ -35,7 +33,7 @@ from faraday_client.config.constant import (
     CONST_REQUIREMENTS_FILE,
     CONST_FARADAY_FOLDER_LIST,
 )
-from faraday_client.utils.logger import set_logging_level, get_logger
+from faraday_client.utils.logger import set_logging_level
 
 CONST_FARADAY_HOME_PATH = os.path.expanduser('~/.faraday')
 
@@ -54,10 +52,6 @@ os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  # Use double dirna
 FARADAY_CLIENT_BASE = FARADAY_BASE
 
 FARADAY_USER_HOME = os.path.expanduser(CONST_FARADAY_HOME_PATH)
-
-FARADAY_PLUGINS_PATH = os.path.join(FARADAY_USER_HOME, CONST_FARADAY_PLUGINS_PATH)
-
-FARADAY_PLUGINS_BASEPATH = os.path.join(FARADAY_CLIENT_BASE, CONST_FARADAY_PLUGINS_REPO_PATH)
 
 FARADAY_BASE_IMAGES = os.path.join(FARADAY_CLIENT_BASE, "data", CONST_FARADAY_IMAGES)
 
@@ -371,80 +365,61 @@ def doLoginLoop(force_login=False):
     Sets the username and passwords from the command line.
     If --login flag is set then username and password is set
     """
-
+    CONF = getInstanceConfiguration()
     try:
-        CONF = getInstanceConfiguration()
         old_server_url = CONF.getAPIUrl()
+        if force_login:
+            if old_server_url is None:
+                server_url = input("\nPlease enter the Faraday Server URL (Press enter for http://localhost:5985): ") \
+                                 or "http://localhost:5985"
+            else:
+                server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {old_server_url}): ")\
+                                 or old_server_url
+        else:
+            if not old_server_url:
+                server_url = input("\nPlease enter the Faraday Server URL (Press enter for http://localhost:5985): ") \
+                             or "http://localhost:5985"
+            else:
+                server_url = old_server_url
+        CONF.setAPIUrl(server_url)
+        if force_login:
+            print("""\nTo login please provide your valid Faraday credentials.\nYou have 3 attempts.""")
         api_username = CONF.getAPIUsername()
         api_password = CONF.getAPIPassword()
-        if old_server_url and api_username and api_password and not force_login:
-            return
-
-        if old_server_url is None:
-            new_server_url = input(
-            "\nPlease enter the Faraday Server URL (Press enter for http://localhost:5985): ") or "http://localhost:5985"
-        else:
-            new_server_url = input(
-                "\nPlease enter the Faraday Server URL (Press enter for last used: {}): ".format(old_server_url)) or old_server_url
-
-        CONF.setAPIUrl(new_server_url)
-
-        print("""\nTo login please provide your valid Faraday credentials.\nYou have 3 attempts.""")
-
         for attempt in range(1, 4):
-
-            api_username = input("Username (press enter for faraday): ") or "faraday"
-            api_password = getpass.getpass('Password: ')
-            session_cookie = try_login_user(new_server_url, api_username, api_password)
-
+            if force_login or (not api_username or not api_password):
+                api_username = input("Username (press enter for faraday): ") or "faraday"
+                api_password = getpass.getpass('Password: ')
+            session_cookie = try_login_user(server_url, api_username, api_password)
             if session_cookie:
-
                 CONF.setAPIUsername(api_username)
                 CONF.setAPIPassword(api_password)
                 CONF.setDBSessionCookies(session_cookie)
                 CONF.saveConfig()
-
                 user_info = get_user_info()
                 if not user_info:
                     continue
                 else:
                     if 'roles' in user_info:
                         if 'client' in user_info['roles']:
-                            print("You can't login as a client. You have %s attempt(s) left." % (3 - attempt))
-                            continue
+                            if force_login:
+                                print("You can't login as a client. You have %s attempt(s) left." % (3 - attempt))
+                                continue
+                            else:
+                                print("You can't login as a client.")
+                                sys.exit(-1)
                     logger.info('Login successful: {0}'.format(api_username))
                     break
             print('Login failed, please try again. You have %d more attempts' % (3 - attempt))
-
         else:
             logger.fatal('Invalid credentials, 3 attempts failed. Quitting Faraday...')
             sys.exit(-1)
-
     except KeyboardInterrupt:
         sys.exit(0)
 
 
 def login(forced_login):
-
-    CONF = getInstanceConfiguration()
-    server_uri = CONF.getServerURI()
-    api_username = CONF.getAPIUsername()
-    api_password = CONF.getAPIPassword()
-
-    if forced_login:
-        doLoginLoop(forced_login)
-        return
-
-    if server_uri and api_username and api_password:
-
-        session_cookie = try_login_user(server_uri, api_username, api_password)
-
-        if session_cookie:
-            CONF.setDBSessionCookies(session_cookie)
-            logger.info('Login successful: {0}'.format(api_username))
-            return
-
-    doLoginLoop()
+    doLoginLoop(forced_login)
 
 
 def main():

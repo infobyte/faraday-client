@@ -4,6 +4,9 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+import json
+
+import requests
 from past.builtins import basestring
 from builtins import range
 
@@ -15,6 +18,7 @@ from threading import Thread
 from multiprocessing import JoinableQueue, Process
 
 from faraday_client.config.configuration import getInstanceConfiguration
+from faraday_client.persistence.server.server import _conf, _get_base_server_url
 from faraday_client.plugins.plugin import PluginProcess
 import faraday_client.model.api
 from faraday_client.model.commands_history import CommandRunInformation
@@ -27,53 +31,10 @@ from faraday_client.config.constant import (
 from faraday_client.start_client import (
     CONST_FARADAY_HOME_PATH,
 )
+
 CONF = getInstanceConfiguration()
 
 logger = logging.getLogger(__name__)
-
-
-class PluginCommiter(Thread):
-
-    def __init__(self, output_queue, output, pending_actions, plugin, command, mapper_manager, end_event=None):
-        super(PluginCommiter, self).__init__(name="PluginCommiterThread")
-        self.output_queue = output_queue
-        self.pending_actions = pending_actions
-        self.stop = False
-        self.plugin = plugin
-        self.command = command
-        self.mapper_manager = mapper_manager
-        self.output = output
-        self._report_path = os.path.join(CONF.getReportPath(), command.workspace)
-        self._report_ppath = os.path.join(self._report_path, "process")
-        self._report_upath = os.path.join(self._report_path, "unprocessed")
-        self.end_event = end_event
-
-    def stop(self):
-        self.stop = True
-
-    def commit(self):
-        logger.info('Plugin end. Commiting to faraday server.')
-        self.pending_actions.put(
-            (Modelactions.PLUGINEND, self.plugin.id, self.command.getID()))
-        self.command.duration = time.time() - self.command.itime
-        self.mapper_manager.update(self.command)
-        if self.end_event:
-            self.end_event.set()
-
-    def run(self):
-        name = ''
-        try:
-            self.output_queue.join()
-            self.commit()
-            if b'\0' not in self.output and os.path.isfile(self.output):
-                # sometimes output is a filepath
-                name = os.path.basename(self.output)
-                os.rename(self.output,
-                    os.path.join(self._report_ppath, name))
-        except Exception as ex:
-            logger.exception(ex)
-            logger.warning('Something failed, moving file to unprocessed')
-            os.rename(self.output, os.path.join(self._report_upath, name))
 
 
 class PluginController(Thread):
@@ -83,7 +44,7 @@ class PluginController(Thread):
     def __init__(self, id, plugin_manager, mapper_manager, pending_actions, end_event=None):
         super(PluginController, self).__init__(name="PluginControllerThread")
         self.plugin_manager = plugin_manager
-        self._plugins = plugin_manager.getPlugins()
+        self._plugins = list(plugin_manager.plugins())
         self.id = id
         self._actionDispatcher = None
         self._setupActionDispatcher()
@@ -133,12 +94,10 @@ class PluginController(Thread):
         return block_flag
 
     def _get_plugins_by_input(self, cmd, plugin_set):
-        for plugin in plugin_set.values():
-            if isinstance(cmd, bytes):
-                cmd = cmd.decode()
-            if plugin.canParseCommandString(cmd):
-                return plugin
-        return None
+        if isinstance(cmd, bytes):
+            cmd = cmd.decode()
+        plugin = self.plugin_manager.commands_analyzer.get_plugin(cmd)
+        return plugin
 
     def getAvailablePlugins(self):
         """
@@ -163,24 +122,33 @@ class PluginController(Thread):
         :param isReport: Report or output from shell
         :return: None
         """
-        output_queue = JoinableQueue()
-        plugin.set_actions_queue(self.pending_actions)
-        self.plugin_process = PluginProcess(plugin, output_queue, isReport)
-        logger.info("Created plugin_process (%d) for plugin instance (%d)", id(self.plugin_process), id(plugin))
-        self.pending_actions.put((Modelactions.PLUGINSTART, plugin.id, command.getID()))
-        output_queue.put((output, command.getID()))
-        plugin_commiter = PluginCommiter(
-            output_queue,
-            output,
-            self.pending_actions,
-            plugin,
-            command,
-            self._mapper_manager,
-            self.end_event,
-        )
-        plugin_commiter.start()
-        # This process is stopped when plugin commiter joins output queue
-        self.plugin_process.start()
+        plugin.processOutput(output.decode('utf8'))
+        base_url = _get_base_server_url()
+        cookies = _conf().getDBSessionCookies()
+        command.duration = time.time() - command.itime
+        plugin_result = plugin.get_json()
+        self.send_data(command.workspace, plugin_result)
+        command_id = command.getID()
+        data = command.toDict()
+        data['tool'] = data['command']
+        data.pop('id_available')
+        res = requests.put(
+            f'{base_url}/_api/v2/ws/{command.workspace}/commands/{command_id}/',
+            json=data,
+            cookies=cookies)
+        logger.info(f'Sent command duration {res.status_code}')
+
+    def send_data(self, workspace, data):
+        cookies = _conf().getDBSessionCookies()
+        base_url = _get_base_server_url()
+        res = requests.post(
+            f'{base_url}/_api/v2/ws/{workspace}/bulk_create/',
+            cookies=cookies,
+            json=json.loads(data))
+        if res.status_code != 201:
+            logger.error('Server responded with status code {0}. API response was {1}'.format(res.status_code, res.text))
+            return False
+        return True
 
     def _processAction(self, action, parameters):
         """
@@ -221,7 +189,7 @@ class PluginController(Thread):
             self._plugins[plugin_id].updateSettings(new_settings)
 
     def createPluginSet(self, pid):
-        self.plugin_sets[pid] = self.plugin_manager.getPlugins()
+        self.plugin_sets[pid] = [plugin for plugin in self.plugin_manager.plugins()]
 
     def processCommandInput(self, pid, cmd, pwd):
         """
@@ -248,7 +216,6 @@ class PluginController(Thread):
                 self._active_plugins[pid] = plugin, cmd_info
 
                 return plugin.id, modified_cmd_string
-
         return None, None
 
     def onCommandFinished(self, pid, exit_code, term_output):
@@ -268,7 +235,7 @@ class PluginController(Thread):
         return True
 
     def processReport(self, plugin_id, filepath, ws_name=None):
-        if plugin_id not in self._plugins:
+        if plugin_id not in [plugin[0] for plugin in self._plugins]:
             logger.warning("Unknown Plugin ID: %s", plugin_id)
             return False
         if not ws_name:
@@ -286,11 +253,11 @@ class PluginController(Thread):
         command_id = self._mapper_manager.save(cmd_info)
         cmd_info.setID(command_id)
 
-        if plugin_id in self._plugins:
+        if plugin_id in [plugin[0] for plugin in self._plugins]:
             logger.info('Processing report with plugin {0}'.format(plugin_id))
-            self._plugins[plugin_id].workspace = ws_name
             with open(filepath, 'rb') as output:
-                self.processOutput(self._plugins[plugin_id], output.read(), cmd_info, True)
+                plugin = [plugin[1] for plugin in self._plugins if plugin[0] == plugin_id].pop()
+                self.processOutput(plugin, output.read(), cmd_info, True)
             return command_id
 
         # Plugin to process this report not found, update duration of plugin process
@@ -300,6 +267,3 @@ class PluginController(Thread):
 
     def clearActivePlugins(self):
         self._active_plugins = {}
-
-
-# I'm Py3

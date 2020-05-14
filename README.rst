@@ -28,6 +28,17 @@ Features
 
 * TODO
 
+
+Quick install
+-------------
+
+OSX
+
+```
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/Cellar/gobject-introspection/1.62.0/lib/pkgconfig:/usr/local/Cellar/libffi/3.2.1/lib/pkgconfig:/usr/local/Cellar/cairo/1.16.0_2/lib/pkgconfig
+python setup.py install
+```
+
 Credits
 -------
 

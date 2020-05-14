@@ -905,13 +905,13 @@ class GuiApp(Gtk.Application, FaradayUi):
 
         def select_plugin():
             """Creates a simple dialog with a combo box to select a plugin"""
-            plugins_id = list(self.plugin_manager.getPlugins())
-            plugins_id = sorted(plugins_id, key=lambda s: s.lower())
+            plugins_id = self.plugin_manager.plugins()
+            plugins_id = sorted(plugins_id, key=lambda s: s[0].lower())
             dialog = Gtk.Dialog("Select plugin", self.window, 0)
 
             combo_box = Gtk.ComboBoxText()
             combo_box.set_wrap_width(3)
-            for plugin_id in plugins_id:
+            for plugin_id, plugin in plugins_id:
                 combo_box.append_text(plugin_id)
             combo_box.show()
 
