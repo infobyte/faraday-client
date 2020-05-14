@@ -388,17 +388,12 @@ def doLoginLoop(force_login=False):
             try:
                 test_ssl_response = requests.get(server_url)
             except requests.exceptions.SSLError as e:
-                logger.error("Invalid SSL Certificate, use --cert PUBLIC_CERTIFICATE for self signed certificates")
-                print(f"{Fore.RED}Invalid SSL Certificate, use --cert PUBLIC_CERTIFICATE_PATH for self signed certificates")
+                logger.error("Invalid SSL Certificate, use --cert CERTIFICATE for self signed certificates")
+                print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for self signed certificates")
                 sys.exit(1)
             except requests.exceptions.ConnectionError as e:
                 logger.error("Connection to Faraday server FAILED: %s", e)
                 sys.exit(1)
-        else:
-            logger.error(f"Connection to server over http is not allowed [{server_url}]")
-            print(f"{Fore.RED}Connection to server over http is not allowed [{server_url}], please use https")
-            sys.exit(1)
-
         CONF.setAPIUrl(server_url)
         if force_login:
             print("""\nTo login please provide your valid Faraday credentials.\nYou have 3 attempts.""")

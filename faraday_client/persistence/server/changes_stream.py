@@ -8,6 +8,9 @@ See the file 'doc/LICENSE' for the license information
 """
 from __future__ import absolute_import
 from __future__ import print_function
+
+import os
+
 from past.builtins import basestring
 
 import json
@@ -16,6 +19,8 @@ import threading
 from queue import Queue, Empty
 import requests
 import websocket
+import ssl
+from urllib.parse import urlparse
 
 from faraday_client.persistence.server.server_io_exceptions import (
     ChangesStreamStoppedAbruptly
@@ -75,23 +80,48 @@ class ChangesStream:
 class WebsocketsChangesStream(ChangesStream):
 
     def __init__(self, workspace_name, server_url, **params):
-        self._base_url = server_url
+        server_url_info = urlparse(server_url)
         self.changes_queue = Queue()
         self.workspace_name = workspace_name
         self._response = None
-        websockets_url = f"wss://{self._base_url}/websockets"
-        logger.info(f'Connecting to websocket url {websockets_url}')
+        ws_port = 9000
+        self._base_url = server_url_info.hostname
+        ws_kwargs = {}
+        if server_url_info.scheme == "https":
+            if server_url_info.port:
+                # Using HTTPS but not for standard 443 port
+                websockets_url = f"wss://{server_url_info.hostname}:{server_url_info.port}/websockets"
+                test_ws_url = f"https://{server_url_info.hostname}:{server_url_info.port}/websockets"
+            else:
+                websockets_url = f"wss://{server_url_info.hostname}/websockets"
+                test_ws_url = f"https://{server_url_info.hostname}/websockets"
+            try:
+                ws_response = requests.get(test_ws_url)
+                if ws_response.status_code == 404:
+                    # Using HTTPS but not for websockets
+                    websockets_url = f"ws://{server_url_info.hostname}:{ws_port}/"
+                else:
+                    cert_path = os.environ.get("REQUESTS_CA_BUNDLE", None)
+                    if cert_path:
+                        ws_kwargs = {"sslopt": {"ca_certs": "/vagrant/ssl/faraday.pub"}}
+                        logger.info("Using self signed certificate for WSS")
+            except requests.exceptions.ConnectionError:
+                logger.warning("Faraday server is over https but websockets are not")
+                websockets_url = f"ws://{server_url_info.hostname}:{ws_port}/"
+        else:
+            websockets_url = f"ws://{server_url_info.hostname}:{ws_port}/"
+        logger.info('Connecting to websocket url %s', websockets_url)
         self.ws = websocket.WebSocketApp(
                 websockets_url,
                 on_message=self.on_message,
                 on_error=self.on_error,
                 on_open=self.on_open,
-                on_close=self.on_close)
+                on_close=self.on_close
+        )
         # ws.run_forever will call on_message, on_error, on_close and on_open
         # see websocket client python docs on:
         # https://github.com/websocket-client/websocket-client
-        thread = threading.Thread(target=self.ws.run_forever, args=(),
-                                  name='WebsocketsChangesStream')
+        thread = threading.Thread(target=self.ws.run_forever, args=(), kwargs=ws_kwargs, name='WebsocketsChangesStream')
         thread.daemon = True
         thread.start()
 

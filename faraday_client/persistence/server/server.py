@@ -592,8 +592,7 @@ def get_objects(workspace_name, object_signature, **params):
 
 
 def _websockets_changes(workspace_name, **extra_params):
-    url = urlparse.urlparse(_get_base_server_url())
-    return WebsocketsChangesStream(workspace_name, url.hostname, **extra_params)
+    return WebsocketsChangesStream(workspace_name, _get_base_server_url(), **extra_params)
 
 
 # cha cha cha chaaaanges!
