@@ -103,7 +103,7 @@ class WebsocketsChangesStream(ChangesStream):
                 else:
                     cert_path = os.environ.get("REQUESTS_CA_BUNDLE", None)
                     if cert_path:
-                        ws_kwargs = {"sslopt": {"ca_certs": "/vagrant/ssl/faraday.pub"}}
+                        ws_kwargs = {"sslopt": {"ca_certs": cert_path}}
                         logger.info("Using self signed certificate for WSS")
             except requests.exceptions.ConnectionError:
                 logger.warning("Faraday server is over https but websockets are not")
