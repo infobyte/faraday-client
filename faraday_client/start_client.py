@@ -419,6 +419,9 @@ def main():
     printBanner()
     logger.info("Dependencies met.")
     if args.cert_path:
+        if not os.path.isfile(args.cert_path):
+            logger.error("Certificate Path Don't exists [%s]", args.cert_path)
+            sys.exit(1)
         os.environ[REQUESTS_CA_BUNDLE_VAR] = args.cert_path
     checkConfiguration(args.gui)
     setConf()
