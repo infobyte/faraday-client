@@ -116,12 +116,6 @@ def getParserArgs():
                         help="Disable the application exception hook that allows to send error \
                         reports to developers.")
 
-    parser.add_argument('--login',
-                        action="store_true",
-                        dest="login",
-                        default=False,
-                        help="Enable prompt for authentication Database credentials")
-
     parser.add_argument('--dev-mode', action="store_true", dest="dev_mode",
                         default=False,
                         help="Enable dev mode. This will use the user config and plugin folder.")
@@ -361,7 +355,7 @@ def try_login_user(server_uri, api_username, api_password):
         sys.exit(-2)
 
 
-def doLoginLoop(force_login=False):
+def login():
     """
     Sets the username and passwords from the command line.
     If --login flag is set then username and password is set
@@ -369,19 +363,12 @@ def doLoginLoop(force_login=False):
     CONF = getInstanceConfiguration()
     try:
         old_server_url = CONF.getAPIUrl()
-        if force_login:
-            if old_server_url is None:
-                server_url = input("\nPlease enter the Faraday Server URL (Press enter for https://localhost): ") \
-                                 or "https://localhost"
-            else:
-                server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {old_server_url}): ")\
-                                 or old_server_url
+        if old_server_url is None:
+            server_url = input("\nPlease enter the Faraday Server URL (Press enter for https://localhost): ") \
+                            or "https://localhost"
         else:
-            if not old_server_url:
-                server_url = input("\nPlease enter the Faraday Server URL (Press enter for https://localhost): ") \
-                             or "https://localhost"
-            else:
-                server_url = old_server_url
+            server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {old_server_url}): ")\
+                            or old_server_url
         parsed_url = urlparse(server_url)
         if parsed_url.scheme == "https":
             logger.debug("Validate server ssl certificate [%s]", server_url)
@@ -395,19 +382,13 @@ def doLoginLoop(force_login=False):
                 logger.error("Connection to Faraday server FAILED: %s", e)
                 sys.exit(1)
         CONF.setAPIUrl(server_url)
-        if force_login:
-            print("""\nTo login please provide your valid Faraday credentials.\nYou have 3 attempts.""")
-        api_username = CONF.getAPIUsername()
-        api_password = CONF.getAPIPassword()
+        print("""\nTo login please provide your valid Faraday credentials.\nYou have 3 attempts.""")
         MAX_ATTEMPTS = 3
         for attempt in range(1, MAX_ATTEMPTS + 1):
-            if force_login or (not api_username or not api_password):
-                api_username = input("Username (press enter for faraday): ") or "faraday"
-                api_password = getpass.getpass('Password: ')
+            api_username = input("Username (press enter for faraday): ") or "faraday"
+            api_password = getpass.getpass('Password: ')
             session_cookie = try_login_user(server_url, api_username, api_password)
             if session_cookie:
-                CONF.setAPIUsername(api_username)
-                CONF.setAPIPassword(api_password)
                 CONF.setDBSessionCookies(session_cookie)
                 CONF.saveConfig()
                 user_info = get_user_info()
@@ -416,12 +397,8 @@ def doLoginLoop(force_login=False):
                 else:
                     if 'roles' in user_info:
                         if 'client' in user_info['roles']:
-                            if force_login:
-                                print(f"You can't login as a client. You have {MAX_ATTEMPTS - attempt} attempt(s) left.")
-                                continue
-                            else:
-                                print("You can't login as a client.")
-                                sys.exit(-1)
+                            print(f"You can't login as a client. You have {MAX_ATTEMPTS - attempt} attempt(s) left.")
+                            continue
                     logger.info('Login successful: {0}'.format(api_username))
                     break
             print(f'Login failed, please try again. You have {MAX_ATTEMPTS - attempt} more attempts')
@@ -430,11 +407,6 @@ def doLoginLoop(force_login=False):
             sys.exit(-1)
     except KeyboardInterrupt:
         sys.exit(0)
-
-
-def login(forced_login):
-    doLoginLoop(forced_login)
-
 
 def main():
     """
@@ -450,8 +422,7 @@ def main():
         os.environ[REQUESTS_CA_BUNDLE_VAR] = args.cert_path
     checkConfiguration(args.gui)
     setConf()
-
-    login(args.login)
+    login()
     start_faraday_client()
 
 
