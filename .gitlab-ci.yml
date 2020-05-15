@@ -16,7 +16,7 @@ workflow:
       when: always
     - if: $DAILY_TEST
       when: always
-    when: never
+    - when: never
 
 cache:
   paths:
