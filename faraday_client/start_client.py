@@ -38,13 +38,13 @@ from faraday_client.utils.logger import set_logging_level
 CONST_FARADAY_HOME_PATH = os.path.expanduser('~/.faraday')
 
 from faraday_client import __version__
-from faraday_client.persistence.server.server import login_user, get_user_info
+from faraday_client.persistence.server.server import login_user, get_user_info, is_authenticated
 
 import faraday_client
 
 from colorama import init, Fore, Back, Style
 init(autoreset=True)
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 USER_HOME = os.path.expanduser(CONST_USER_HOME)
 # find_module returns if search is successful, the return value is a 3-element tuple (file, pathname, description):
@@ -115,6 +115,12 @@ def getParserArgs():
                         default=False,
                         help="Disable the application exception hook that allows to send error \
                         reports to developers.")
+
+    parser.add_argument('--login',
+                        action="store_true",
+                        dest="login",
+                        default=False,
+                        help="Force to ask for credentials")
 
     parser.add_argument('--dev-mode', action="store_true", dest="dev_mode",
                         default=False,
@@ -346,50 +352,64 @@ def try_login_user(server_uri, api_username, api_password):
 
     try:
         session_cookie = login_user(server_uri, api_username, api_password)
-        return session_cookie
     except requests.exceptions.SSLError:
         print("SSL certificate validation failed.\nYou can use the --cert option in Faraday to set the path of the cert")
         sys.exit(-1)
     except requests.exceptions.MissingSchema:
         print("The Faraday Server URL is incorrect, please try again.")
         sys.exit(-2)
+    except Exception as e:
+        print(e)
+    else:
+        return session_cookie
 
 
-def login():
+def login(ask_for_credentials):
     """
     Sets the username and passwords from the command line.
     If --login flag is set then username and password is set
     """
     CONF = getInstanceConfiguration()
+    server_url = CONF.getAPIUrl()
     try:
-        old_server_url = CONF.getAPIUrl()
-        if old_server_url is None:
+        if not server_url:
             server_url = input("\nPlease enter the Faraday Server URL (Press enter for https://localhost): ") \
-                            or "https://localhost"
+                         or "https://localhost"
         else:
-            server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {old_server_url}): ")\
-                            or old_server_url
+            if ask_for_credentials:
+                server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {server_url}): ") \
+                             or server_url
         parsed_url = urlparse(server_url)
-        if parsed_url.scheme == "https":
-            logger.debug("Validate server ssl certificate [%s]", server_url)
-            try:
-                test_ssl_response = requests.get(server_url)
-            except requests.exceptions.SSLError as e:
-                logger.error("Invalid SSL Certificate, use --cert CERTIFICATE for self signed certificates")
-                print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for self signed certificates")
+        try:
+            if parsed_url.scheme == "https":
+                logger.debug("Validate server ssl certificate [%s]", server_url)
+            login_url = urljoin(server_url, "/_api/login")
+            test_server_response = requests.get(login_url)
+            if test_server_response.status_code != 200:
+                logger.error("Faraday server returned invalid response: %s", test_server_response.status_code)
                 sys.exit(1)
-            except requests.exceptions.ConnectionError as e:
-                logger.error("Connection to Faraday server FAILED: %s", e)
-                sys.exit(1)
+        except requests.exceptions.SSLError as e:
+            logger.error("Invalid SSL Certificate, use --cert CERTIFICATE for self signed certificates")
+            print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for self signed certificates")
+            sys.exit(1)
+        except requests.exceptions.ConnectionError as e:
+            logger.error("Connection to Faraday server FAILED: %s", e)
+            sys.exit(1)
         CONF.setAPIUrl(server_url)
-        print("""\nTo login please provide your valid Faraday credentials.\nYou have 3 attempts.""")
+        if not ask_for_credentials:
+            session_cookies = CONF.getFaradaySessionCookies()
+            if session_cookies and server_url:
+                if is_authenticated(server_url, session_cookies):
+                    logger.debug("Valid Previous session cookie found")
+                    return True
+        print(f"""\nPlease provide your valid Faraday credentials for {server_url}\nYou have 3 attempts.""")
         MAX_ATTEMPTS = 3
         for attempt in range(1, MAX_ATTEMPTS + 1):
             api_username = input("Username (press enter for faraday): ") or "faraday"
             api_password = getpass.getpass('Password: ')
             session_cookie = try_login_user(server_url, api_username, api_password)
             if session_cookie:
-                CONF.setDBSessionCookies(session_cookie)
+                CONF.setFaradaySessionCookies(session_cookie)
                 CONF.saveConfig()
                 user_info = get_user_info()
                 if not user_info:
@@ -425,7 +445,7 @@ def main():
         os.environ[REQUESTS_CA_BUNDLE_VAR] = args.cert_path
     checkConfiguration(args.gui)
     setConf()
-    login()
+    login(args.login)
     start_faraday_client()
 
 

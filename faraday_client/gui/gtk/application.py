@@ -813,7 +813,7 @@ class GuiApp(Gtk.Application, FaradayUi):
             if not should_login:
                 return
 
-        if not is_authenticated(CONF.getServerURI(), CONF.getDBSessionCookies()):
+        if not is_authenticated(CONF.getServerURI(), CONF.getFaradaySessionCookies()):
             loginDialog = ForceLoginDialog(self.window,
                                            self.exit_faraday_without_confirm)
             loginDialog.run(3, CONF.getServerURI(), self.window)

@@ -53,7 +53,7 @@ def dispatch(args, unknown, user_help, username, password):
         raise UserWarning('Invalid credentials!')
 
     CONF.setDBUser(username)
-    CONF.setDBSessionCookies(session_cookie)
+    CONF.setFaradaySessionCookies(session_cookie)
 
     if '--' in unknown:
         unknown.remove('--')

@@ -77,10 +77,10 @@ def _conf():
     # If you are running this libs outside of Faraday, cookies are not setted.
     # you need get a valid cookie auth and set that.
     # Fplugin run in other instance, so this dont generate any trouble.
-    if not CONF.getDBSessionCookies() and not FARADAY_UPLOAD_REPORTS_WEB_COOKIE:
+    if not CONF.getFaradaySessionCookies() and not FARADAY_UPLOAD_REPORTS_WEB_COOKIE:
         server_url = CONF.getServerURI() if FARADAY_UP else SERVER_URL
         cookie = login_user(server_url, CONF.getAPIUsername(), CONF.getAPIPassword())
-        CONF.setDBSessionCookies(cookie)
+        CONF.setFaradaySessionCookies(cookie)
 
     return CONF
 
@@ -175,7 +175,7 @@ def _add_session_cookies(func):
         if FARADAY_UPLOAD_REPORTS_WEB_COOKIE:
             kwargs['cookies'] = FARADAY_UPLOAD_REPORTS_WEB_COOKIE
         else:
-            kwargs['cookies'] = _conf().getDBSessionCookies()
+            kwargs['cookies'] = _conf().getFaradaySessionCookies()
         response = func(*args, **kwargs)
         return response
     return wrapper if FARADAY_UP else func
@@ -1646,15 +1646,21 @@ def login_user(uri, uname, upass):
                 return None
         else:
             return resp.cookies
-    except requests.adapters.ConnectionError:
+    except requests.adapters.ConnectionError as e:
+        print(f"ERROR {e}")
         return None
-    except requests.adapters.ReadTimeout:
+    except requests.adapters.ReadTimeout as e:
+        print(f"ERROR {e}")
         return None
+    except Exception as e:
+        print(f"ERROR {e}")
+        return None
+
 
 def is_authenticated(uri, cookies):
     try:
         resp = requests.get(urlparse.urljoin(uri, "/_api/session"), cookies=cookies, timeout=1)
-        if resp.status_code != 403:
+        if resp.status_code not in [401, 403]:
             user_info = resp.json()
             return bool(user_info.get('username', {}))
         else:
@@ -1679,7 +1685,7 @@ def check_server_url(url_to_test):
 
 def get_user_info():
     try:
-        resp = requests.get(urlparse.urljoin(_get_base_server_url(), "/_api/session"), cookies=_conf().getDBSessionCookies(), timeout=1)
+        resp = requests.get(urlparse.urljoin(_get_base_server_url(), "/_api/session"), cookies=_conf().getFaradaySessionCookies(), timeout=1)
         if (resp.status_code != 401) and (resp.status_code != 403):
             return resp.json()
         else:

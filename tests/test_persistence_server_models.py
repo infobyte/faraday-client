@@ -30,7 +30,7 @@ class TestVulnPersistanceModelsFuncions(GenericAPITest):
         conf_mock = Mock()
         getInstanceConfigurationMock.return_value = conf_mock
         port = 5985
-        conf_mock.getDBSessionCookies.return_value = None
+        conf_mock.getFaradaySessionCookies.return_value = None
         conf_mock.getAPIUrl.return_value = 'http://localhost:{0}'.format(port)
         conf_mock.getServerURI.return_value = 'http://localhost:{0}'.format(port)
         conf_mock.getAPIUsername.return_value = 'faraday'
@@ -106,7 +106,7 @@ class TestVulnWebPersistanceModelsFuncions(GenericAPITest):
         conf_mock = Mock()
         getInstanceConfigurationMock.return_value = conf_mock
         port = 5985
-        conf_mock.getDBSessionCookies.return_value = None
+        conf_mock.getFaradaySessionCookies.return_value = None
         conf_mock.getAPIUrl.return_value = 'http://localhost:{0}'.format(port)
         conf_mock.getServerURI.return_value = 'http://localhost:{0}'.format(port)
         conf_mock.getAPIUsername.return_value = 'faraday'

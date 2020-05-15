@@ -103,7 +103,7 @@ class PreferenceWindowDialog(Gtk.Dialog):
         It's a boolean function, return True if auth ok, False if not.
         Number 42 was chosen for obvious reasons :) """
 
-        if is_authenticated(repourl, CONF.getDBSessionCookies()):
+        if is_authenticated(repourl, CONF.getFaradaySessionCookies()):
             return True
 
         # if that didn't work...
@@ -218,7 +218,7 @@ class LoginDialog(Gtk.Dialog):
                 else:
 
                     CONF.setDBUser(newUser)
-                    CONF.setDBSessionCookies(session_cookie)
+                    CONF.setFaradaySessionCookies(session_cookie)
 
                     user_info = get_user_info()
 
