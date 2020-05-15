@@ -4,6 +4,20 @@ variables:
     APT_CACHE_DIR: "$CI_PROJECT_DIR/apt-cache"
     IMAGE_TAG: 'egrep -o "[0-9]\.([0-9]|[0-9][0-9])\.[0-9]" faraday_client/__init__.py'
 
+workflow:
+  rules:
+    - if: '$CI_COMMIT_REF_NAME =~ /^.*\/(master)$/'
+      when: always
+    - if: $CI_COMMIT_TAG
+      when: always
+    - if: $BUILD_TEST
+      when: always
+    - if: $FULL_TEST
+      when: always
+    - if: $DAILY_TEST
+      when: always
+    when: never
+
 cache:
   paths:
     - "$CI_PROJECT_DIR/.cache/pip"
@@ -23,13 +37,6 @@ generate_build_file:
         - "/bin/mkdir faraday_copy"
         - "/usr/bin/rsync -aq --exclude 'faraday_copy' --exclude '.cache' . faraday_copy"
         - "/bin/tar -zcf faraday.tar.gz faraday_copy"
-    only:
-        variables:
-            - $CI_COMMIT_REF_NAME =~ /^.*\/(master)$/
-            - $CI_COMMIT_TAG
-            - $BUILD_TEST
-            - $FULL_TEST
-            - $DAILY_TEST
     artifacts:
         name: 'faraday'
         paths:
@@ -51,13 +58,6 @@ build_nix_python3:
     paths:
       - py3.tar.gz
     expire_in: 15 days # in the future we don't need to expire this.
-  only:
-    variables:
-      - $CI_COMMIT_REF_NAME =~ /^.*\/(master)$/
-      - $CI_COMMIT_TAG
-      - $BUILD_TEST
-      - $FULL_TEST
-      - $DAILY_TEST
 
 
 generate_rpm:
@@ -103,13 +103,6 @@ generate_rpm:
         paths:
             - "faraday-client_amd64.rpm"
         expire_in: 15 days
-    only:
-        variables:
-            - $CI_COMMIT_REF_NAME =~ /^.*\/(master)$/
-            - $CI_COMMIT_TAG
-            - $BUILD_TEST
-            - $FULL_TEST
-            - $DAILY_TEST
 
 
 generate_deb:
@@ -146,13 +139,6 @@ generate_deb:
         paths:
             - "faraday-client_amd64.deb"
         expire_in: 15 days
-    only:
-        variables:
-            - $CI_COMMIT_REF_NAME =~ /^.*\/(master)$/
-            - $CI_COMMIT_TAG
-            - $BUILD_TEST
-            - $FULL_TEST
-            - $DAILY_TEST
 
 macos_pkg:
     tags:
@@ -192,10 +178,3 @@ macos_pkg:
         paths:
             - Faraday-client.pkg
         expire_in: 1 week
-    only:
-        variables:
-            - $CI_COMMIT_REF_NAME =~ /^.*\/(master)$/
-            - $CI_COMMIT_TAG
-            - $BUILD_TEST
-            - $FULL_TEST
-            - $DAILY_TEST
