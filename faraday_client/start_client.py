@@ -33,6 +33,7 @@ from faraday_client.config.constant import (
     CONST_REQUIREMENTS_FILE,
     CONST_FARADAY_FOLDER_LIST,
 )
+from faraday_client.persistence.server.exceptions import Required2FAError
 from faraday_client.utils.logger import set_logging_level
 
 CONST_FARADAY_HOME_PATH = os.path.expanduser('~/.faraday')
@@ -348,16 +349,17 @@ _/ ____\_____  ____________     __| _/_____   ___.__.
 
 
 
-def try_login_user(server_uri, api_username, api_password):
-
+def try_login_user(server_uri, api_username, api_password, u2fa_token=None):
     try:
-        session_cookie = login_user(server_uri, api_username, api_password)
+        session_cookie = login_user(server_uri, api_username, api_password, u2fa_token)
     except requests.exceptions.SSLError:
         print("SSL certificate validation failed.\nYou can use the --cert option in Faraday to set the path of the cert")
         sys.exit(-1)
     except requests.exceptions.MissingSchema:
         print("The Faraday Server URL is incorrect, please try again.")
         sys.exit(-2)
+    except Required2FAError as e:
+        raise e
     except Exception as e:
         print(e)
     else:
@@ -407,10 +409,16 @@ def login(ask_for_credentials):
         for attempt in range(1, MAX_ATTEMPTS + 1):
             api_username = input("Username (press enter for faraday): ") or "faraday"
             api_password = getpass.getpass('Password: ')
-            session_cookie = try_login_user(server_url, api_username, api_password)
+            try:
+                session_cookie = try_login_user(server_url, api_username, api_password)
+            except Required2FAError as e:
+                print(f"{Fore.YELLOW}2FA Authentication enabled!!")
+                u2fa_token = None
+                while not u2fa_token:
+                    u2fa_token = input("2FA Token: ")
+                session_cookie = try_login_user(server_url, api_username, api_password, u2fa_token)
             if session_cookie:
                 CONF.setFaradaySessionCookies(session_cookie)
-                CONF.saveConfig()
                 user_info = get_user_info()
                 if not user_info:
                     continue
@@ -420,6 +428,7 @@ def login(ask_for_credentials):
                             print(f"You can't login as a client. You have {MAX_ATTEMPTS - attempt} attempt(s) left.")
                             continue
                     logger.info('Login successful: {0}'.format(api_username))
+                    CONF.saveConfig()
                     break
             print(f'Login failed, please try again. You have {MAX_ATTEMPTS - attempt} more attempts')
         else:

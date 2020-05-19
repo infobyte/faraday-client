@@ -32,6 +32,7 @@ import urllib.parse as urlparse
 from urllib.parse import urlencode
 
 from colorama import init, Fore
+
 init(autoreset=True)
 import requests
 
@@ -46,6 +47,7 @@ from faraday_client.persistence.server.server_io_exceptions import (WrongObjectS
 from faraday_client.persistence.server.changes_stream import (
     WebsocketsChangesStream
 )
+from faraday_client.persistence.server.exceptions import Required2FAError
 
 # NOTE: Change is you want to use this module by itself.
 # If FARADAY_UP is False, SERVER_URL must be a valid faraday server url
@@ -1624,7 +1626,7 @@ def server_info():
     except:
         return None
 
-def login_user(uri, uname, upass):
+def login_user(uri, uname, upass, u2fa_token=None):
     auth = {"email": uname, "password": upass}
     headers = {'User-Agent': f'faraday-client/{f_version}'}
     try:
@@ -1632,20 +1634,22 @@ def login_user(uri, uname, upass):
         if resp.status_code == 401:
             return None
         elif resp.status_code == 202:
-            print(f"{Fore.YELLOW}2FA Authentication enabled!!")
-            u2fa_token = None
-            while not u2fa_token:
-                u2fa_token = input("2FA Token: ")
-            json_2fa = {"secret": u2fa_token}
-            resp_2fa = requests.post(urlparse.urljoin(uri, "/_api/confirmation"), json=json_2fa, headers=headers,
-                                     cookies=resp.cookies)
-            if resp_2fa.status_code == 200:
-                return resp_2fa.cookies
+            if not u2fa_token:
+                raise Required2FAError()
             else:
-                logger.error("Invalid 2FA Token")
-                return None
+
+                json_2fa = {"secret": u2fa_token}
+                resp_2fa = requests.post(urlparse.urljoin(uri, "/_api/confirmation"), json=json_2fa, headers=headers,
+                                         cookies=resp.cookies)
+                if resp_2fa.status_code == 200:
+                    return resp_2fa.cookies
+                else:
+                    logger.error("Invalid 2FA Token")
+                    return None
         else:
             return resp.cookies
+    except Required2FAError as e:
+        raise e
     except requests.adapters.ConnectionError as e:
         print(f"ERROR {e}")
         return None

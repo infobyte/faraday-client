@@ -5,6 +5,10 @@ See the file 'doc/LICENSE' for the license information
 
 """
 from __future__ import absolute_import
+
+import logging
+
+from faraday_client.persistence.server.exceptions import Required2FAError
 from past.builtins import basestring
 
 
@@ -31,6 +35,7 @@ from faraday_client.plugins import fplugin_utils
 
 CONF = getInstanceConfiguration()
 
+logger = logging.getLogger(__name__)
 
 class PreferenceWindowDialog(Gtk.Dialog):
     """Sets up a preference dialog with basically nothing more than a
@@ -183,7 +188,6 @@ class LoginDialog(Gtk.Dialog):
         passwordBox.pack_start(password_label, True, True, 3)
         passwordBox.pack_start(self.password_entry, False, False, 5)
         content_area.pack_start(passwordBox, True, True, 10)
-
         self.show_all()
 
     def getUser(self):
@@ -264,6 +268,139 @@ class ForceLoginDialog(LoginDialog):
         """Override destroy to make it exit Faraday."""
         self.exit_faraday()
 
+
+class AuthDialog(Gtk.Dialog):
+
+    """Faraday auth dialog"""
+
+    def __init__(self, reload_ws_callback, parent):
+        super().__init__(title=f"Faraday login for {CONF.getAPIUrl()}", flags=Gtk.DialogFlags.MODAL)
+        self.set_default_response(Gtk.ResponseType.OK)
+        self.set_keep_above(True)
+        self.set_transient_for(parent)
+        self.max_attempts = 3
+        self.attempts_counter = 0
+        self.reload_ws_callback = reload_ws_callback
+        content_area = self.get_content_area()
+
+        instructions = Gtk.Label.new("Credentials needed to proceed."
+                                     "You've got 3 tries.")
+        instructions.set_line_wrap(True)
+        instructions.set_max_width_chars(38)
+        content_area.pack_start(instructions, True, True, 10)
+
+        userBox = Gtk.Box()
+        user_label = Gtk.Label()
+        user_label.set_text("User:")
+        self.user_entry = Gtk.Entry()
+        self.user_entry.set_width_chars(24)
+        self.user_entry.set_activates_default(True)
+        userBox.pack_start(user_label, True, True, 3)
+        userBox.pack_start(self.user_entry, False, False, 5)
+        content_area.pack_start(userBox, True, True, 10)
+
+        passwordBox = Gtk.Box()
+        password_label = Gtk.Label()
+        password_label.set_text("Password:")
+        self.password_entry = Gtk.Entry()
+        self.password_entry.set_visibility(False)
+        self.password_entry.set_width_chars(24)
+        self.password_entry.set_activates_default(True)
+        passwordBox.pack_start(password_label, True, True, 3)
+        passwordBox.pack_start(self.password_entry, False, False, 5)
+        content_area.pack_start(passwordBox, True, True, 10)
+
+        u2FABox = Gtk.Box()
+        u2FA_label = Gtk.Label()
+        u2FA_label.set_text("2FA Token:")
+        self.u2FA_entry = Gtk.Entry()
+        self.u2FA_entry.set_width_chars(24)
+        self.u2FA_entry.set_activates_default(True)
+        u2FABox.pack_start(u2FA_label, True, True, 3)
+        u2FABox.pack_start(self.u2FA_entry, False, False, 5)
+        content_area.pack_start(u2FABox, True, True, 10)
+
+        button_box = Gtk.Box(spacing=6)
+        content_area.pack_end(button_box, False, True, 10)
+        ok_button = Gtk.Button.new_with_label("OK")
+        ok_button.connect("clicked", self.on_click_ok)
+        button_box.pack_start(ok_button, False, True, 10)
+        cancel_button = Gtk.Button.new_with_label("Cancel")
+        self.connect("key_press_event", key_reactions)
+        cancel_button.connect("clicked", self.on_click_cancel)
+        button_box.pack_end(cancel_button, False, True, 10)
+        self.show_all()
+
+    def getUser(self):
+        if self.user_entry.get_text() is not None:
+            res = self.user_entry.get_text()
+        else:
+            res = ""
+        return res
+
+    def getPassword(self):
+        if self.password_entry.get_text() is not None:
+            res = self.password_entry.get_text()
+        else:
+            res = ""
+        return res
+
+    def get2FAToken(self):
+        if self.u2FA_entry.get_text() is not None:
+            res = self.u2FA_entry.get_text()
+        else:
+            res = ""
+        return res
+
+    def clear(self):
+        self.user_entry.set_text("")
+        self.password_entry.set_text("")
+        self.u2FA_entry.set_text("")
+
+    def exit(self):
+        self.destroy()
+
+    def on_click_ok(self, buttons=None):
+        newUser = self.getUser()
+        newPass = self.getPassword()
+        new2FAToken = self.get2FAToken()
+        if self.attempts_counter < self.max_attempts:
+            try:
+                session_cookie = login_user(CONF.getAPIUrl(), newUser, newPass, new2FAToken)
+            except Required2FAError:
+                error_message = f"2FA Token Required"
+                errorDialog(self, (error_message))
+            else:
+                if not session_cookie:
+                    logger.warning("Faraday Auth invalid")
+                    self.clear()
+                    self.attempts_counter += 1
+                    error_message = f"Invalid credentials!. You have {self.max_attempts - self.attempts_counter} attempt(s) left."
+                    errorDialog(self, (error_message))
+                else:
+                    old_cookies = CONF.getFaradaySessionCookies()
+                    CONF.setFaradaySessionCookies(session_cookie)
+                    user_info = get_user_info()
+                    if 'client' in user_info['roles']:
+                        CONF.setFaradaySessionCookies(old_cookies)
+                        self.clear()
+                        self.attempts_counter += 1
+                        error_message = f"You can't login as a client. You have {self.max_attempts - self.attempts_counter} attempt(s) left."
+                        errorDialog(self, (error_message))
+                        self.show_all()
+                    else:
+                        logger.info("Faraday Auth Successful")
+                        CONF.saveConfig()
+                        self.reload_ws_callback()
+                        MessageDialog(self, "Faraday Authentication Successful")
+                        self.destroy()
+        else:
+            error_message= "Max login attempts reached"
+            errorDialog(self, (error_message))
+
+    def on_click_cancel(self, button=None):
+        """Override on_click_cancel to make it exit Faraday."""
+        self.destroy()
 
 class NewWorkspaceDialog(Gtk.Window):
     """Sets up the New Workspace Dialog, where the user can set a name,
@@ -1746,6 +1883,16 @@ class errorDialog(Gtk.MessageDialog):
                                    error)
         if explanation is not None:
             self.format_secondary_text(explanation)
+        self.run()
+        self.destroy()
+
+
+class MessageDialog(Gtk.MessageDialog):
+    def __init__(self, parent_window, message):
+        super().__init__(transient_for=parent_window, modal=True, buttons=Gtk.ButtonsType.OK)
+        self.set_keep_above(True)
+        self.set_modal(True)
+        self.props.text = message
         self.run()
         self.destroy()
 
