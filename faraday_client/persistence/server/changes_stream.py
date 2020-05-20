@@ -86,7 +86,7 @@ class WebsocketsChangesStream(ChangesStream):
         self._response = None
         ws_port = 9000
         self._base_url = server_url_info.hostname
-        ws_kwargs = {}
+        ws_kwargs = {'ping_interval': 30}
         if server_url_info.scheme == "https":
             if server_url_info.port:
                 # Using HTTPS but not for standard 443 port
@@ -103,7 +103,7 @@ class WebsocketsChangesStream(ChangesStream):
                 else:
                     cert_path = os.environ.get("REQUESTS_CA_BUNDLE", None)
                     if cert_path:
-                        ws_kwargs = {"sslopt": {"ca_certs": cert_path}}
+                        ws_kwargs["sslopt"] = {"ca_certs": cert_path}
                         logger.info("Using self signed certificate for WSS")
             except requests.exceptions.ConnectionError:
                 logger.warning("Faraday server is over https but websockets are not")
