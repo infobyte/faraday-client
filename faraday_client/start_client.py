@@ -38,12 +38,13 @@ from faraday_client.utils.logger import set_logging_level
 CONST_FARADAY_HOME_PATH = os.path.expanduser('~/.faraday')
 
 from faraday_client import __version__
-from faraday_client.persistence.server import server
 from faraday_client.persistence.server.server import login_user, get_user_info
 
 import faraday_client
 
-from colorama import Fore, Back, Style
+from colorama import init, Fore, Back, Style
+init(autoreset=True)
+from urllib.parse import urlparse
 
 USER_HOME = os.path.expanduser(CONST_USER_HOME)
 # find_module returns if search is successful, the return value is a 3-element tuple (file, pathname, description):
@@ -370,23 +371,36 @@ def doLoginLoop(force_login=False):
         old_server_url = CONF.getAPIUrl()
         if force_login:
             if old_server_url is None:
-                server_url = input("\nPlease enter the Faraday Server URL (Press enter for http://localhost:5985): ") \
-                                 or "http://localhost:5985"
+                server_url = input("\nPlease enter the Faraday Server URL (Press enter for https://localhost): ") \
+                                 or "https://localhost"
             else:
                 server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {old_server_url}): ")\
                                  or old_server_url
         else:
             if not old_server_url:
-                server_url = input("\nPlease enter the Faraday Server URL (Press enter for http://localhost:5985): ") \
-                             or "http://localhost:5985"
+                server_url = input("\nPlease enter the Faraday Server URL (Press enter for https://localhost): ") \
+                             or "https://localhost"
             else:
                 server_url = old_server_url
+        parsed_url = urlparse(server_url)
+        if parsed_url.scheme == "https":
+            logger.debug("Validate server ssl certificate [%s]", server_url)
+            try:
+                test_ssl_response = requests.get(server_url)
+            except requests.exceptions.SSLError as e:
+                logger.error("Invalid SSL Certificate, use --cert CERTIFICATE for self signed certificates")
+                print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for self signed certificates")
+                sys.exit(1)
+            except requests.exceptions.ConnectionError as e:
+                logger.error("Connection to Faraday server FAILED: %s", e)
+                sys.exit(1)
         CONF.setAPIUrl(server_url)
         if force_login:
             print("""\nTo login please provide your valid Faraday credentials.\nYou have 3 attempts.""")
         api_username = CONF.getAPIUsername()
         api_password = CONF.getAPIPassword()
-        for attempt in range(1, 4):
+        MAX_ATTEMPTS = 3
+        for attempt in range(1, MAX_ATTEMPTS + 1):
             if force_login or (not api_username or not api_password):
                 api_username = input("Username (press enter for faraday): ") or "faraday"
                 api_password = getpass.getpass('Password: ')
@@ -403,16 +417,16 @@ def doLoginLoop(force_login=False):
                     if 'roles' in user_info:
                         if 'client' in user_info['roles']:
                             if force_login:
-                                print("You can't login as a client. You have %s attempt(s) left." % (3 - attempt))
+                                print(f"You can't login as a client. You have {MAX_ATTEMPTS - attempt} attempt(s) left.")
                                 continue
                             else:
                                 print("You can't login as a client.")
                                 sys.exit(-1)
                     logger.info('Login successful: {0}'.format(api_username))
                     break
-            print('Login failed, please try again. You have %d more attempts' % (3 - attempt))
+            print(f'Login failed, please try again. You have {MAX_ATTEMPTS - attempt} more attempts')
         else:
-            logger.fatal('Invalid credentials, 3 attempts failed. Quitting Faraday...')
+            logger.fatal(f'Invalid credentials, {MAX_ATTEMPTS} attempts failed. Quitting Faraday...')
             sys.exit(-1)
     except KeyboardInterrupt:
         sys.exit(0)
@@ -433,6 +447,9 @@ def main():
     printBanner()
     logger.info("Dependencies met.")
     if args.cert_path:
+        if not os.path.isfile(args.cert_path):
+            logger.error("Certificate Path Don't exists [%s]", args.cert_path)
+            sys.exit(1)
         os.environ[REQUESTS_CA_BUNDLE_VAR] = args.cert_path
     checkConfiguration(args.gui)
     setConf()
