@@ -422,7 +422,7 @@ class CouchDbManager(AbstractPersistenceManager):
                     "Setting user,pass %s %s" % (url.username, url.password))
 
                 self.__serv = Server(uri=uri)
-                cookies = CONF.getDBSessionCookies()
+                cookies = CONF.getFaradaySessionCookies()
                 if cookies:
                     auth_obj = RestkitCookies(cookies)
                     auth_resource = CouchdbResource(filters=[auth_obj])

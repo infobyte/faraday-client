@@ -57,7 +57,7 @@ class MainApplication:
                     if session_cookie:
                         logger.info('Login successful')
                         CONF.setDBUser(username)
-                        CONF.setDBSessionCookies(session_cookie)
+                        CONF.setFaradaySessionCookies(session_cookie)
                     else:
                         logger.error('Login failed')
             except (IOError, ValueError):

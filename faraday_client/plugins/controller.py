@@ -124,7 +124,7 @@ class PluginController(Thread):
         """
         plugin.processOutput(output.decode('utf8'))
         base_url = _get_base_server_url()
-        cookies = _conf().getDBSessionCookies()
+        cookies = _conf().getFaradaySessionCookies()
         command.duration = time.time() - command.itime
         plugin_result = plugin.get_json()
         self.send_data(command.workspace, plugin_result)
@@ -139,7 +139,7 @@ class PluginController(Thread):
         logger.info(f'Sent command duration {res.status_code}')
 
     def send_data(self, workspace, data):
-        cookies = _conf().getDBSessionCookies()
+        cookies = _conf().getFaradaySessionCookies()
         base_url = _get_base_server_url()
         res = requests.post(
             f'{base_url}/_api/v2/ws/{workspace}/bulk_create/',

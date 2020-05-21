@@ -208,8 +208,8 @@ class AppWindow(Gtk.ApplicationWindow):
         new_button.set_action_name('app.new')
 
         preferences_button = Gtk.ToolButton.new(preferences_icon, None)
-        preferences_button.set_tooltip_text("Preferences")
-        preferences_button.set_label("Preferences")
+        preferences_button.set_tooltip_text("Login")
+        preferences_button.set_label("Login")
         toolbar.insert(preferences_button, 2)
         preferences_button.set_action_name('app.preferences')
 

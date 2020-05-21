@@ -33,18 +33,19 @@ from faraday_client.config.constant import (
     CONST_REQUIREMENTS_FILE,
     CONST_FARADAY_FOLDER_LIST,
 )
+from faraday_client.persistence.server.exceptions import Required2FAError
 from faraday_client.utils.logger import set_logging_level
 
 CONST_FARADAY_HOME_PATH = os.path.expanduser('~/.faraday')
 
 from faraday_client import __version__
-from faraday_client.persistence.server.server import login_user, get_user_info
+from faraday_client.persistence.server.server import login_user, get_user_info, is_authenticated
 
 import faraday_client
 
 from colorama import init, Fore, Back, Style
 init(autoreset=True)
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 USER_HOME = os.path.expanduser(CONST_USER_HOME)
 # find_module returns if search is successful, the return value is a 3-element tuple (file, pathname, description):
@@ -120,7 +121,7 @@ def getParserArgs():
                         action="store_true",
                         dest="login",
                         default=False,
-                        help="Enable prompt for authentication Database credentials")
+                        help="Force to ask for credentials")
 
     parser.add_argument('--dev-mode', action="store_true", dest="dev_mode",
                         default=False,
@@ -348,81 +349,86 @@ _/ ____\_____  ____________     __| _/_____   ___.__.
 
 
 
-def try_login_user(server_uri, api_username, api_password):
-
+def try_login_user(server_uri, api_username, api_password, u2fa_token=None):
     try:
-        session_cookie = login_user(server_uri, api_username, api_password)
-        return session_cookie
+        session_cookie = login_user(server_uri, api_username, api_password, u2fa_token)
     except requests.exceptions.SSLError:
         print("SSL certificate validation failed.\nYou can use the --cert option in Faraday to set the path of the cert")
         sys.exit(-1)
     except requests.exceptions.MissingSchema:
         print("The Faraday Server URL is incorrect, please try again.")
         sys.exit(-2)
+    except Required2FAError as e:
+        raise e
+    except Exception as e:
+        print(e)
+    else:
+        return session_cookie
 
 
-def doLoginLoop(force_login=False):
+def login(ask_for_credentials):
     """
     Sets the username and passwords from the command line.
     If --login flag is set then username and password is set
     """
     CONF = getInstanceConfiguration()
+    server_url = CONF.getAPIUrl()
     try:
-        old_server_url = CONF.getAPIUrl()
-        if force_login:
-            if old_server_url is None:
-                server_url = input("\nPlease enter the Faraday Server URL (Press enter for https://localhost): ") \
-                                 or "https://localhost"
-            else:
-                server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {old_server_url}): ")\
-                                 or old_server_url
+        if not server_url:
+            server_url = input("\nPlease enter the Faraday Server URL (Press enter for https://localhost): ") \
+                         or "https://localhost"
         else:
-            if not old_server_url:
-                server_url = input("\nPlease enter the Faraday Server URL (Press enter for https://localhost): ") \
-                             or "https://localhost"
-            else:
-                server_url = old_server_url
+            if ask_for_credentials:
+                server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {server_url}): ") \
+                             or server_url
         parsed_url = urlparse(server_url)
-        if parsed_url.scheme == "https":
-            logger.debug("Validate server ssl certificate [%s]", server_url)
-            try:
-                test_ssl_response = requests.get(server_url)
-            except requests.exceptions.SSLError as e:
-                logger.error("Invalid SSL Certificate, use --cert CERTIFICATE for self signed certificates")
-                print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for self signed certificates")
+        try:
+            if parsed_url.scheme == "https":
+                logger.debug("Validate server ssl certificate [%s]", server_url)
+            login_url = urljoin(server_url, "/_api/login")
+            test_server_response = requests.get(login_url)
+            if test_server_response.status_code != 200:
+                logger.error("Faraday server returned invalid response: %s", test_server_response.status_code)
                 sys.exit(1)
-            except requests.exceptions.ConnectionError as e:
-                logger.error("Connection to Faraday server FAILED: %s", e)
-                sys.exit(1)
+        except requests.exceptions.SSLError as e:
+            logger.error("Invalid SSL Certificate, use --cert CERTIFICATE for self signed certificates")
+            print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for self signed certificates")
+            sys.exit(1)
+        except requests.exceptions.ConnectionError as e:
+            logger.error("Connection to Faraday server FAILED: %s", e)
+            sys.exit(1)
         CONF.setAPIUrl(server_url)
-        if force_login:
-            print("""\nTo login please provide your valid Faraday credentials.\nYou have 3 attempts.""")
-        api_username = CONF.getAPIUsername()
-        api_password = CONF.getAPIPassword()
+        if not ask_for_credentials:
+            session_cookies = CONF.getFaradaySessionCookies()
+            if session_cookies and server_url:
+                if is_authenticated(server_url, session_cookies):
+                    logger.debug("Valid Previous session cookie found")
+                    return True
+        print(f"""\nPlease provide your valid Faraday credentials for {server_url}\nYou have 3 attempts.""")
         MAX_ATTEMPTS = 3
         for attempt in range(1, MAX_ATTEMPTS + 1):
-            if force_login or (not api_username or not api_password):
-                api_username = input("Username (press enter for faraday): ") or "faraday"
-                api_password = getpass.getpass('Password: ')
-            session_cookie = try_login_user(server_url, api_username, api_password)
+            api_username = input("Username (press enter for faraday): ") or "faraday"
+            api_password = getpass.getpass('Password: ')
+            try:
+                session_cookie = try_login_user(server_url, api_username, api_password)
+            except Required2FAError as e:
+                print(f"{Fore.YELLOW}2FA Authentication enabled!!")
+                u2fa_token = None
+                while not u2fa_token:
+                    u2fa_token = input("2FA Token: ")
+                session_cookie = try_login_user(server_url, api_username, api_password, u2fa_token)
             if session_cookie:
-                CONF.setAPIUsername(api_username)
-                CONF.setAPIPassword(api_password)
-                CONF.setDBSessionCookies(session_cookie)
-                CONF.saveConfig()
+                CONF.setFaradaySessionCookies(session_cookie)
                 user_info = get_user_info()
                 if not user_info:
                     continue
                 else:
                     if 'roles' in user_info:
                         if 'client' in user_info['roles']:
-                            if force_login:
-                                print(f"You can't login as a client. You have {MAX_ATTEMPTS - attempt} attempt(s) left.")
-                                continue
-                            else:
-                                print("You can't login as a client.")
-                                sys.exit(-1)
+                            print(f"You can't login as a client. You have {MAX_ATTEMPTS - attempt} attempt(s) left.")
+                            continue
                     logger.info('Login successful: {0}'.format(api_username))
+                    CONF.saveConfig()
                     break
             print(f'Login failed, please try again. You have {MAX_ATTEMPTS - attempt} more attempts')
         else:
@@ -430,11 +436,6 @@ def doLoginLoop(force_login=False):
             sys.exit(-1)
     except KeyboardInterrupt:
         sys.exit(0)
-
-
-def login(forced_login):
-    doLoginLoop(forced_login)
-
 
 def main():
     """
@@ -453,7 +454,6 @@ def main():
         os.environ[REQUESTS_CA_BUNDLE_VAR] = args.cert_path
     checkConfiguration(args.gui)
     setConf()
-
     login(args.login)
     start_faraday_client()
 

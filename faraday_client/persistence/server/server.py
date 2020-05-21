@@ -32,6 +32,7 @@ import urllib.parse as urlparse
 from urllib.parse import urlencode
 
 from colorama import init, Fore
+
 init(autoreset=True)
 import requests
 
@@ -46,6 +47,7 @@ from faraday_client.persistence.server.server_io_exceptions import (WrongObjectS
 from faraday_client.persistence.server.changes_stream import (
     WebsocketsChangesStream
 )
+from faraday_client.persistence.server.exceptions import Required2FAError
 
 # NOTE: Change is you want to use this module by itself.
 # If FARADAY_UP is False, SERVER_URL must be a valid faraday server url
@@ -77,10 +79,10 @@ def _conf():
     # If you are running this libs outside of Faraday, cookies are not setted.
     # you need get a valid cookie auth and set that.
     # Fplugin run in other instance, so this dont generate any trouble.
-    if not CONF.getDBSessionCookies() and not FARADAY_UPLOAD_REPORTS_WEB_COOKIE:
+    if not CONF.getFaradaySessionCookies() and not FARADAY_UPLOAD_REPORTS_WEB_COOKIE:
         server_url = CONF.getServerURI() if FARADAY_UP else SERVER_URL
         cookie = login_user(server_url, CONF.getAPIUsername(), CONF.getAPIPassword())
-        CONF.setDBSessionCookies(cookie)
+        CONF.setFaradaySessionCookies(cookie)
 
     return CONF
 
@@ -175,7 +177,7 @@ def _add_session_cookies(func):
         if FARADAY_UPLOAD_REPORTS_WEB_COOKIE:
             kwargs['cookies'] = FARADAY_UPLOAD_REPORTS_WEB_COOKIE
         else:
-            kwargs['cookies'] = _conf().getDBSessionCookies()
+            kwargs['cookies'] = _conf().getFaradaySessionCookies()
         response = func(*args, **kwargs)
         return response
     return wrapper if FARADAY_UP else func
@@ -1624,7 +1626,7 @@ def server_info():
     except:
         return None
 
-def login_user(uri, uname, upass):
+def login_user(uri, uname, upass, u2fa_token=None):
     auth = {"email": uname, "password": upass}
     headers = {'User-Agent': f'faraday-client/{f_version}'}
     try:
@@ -1632,29 +1634,37 @@ def login_user(uri, uname, upass):
         if resp.status_code == 401:
             return None
         elif resp.status_code == 202:
-            print(f"{Fore.YELLOW}2FA Authentication enabled!!")
-            u2fa_token = None
-            while not u2fa_token:
-                u2fa_token = input("2FA Token: ")
-            json_2fa = {"secret": u2fa_token}
-            resp_2fa = requests.post(urlparse.urljoin(uri, "/_api/confirmation"), json=json_2fa, headers=headers,
-                                     cookies=resp.cookies)
-            if resp_2fa.status_code == 200:
-                return resp_2fa.cookies
+            if not u2fa_token:
+                raise Required2FAError()
             else:
-                logger.error("Invalid 2FA Token")
-                return None
+
+                json_2fa = {"secret": u2fa_token}
+                resp_2fa = requests.post(urlparse.urljoin(uri, "/_api/confirmation"), json=json_2fa, headers=headers,
+                                         cookies=resp.cookies)
+                if resp_2fa.status_code == 200:
+                    return resp_2fa.cookies
+                else:
+                    logger.error("Invalid 2FA Token")
+                    return None
         else:
             return resp.cookies
-    except requests.adapters.ConnectionError:
+    except Required2FAError as e:
+        raise e
+    except requests.adapters.ConnectionError as e:
+        print(f"ERROR {e}")
         return None
-    except requests.adapters.ReadTimeout:
+    except requests.adapters.ReadTimeout as e:
+        print(f"ERROR {e}")
         return None
+    except Exception as e:
+        print(f"ERROR {e}")
+        return None
+
 
 def is_authenticated(uri, cookies):
     try:
         resp = requests.get(urlparse.urljoin(uri, "/_api/session"), cookies=cookies, timeout=1)
-        if resp.status_code != 403:
+        if resp.status_code not in [401, 403]:
             user_info = resp.json()
             return bool(user_info.get('username', {}))
         else:
@@ -1679,7 +1689,7 @@ def check_server_url(url_to_test):
 
 def get_user_info():
     try:
-        resp = requests.get(urlparse.urljoin(_get_base_server_url(), "/_api/session"), cookies=_conf().getDBSessionCookies(), timeout=1)
+        resp = requests.get(urlparse.urljoin(_get_base_server_url(), "/_api/session"), cookies=_conf().getFaradaySessionCookies(), timeout=1)
         if (resp.status_code != 401) and (resp.status_code != 403):
             return resp.json()
         else:

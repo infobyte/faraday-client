@@ -70,6 +70,7 @@ from faraday_client.gui.gtk.dialogs import NewWorkspaceDialog
 from faraday_client.gui.gtk.dialogs import NotificationsDialog
 from faraday_client.gui.gtk.dialogs import PluginOptionsDialog
 from faraday_client.gui.gtk.dialogs import PreferenceWindowDialog
+from faraday_client.gui.gtk.dialogs import AuthDialog
 from faraday_client.gui.gtk.dialogs import FaradayPluginsDialog
 from faraday_client.gui.gtk.dialogs import errorDialog
 
@@ -813,7 +814,7 @@ class GuiApp(Gtk.Application, FaradayUi):
             if not should_login:
                 return
 
-        if not is_authenticated(CONF.getServerURI(), CONF.getDBSessionCookies()):
+        if not is_authenticated(CONF.getServerURI(), CONF.getFaradaySessionCookies()):
             loginDialog = ForceLoginDialog(self.window,
                                            self.exit_faraday_without_confirm)
             loginDialog.run(3, CONF.getServerURI(), self.window)
@@ -968,9 +969,10 @@ class GuiApp(Gtk.Application, FaradayUi):
         changes her Couch URL, the sidebar will reload reflecting the
         new workspaces available"""
 
-        preference_window = PreferenceWindowDialog(self.reload_workspaces,
-                                                   self.connect_to_couch,
-                                                   self.window)
+        #preference_window = PreferenceWindowDialog(self.reload_workspaces,
+        #                                           self.connect_to_couch,
+        #                                           self.window)
+        preference_window = AuthDialog(self.reload_workspaces, self.window)
         preference_window.show_all()
 
     def on_click_go_to_web_ui_button(self, action=None, param=None):
