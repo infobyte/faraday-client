@@ -46,6 +46,7 @@ CONST_REPO_PASSWORD = "repo_password"
 CONST_API_URL = "api_url"
 CONST_FARADAY_SESSION_COOKIE = "faraday_session_cookie"
 CONST_FARADAY_SESSION_COOKIE_NAME = "faraday_session_2"
+CONST_CUSTOM_PLUGINS_PATH = "custom_plugins_path"
 CONST_COUCH_URI = "couch_uri"
 CONST_COUCH_REPLICS = "couch_replics"
 CONST_COUCH_ISREPLICATED = "couch_is_replicated"
@@ -170,7 +171,7 @@ class Configuration:
 
             self._db_user = ""
             self._session_cookies = self._getValue(tree, CONST_FARADAY_SESSION_COOKIE, default="")
-
+            self._custom_plugins_path = self._getValue(tree, CONST_CUSTOM_PLUGINS_PATH, default="")
             self._updates_uri = self._getValue(tree, CONST_UPDATEURI, default = "https://www.faradaysec.com/scripts/updates.php")
             self._tkts_uri = self._getValue(tree, CONST_TKTURI, default = "https://www.faradaysec.com/scripts/listener.php")
             self._tkt_api_params = self._getValue(tree, CONST_TKTAPIPARAMS,default ="{}")
@@ -279,6 +280,15 @@ class Configuration:
             return {CONST_FARADAY_SESSION_COOKIE_NAME: self._session_cookies}
         else:
             return {}
+
+    def getCustomPluginsPath(self):
+        if self._custom_plugins_path:
+            if os.path.isdir(self._custom_plugins_path):
+                return self._custom_plugins_path
+            else:
+                return None
+        else:
+            return None
 
     def getDBUser(self):
         return self._db_user
@@ -608,6 +618,10 @@ class Configuration:
         FARADAY_SESSION_COOKIE.text = self.getFaradaySessionCookies().get(CONST_FARADAY_SESSION_COOKIE_NAME)
         ROOT.append(FARADAY_SESSION_COOKIE)
 
+        CUSTOM_PLUGINS_PATH = Element(CONST_CUSTOM_PLUGINS_PATH)
+        CUSTOM_PLUGINS_PATH.text = self.getCustomPluginsPath()
+        ROOT.append(CUSTOM_PLUGINS_PATH)
+        
         COUCH_URI = Element(CONST_COUCH_URI)
         COUCH_URI.text = self.getCouchURI()
         ROOT.append(COUCH_URI)
