@@ -5,6 +5,7 @@ See the file 'doc/LICENSE' for the license information
 
 """
 import json
+from urllib.parse import urljoin
 
 import requests
 from past.builtins import basestring
@@ -123,7 +124,7 @@ class PluginController(Thread):
         :return: None
         """
         plugin.processOutput(output.decode('utf8'))
-        base_url = _get_base_server_url()
+
         cookies = _conf().getFaradaySessionCookies()
         command.duration = time.time() - command.itime
         plugin_result = plugin.get_json()
@@ -132,17 +133,18 @@ class PluginController(Thread):
         data = command.toDict()
         data['tool'] = data['command']
         data.pop('id_available')
+        url = urljoin(_get_base_server_url(), f"_api/v2/ws/{command.workspace}/commands/{command_id}/")
         res = requests.put(
-            f'{base_url}/_api/v2/ws/{command.workspace}/commands/{command_id}/',
+            url,
             json=data,
             cookies=cookies)
         logger.info(f'Sent command duration {res.status_code}')
 
     def send_data(self, workspace, data):
         cookies = _conf().getFaradaySessionCookies()
-        base_url = _get_base_server_url()
+        url = urljoin(_get_base_server_url(), f"_api/v2/ws/{workspace}/bulk_create/")
         res = requests.post(
-            f'{base_url}/_api/v2/ws/{workspace}/bulk_create/',
+            url,
             cookies=cookies,
             json=json.loads(data))
         if res.status_code != 201:

@@ -20,7 +20,7 @@ from queue import Queue, Empty
 import requests
 import websocket
 import ssl
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 from faraday_client.persistence.server.server_io_exceptions import (
     ChangesStreamStoppedAbruptly
@@ -88,13 +88,15 @@ class WebsocketsChangesStream(ChangesStream):
         self._base_url = server_url_info.hostname
         ws_kwargs = {'ping_interval': 30}
         if server_url_info.scheme == "https":
+            url_path = "websockets" if not server_url_info.path else f"{server_url_info.path}websockets"
             if server_url_info.port:
                 # Using HTTPS but not for standard 443 port
-                websockets_url = f"wss://{server_url_info.hostname}:{server_url_info.port}/websockets"
-                test_ws_url = f"https://{server_url_info.hostname}:{server_url_info.port}/websockets"
+                url_path = "websockets" if not server_url_info.path else f"{server_url_info.path}websockets"
+                websockets_url = f"wss://{server_url_info.hostname}:{server_url_info.port}/{url_path}"
+                test_ws_url = f"https://{server_url_info.hostname}:{server_url_info.port}/{url_path}"
             else:
-                websockets_url = f"wss://{server_url_info.hostname}/websockets"
-                test_ws_url = f"https://{server_url_info.hostname}/websockets"
+                websockets_url = f"wss://{server_url_info.hostname}/{url_path}"
+                test_ws_url = f"https://{server_url_info.hostname}/{url_path}"
             try:
                 ws_response = requests.get(test_ws_url)
                 if ws_response.status_code == 404:
@@ -109,6 +111,7 @@ class WebsocketsChangesStream(ChangesStream):
                 logger.warning("Faraday server is over https but websockets are not")
                 websockets_url = f"ws://{server_url_info.hostname}:{ws_port}/"
         else:
+            url_path = "" if not server_url_info.path else f"{server_url_info.path}websockets"
             websockets_url = f"ws://{server_url_info.hostname}:{ws_port}/"
         logger.info('Connecting to websocket url %s', websockets_url)
         self.ws = websocket.WebSocketApp(
@@ -131,10 +134,8 @@ class WebsocketsChangesStream(ChangesStream):
 
     def on_open(self):
         from faraday_client.persistence.server.server import _create_server_api_url, _post  # pylint:disable=import-outside-toplevel
-
-        response = _post(
-            _create_server_api_url() +
-            '/ws/{}/websocket_token/'.format(self.workspace_name),
+        url = urljoin(_create_server_api_url(), f"ws/{self.workspace_name}/websocket_token/")
+        response = _post(url,
             expected_response=200)
         token = response['token']
         self.ws.send(json.dumps({

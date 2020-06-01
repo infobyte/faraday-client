@@ -16,7 +16,7 @@ import socket
 try:
     from urlparse import urlparse
 except ImportError:
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, urljoin
 import traceback
 from faraday_client.persistence.server import server
 
@@ -573,7 +573,8 @@ def test_couch(uri):
     permissions (response_code == 200)
     """
     try:
-        response_code = requests.get(uri + '/_api/info', timeout=3).status_code
+        url = urljoin(uri, "_api/info")
+        response_code = requests.get(url, timeout=3).status_code
         return response_code == 200
     except:
         return False

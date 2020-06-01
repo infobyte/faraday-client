@@ -96,11 +96,12 @@ def _get_base_server_url():
         server_url = _conf().getAPIUrl()
     else:
         server_url = SERVER_URL
-    return server_url.rstrip('/')
+    return server_url
 
 def _create_server_api_url():
     """Return the server's api url."""
-    return "{0}/_api/v2".format(_get_base_server_url())
+    url = urlparse.urljoin(_get_base_server_url(), "_api/v2/")
+    return url
 
 def _create_server_get_url(workspace_name, object_name=None, object_id=None, **params):
     """Creates a url to get from the server. Takes the workspace name
@@ -113,10 +114,7 @@ def _create_server_get_url(workspace_name, object_name=None, object_id=None, **p
     """
     get_url = "/{0}".format(object_name) if object_name else ""
     get_url += "/{0}/".format(object_id) if object_id else ""
-    get_url = '{0}/ws/{1}{2}'.format(_create_server_api_url(),
-                                     workspace_name,
-                                     get_url)
-
+    get_url = urlparse.urljoin(_create_server_api_url(), f"ws/{workspace_name}/{get_url}/")
     return get_url
 
 
@@ -125,7 +123,7 @@ def _create_server_post_url(workspace_name, obj_type, command_id):
     object_end_point_name = OBJECT_TYPE_END_POINT_MAPPER[obj_type]
     if obj_type == 'comment':
         object_end_point_name = object_end_point_name.strip('/') + '_unique/'
-    post_url = '{0}/ws/{1}/{2}/'.format(server_api_url, workspace_name, object_end_point_name)
+    post_url = urlparse.urljoin(server_api_url, f"ws/{workspace_name}/{object_end_point_name}/")
     if command_id:
         get_params = {'command_id': command_id}
         post_url += '?' + urlencode(get_params)
@@ -135,7 +133,7 @@ def _create_server_post_url(workspace_name, obj_type, command_id):
 def _create_server_put_url(workspace_name, obj_type, obj_id, command_id):
     server_api_url = _create_server_api_url()
     object_end_point_name = OBJECT_TYPE_END_POINT_MAPPER[obj_type]
-    put_url = '{0}/ws/{1}/{2}/{3}/'.format(server_api_url, workspace_name, object_end_point_name, obj_id)
+    put_url = urlparse.urljoin(server_api_url, f"ws/{workspace_name}/{object_end_point_name}/{obj_id}/")
     if command_id:
         get_params = {'command_id': command_id}
         put_url += '?' + urlencode(get_params)
@@ -608,7 +606,8 @@ def get_changes_stream(workspace_name, heartbeat='1000', stream_provider=_websoc
 def get_workspaces_names():
     """Returns:
         A dictionary with a list with the workspaces names."""
-    return _get("{0}/ws".format(_create_server_api_url()))
+    url = urlparse.urljoin(_create_server_api_url(), "ws/")
+    return _get(url)
 
 # XXX: COUCH IT!
 def _clean_up_stupid_couch_response(response_string):
@@ -1622,7 +1621,8 @@ def server_info():
     None otherwise.
     """
     try:
-        return _get("{0}/info".format(_create_server_api_url()))
+        url = urlparse.urljoin(_create_server_api_url(), "info")
+        return _get(url)
     except:
         return None
 
@@ -1630,7 +1630,7 @@ def login_user(uri, uname, upass, u2fa_token=None):
     auth = {"email": uname, "password": upass}
     headers = {'User-Agent': f'faraday-client/{f_version}'}
     try:
-        resp = requests.post(urlparse.urljoin(uri, "/_api/login"), json=auth, headers=headers)
+        resp = requests.post(urlparse.urljoin(uri, "_api/login"), json=auth, headers=headers)
         if resp.status_code == 401:
             return None
         elif resp.status_code == 202:
@@ -1639,7 +1639,7 @@ def login_user(uri, uname, upass, u2fa_token=None):
             else:
 
                 json_2fa = {"secret": u2fa_token}
-                resp_2fa = requests.post(urlparse.urljoin(uri, "/_api/confirmation"), json=json_2fa, headers=headers,
+                resp_2fa = requests.post(urlparse.urljoin(uri, "_api/confirmation"), json=json_2fa, headers=headers,
                                          cookies=resp.cookies)
                 if resp_2fa.status_code == 200:
                     return resp_2fa.cookies
@@ -1663,7 +1663,7 @@ def login_user(uri, uname, upass, u2fa_token=None):
 
 def is_authenticated(uri, cookies):
     try:
-        resp = requests.get(urlparse.urljoin(uri, "/_api/session"), cookies=cookies, timeout=1)
+        resp = requests.get(urlparse.urljoin(uri, "_api/session"), cookies=cookies, timeout=1)
         if resp.status_code not in [401, 403]:
             user_info = resp.json()
             return bool(user_info.get('username', {}))
@@ -1680,7 +1680,8 @@ def check_server_url(url_to_test):
     False otherwise.
     """
     try:
-        resp = _get("{0}/_api/v2/info".format(url_to_test))
+        url = urlparse.urljoin(url_to_test, "_api/v2/info")
+        resp = _get(url)
         return 'Faraday Server' in resp
     except Exception as ex:
         logger.exception(ex)
@@ -1689,7 +1690,8 @@ def check_server_url(url_to_test):
 
 def get_user_info():
     try:
-        resp = requests.get(urlparse.urljoin(_get_base_server_url(), "/_api/session"), cookies=_conf().getFaradaySessionCookies(), timeout=1)
+        url = urlparse.urljoin(_get_base_server_url(), "_api/session")
+        resp = requests.get(url, cookies=_conf().getFaradaySessionCookies(), timeout=1)
         if (resp.status_code != 401) and (resp.status_code != 403):
             return resp.json()
         else:

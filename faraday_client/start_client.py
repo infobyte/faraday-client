@@ -241,7 +241,7 @@ def start_faraday_client():
 
     serverURL = getInstanceConfiguration().getServerURI()
     if serverURL:
-        url = "%s/_ui" % serverURL
+        url = urljoin(serverURL, "_ui")
         print(Fore.WHITE + Style.BRIGHT + "\n* " + "Faraday UI is ready")
         print(
             Fore.WHITE + Style.BRIGHT + "Point your browser to: \n[%s]" % url)
@@ -381,11 +381,13 @@ def login(ask_for_credentials):
             if ask_for_credentials:
                 server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {server_url}): ") \
                              or server_url
+        if not server_url.endswith("/"):
+            server_url = f"{server_url}/"
         parsed_url = urlparse(server_url)
         try:
             if parsed_url.scheme == "https":
                 logger.debug("Validate server ssl certificate [%s]", server_url)
-            login_url = urljoin(server_url, "/_api/login")
+            login_url = urljoin(server_url, "_api/login")
             test_server_response = requests.get(login_url)
             if test_server_response.status_code != 200:
                 logger.error("Faraday server returned invalid response: %s", test_server_response.status_code)
