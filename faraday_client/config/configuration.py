@@ -4,9 +4,9 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+from faraday_client import __version__ as client_version
 import os
 import json
-import shutil
 
 from faraday_client.config.constant import CONST_FARADAY_HOME_PATH
 
@@ -164,7 +164,6 @@ class Configuration:
             self._repo_user = self._getValue(tree, CONST_REPO_USER)
             self._report_path = self._getValue(tree, CONST_REPORT_PATH)
             self._shell_maximized = self._getValue(tree, CONST_SHELL_MAXIMIZED)
-            self._version = self._getValue(tree, CONST_VERSION)
             self._last_workspace = self._getValue(tree, CONST_LAST_WORKSPACE, default="untitled")
             self._plugin_settings = json.loads(self._getValue(tree, CONST_PLUGIN_SETTINGS, default="{}"))
             self._osint = json.loads(self._getValue(tree, CONST_OSINT, default = "{\"host\": \"shodan.io\",\"icon\": \"shodan\",\"label\": \"Shodan\", \"prefix\": \"/search?query=\", \"suffix\": \"\", \"use_external_icon\": false}"))
@@ -311,7 +310,7 @@ class Configuration:
         return self._shell_maximized
 
     def getVersion(self):
-        return self._version
+        return client_version
 
     def getLastWorkspace(self):
         return self._last_workspace
@@ -449,9 +448,6 @@ class Configuration:
 
     def setShellMaximized(self, val):
         self._shell_maximized = val
-
-    def setVersion(self, val):
-        self._version = val
 
     def setAPIUrl(self, url):
         self._api_url = url
@@ -621,7 +617,7 @@ class Configuration:
         CUSTOM_PLUGINS_PATH = Element(CONST_CUSTOM_PLUGINS_PATH)
         CUSTOM_PLUGINS_PATH.text = self.getCustomPluginsPath()
         ROOT.append(CUSTOM_PLUGINS_PATH)
-        
+
         COUCH_URI = Element(CONST_COUCH_URI)
         COUCH_URI.text = self.getCouchURI()
         ROOT.append(COUCH_URI)
@@ -633,10 +629,6 @@ class Configuration:
         COUCH_REPLICS = Element(CONST_COUCH_REPLICS)
         COUCH_REPLICS.text = self.getCouchReplics()
         ROOT.append(COUCH_REPLICS)
-
-        VERSION = Element(CONST_VERSION)
-        VERSION.text = self.getVersion()
-        ROOT.append(VERSION)
 
         PLUGIN_SETTINGS = Element(CONST_PLUGIN_SETTINGS)
         PLUGIN_SETTINGS.text = json.dumps(self.getPluginSettings())
