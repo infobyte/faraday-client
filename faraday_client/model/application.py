@@ -46,23 +46,6 @@ class MainApplication:
 
         self.args = args
 
-        if args.creds_file:
-            try:
-                with open(args.creds_file, 'r') as fp:
-                    creds = json.loads(fp.read())
-                    username = creds.get('username')
-                    password = creds.get('password')
-                    session_cookie = login_user(CONF.getServerURI(),
-                                                username, password)
-                    if session_cookie:
-                        logger.info('Login successful')
-                        CONF.setDBUser(username)
-                        CONF.setFaradaySessionCookies(session_cookie)
-                    else:
-                        logger.error('Login failed')
-            except (IOError, ValueError):
-                logger.error("Credentials file couldn't be loaded")
-
         self._mappers_manager = MapperManager()
         pending_actions = Queue()
         self._model_controller = ModelController(self._mappers_manager, pending_actions)
@@ -87,10 +70,7 @@ class MainApplication:
 
             self.app = CliApp(self._workspace_manager, self._plugin_controller)
 
-            if self.args.keep_old:
-                CONF.setMergeStrategy("old")
-            else:
-                CONF.setMergeStrategy("new")
+            CONF.setMergeStrategy("new")
 
         else:
             self.app = UiFactory.create(self._model_controller,

@@ -123,10 +123,6 @@ def getParserArgs():
                         default=False,
                         help="Force to ask for credentials")
 
-    parser.add_argument('--dev-mode', action="store_true", dest="dev_mode",
-                        default=False,
-                        help="Enable dev mode. This will use the user config and plugin folder.")
-
     parser.add_argument('--cert',
                         action="store",
                         dest="cert_path",
@@ -166,21 +162,10 @@ def getParserArgs():
                         default=False,
                         help="Enables debug mode. Default = disabled")
 
-    parser.add_argument('--creds-file',
-                        action="store",
-                        dest="creds_file",
-                        default=None,
-                        help="File containing user's credentials to be used in CLI mode")
 
     parser.add_argument('--nodeps',
                         action="store_true",
                         help='Skip dependency check')
-    parser.add_argument('--keep-old', action='store_true', help='Keep old object in CLI mode if Faraday find a conflict')
-    parser.add_argument('--keep-new', action='store_true', help='Keep new object in CLI mode if Faraday find a conflict (DEFAULT ACTION)')
-
-    parser.add_argument('--license-path',
-                        help='Path to the licence .tar.gz',
-                        default=None)
 
     parser.add_argument('-v', '--version', action='version',
                         version='Faraday Client v{version}'.format(version=__version__))
