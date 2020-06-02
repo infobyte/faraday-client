@@ -93,7 +93,7 @@ if [ -n "${FARADAY_PATH+x}" ]; then
     echo "[+] Faraday path set. Aliasing fplugin"
 
     function fplugin() {
-     python "$FARADAY_PATH/client/bin/fplugin.py" $*;
+     python "$FARADAY_PATH/bin/fplugin.py" $*;
      }
 else
 

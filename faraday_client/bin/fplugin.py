@@ -7,7 +7,7 @@ from builtins import input
 
 import os
 import sys
-import imp
+from importlib.machinery import SourceFileLoader
 import shlex
 import atexit
 import signal
@@ -82,7 +82,8 @@ def dispatch(args, unknown, user_help, username, password):
 
     plugin_path = os.path.join(faraday_directory, "bin/", args.command + '.py')
     # Get filename and import this
-    module_fplugin = imp.load_source('module_fplugin', plugin_path)
+    loader = SourceFileLoader('module_fplugin', plugin_path)
+    module_fplugin = loader.load_module()
     module_fplugin.models.server.FARADAY_UP = False
     module_fplugin.models.server.SERVER_URL = args.url
     module_fplugin.models.server.AUTH_USER = username
@@ -98,7 +99,7 @@ def dispatch(args, unknown, user_help, username, password):
             sys.exit(1)
 
     # Inspect the main function imported from the plugin and decide the best calling option
-    main_argspec = inspect.getargspec(call_main)
+    main_argspec = inspect.getfullargspec(call_main)
 
     if main_argspec != CURRENT_MAIN_ARGSPEC:
         # Function argspec does not match current API.
