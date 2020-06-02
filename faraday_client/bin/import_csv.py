@@ -138,13 +138,13 @@ def parse_host(register):
 def parse_service(register):
 
     columns = {
-        "service_name" : "name",
-        "service_description" : "description",
-        "service_owned" : "owned", #boolean
-        "service_port" : "ports", #list
+        "service_name": "name",
+        "service_description": "description",
+        "service_owned": "owned", #boolean
+        "service_port": "ports", #list
         "service_protocol": "protocol",
-        "service_version" : "version",
-        "service_status" : "status"
+        "service_version": "version",
+        "service_status": "status"
     }
 
     obj = transform_dict_to_object(columns, register)
@@ -157,15 +157,15 @@ def parse_service(register):
 def parse_vulnerability(register):
 
     columns = {
-        "vulnerability_name" : "name",
-        "vulnerability_desc" : "desc",
-        "vulnerability_data" : "data",
-        "vulnerability_severity" : "severity",
-        "vulnerability_refs" : "refs", #list
-        "vulnerability_confirmed" : "confirmed", #boolean
-        "vulnerability_resolution" : "resolution",
-        "vulnerability_status" : "status",
-        "vulnerability_policyviolations" : "policyviolations" #list
+        "vulnerability_name": "name",
+        "vulnerability_desc": "desc",
+        "vulnerability_data": "data",
+        "vulnerability_severity": "severity",
+        "vulnerability_refs": "refs", #list
+        "vulnerability_confirmed": "confirmed", #boolean
+        "vulnerability_resolution": "resolution",
+        "vulnerability_status": "status",
+        "vulnerability_policyviolations": "policyviolations" #list
     }
 
     obj = transform_dict_to_object(columns, register)
