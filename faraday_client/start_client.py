@@ -376,8 +376,8 @@ def login(ask_for_credentials):
                 logger.error("Faraday server returned invalid response: %s", test_server_response.status_code)
                 sys.exit(1)
         except requests.exceptions.SSLError as e:
-            logger.error("Invalid SSL Certificate, use --cert CERTIFICATE for self signed certificates")
-            print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for self signed certificates")
+            logger.error("Invalid SSL Certificate, use --cert CERTIFICATE for custom certificate")
+            print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for custom certificate")
             sys.exit(1)
         except requests.exceptions.ConnectionError as e:
             logger.error("Connection to Faraday server FAILED: %s - use --login to set a new server", server_url)
