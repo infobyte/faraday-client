@@ -375,8 +375,8 @@ def login(ask_for_credentials):
     server_url = CONF.getAPIUrl()
     try:
         if not server_url:
-            server_url = input("\nPlease enter the Faraday Server URL (Press enter for https://localhost): ") \
-                         or "https://localhost"
+            server_url = input("\nPlease enter the Faraday Server URL (Press enter for http://localhost:5985): ") \
+                         or "http://localhost:5985"
         else:
             if ask_for_credentials:
                 server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {server_url}): ") \
@@ -395,7 +395,7 @@ def login(ask_for_credentials):
             print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for self signed certificates")
             sys.exit(1)
         except requests.exceptions.ConnectionError as e:
-            logger.error("Connection to Faraday server FAILED: %s", e)
+            logger.error("Connection to Faraday server FAILED: %s - use --login to set a new server", server_url)
             sys.exit(1)
         CONF.setAPIUrl(server_url)
         if not ask_for_credentials:

@@ -25,7 +25,7 @@ class PluginManager:
         self._plugin_instances = {}
         self._plugin_settings = {}
         self.pending_actions = pending_actions
-        self._plugins_manager = PluginsManager()
+        self._plugins_manager = PluginsManager(CONF.getCustomPluginsPath())
         self.commands_analyzer = CommandAnalyzer(self._plugins_manager)
         self._loadSettings()
 

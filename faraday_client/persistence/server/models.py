@@ -725,6 +725,8 @@ class ModelBase:
         self._workspace_name = workspace_name
         self._server_id = obj.get('_id', None)
         self.id = obj.get('id', self._server_id)
+        if not self._server_id:
+            self._server_id = self.id
         self.name = obj.get('name')
         self.description = obj.get('description', "")
         self.owned = obj.get('owned', False)
@@ -752,6 +754,7 @@ class ModelBase:
     def setID(self, id):
         if id:
             self.id = id
+            self._server_id = id
             self.id_available.set()
 
     def getID(self):

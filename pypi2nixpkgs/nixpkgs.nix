@@ -1,44 +1,26 @@
-{ overlays ? [ ], ...}@args:
-    let
-        pypi2nixOverlay = self: super: {
-            python3 = super.python3.override { inherit packageOverrides; };
-        };
+{ overlays ? [ ], ... }@args:
+let
+  pypi2nixOverlay = self: super: {
+    python3 = super.python3.override { inherit packageOverrides; };
+  };
 
-        
-            nixpkgs =
-                builtins.fetchTarball {
-                    url = https://github.com/cript0nauta/nixpkgs/archive/7002c9c8ab98917bd0f029a5a4dc822507939a77.tar.gz;
-                    sha256 = "17534f9a9cz3plc2lqkk3i1l1idf5hsnayfikrp917r1cwvnnm2q";
-                };
-        
+  nixpkgs = builtins.fetchTarball {
+    url =
+      "https://github.com/infobyte/nixpkgs/archive/acd94facb9aaf3d463f985e57f89f5b397155153.tar.gz";
+    sha256 = "1bz1blwqsnmcrrhb3rfpav6wczkr6jz4756ypf8xnw6ww4z9vk0v";
+  };
 
-        packageOverrides = self: super: {
-    
+  packageOverrides = self: super: {
 
-            faraday_client =
-                self.callPackage ./packages/faraday_client.nix { };
-        
+    faraday_client = self.callPackage ./packages/faraday_client.nix { };
 
-            flask-restless =
-                self.callPackage ./packages/flask-restless.nix { };
-        
+    flask-restless = self.callPackage ./packages/flask-restless.nix { };
 
-            mimerender =
-                self.callPackage ./packages/mimerender.nix { };
-        
+    mimerender = self.callPackage ./packages/mimerender.nix { };
 
-            html2text =
-                self.callPackage ./packages/html2text.nix { };
-        
+    xlsxwriter = self.callPackage ./packages/xlsxwriter.nix { };
 
-            future =
-                self.callPackage ./packages/future.nix { };
-        
+    faraday-plugins = self.callPackage ./packages/faraday-plugins.nix { };
 
-            xlsxwriter =
-                self.callPackage ./packages/xlsxwriter.nix { };
-        
-
-        };
-    in import nixpkgs (args // { overlays = [ pypi2nixOverlay ] ++ overlays; })
-    
+  };
+in import nixpkgs (args // { overlays = [ pypi2nixOverlay ] ++ overlays; })

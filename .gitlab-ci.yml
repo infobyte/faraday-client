@@ -46,6 +46,11 @@ build_nix_python3:
   image: nixorg/nix
   stage: build_faraday
   script:
+    - mkdir -p ~/faraday
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday-plugins.git ~/faraday/plugins
+    - cd ~/faraday/plugins
+    - git checkout develop
+    - cd -
     - nix-build
     - mkdir -p /opt/faraday
     - cp -r $(readlink result)/* /opt/faraday
