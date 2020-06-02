@@ -253,12 +253,11 @@ class PluginController(Thread):
         command_id = self._mapper_manager.save(cmd_info)
         cmd_info.setID(command_id)
 
-        if plugin_id in [plugin[0] for plugin in self._plugins]:
-            logger.info('Processing report with plugin {0}'.format(plugin_id))
-            with open(filepath, 'rb') as output:
-                plugin = [plugin[1] for plugin in self._plugins if plugin[0] == plugin_id].pop()
-                self.processOutput(plugin, output.read(), cmd_info, True)
-            return command_id
+        logger.info('Processing report with plugin {0}'.format(plugin_id))
+        with open(filepath, 'rb') as output:
+            plugin = [plugin[1] for plugin in self._plugins if plugin[0] == plugin_id].pop()
+            self.processOutput(plugin, output.read(), cmd_info, True)
+        return command_id
 
         # Plugin to process this report not found, update duration of plugin process
         cmd_info.duration = time.time() - cmd_info.itime

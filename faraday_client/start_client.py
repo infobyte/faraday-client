@@ -223,18 +223,8 @@ def start_faraday_client():
 
     logger.info("Starting main application.")
     start = main_app.start
-
-    serverURL = getInstanceConfiguration().getServerURI()
-    if serverURL:
-        url = "%s/_ui" % serverURL
-        print(Fore.WHITE + Style.BRIGHT + "\n* " + "Faraday UI is ready")
-        print(
-            Fore.WHITE + Style.BRIGHT + "Point your browser to: \n[%s]" % url)
-
     print(Fore.RESET + Back.RESET + Style.RESET_ALL)
-
     exit_status = start()
-
     return exit_status
 
 

@@ -9,7 +9,7 @@ from __future__ import absolute_import
 import logging
 
 
-from faraday_plugins.plugins.manager import PluginsManager, CommandAnalyzer
+from faraday_plugins.plugins.manager import PluginsManager, CommandAnalyzer, ReportAnalyzer
 
 from faraday_client.config.configuration import getInstanceConfiguration
 
@@ -27,6 +27,7 @@ class PluginManager:
         self.pending_actions = pending_actions
         self._plugins_manager = PluginsManager(CONF.getCustomPluginsPath())
         self.commands_analyzer = CommandAnalyzer(self._plugins_manager)
+        self.report_analyzer = ReportAnalyzer(self._plugins_manager)
         self._loadSettings()
 
     def addController(self, controller, id):
