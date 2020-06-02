@@ -48,12 +48,11 @@ def signal_handler(signal, frame):
 
 
 def dispatch(args, unknown, user_help, username, password):
-    session_cookie = login_user(args.url, username, password)
-    if not session_cookie:
-        raise UserWarning('Invalid credentials!')
-
-    CONF.setDBUser(username)
-    CONF.setFaradaySessionCookies(session_cookie)
+    if username and password:
+        session_cookie = login_user(args.url, username, password)
+        if not session_cookie:
+            raise UserWarning('Invalid credentials!')
+        CONF.setFaradaySessionCookies(session_cookie)
 
     if '--' in unknown:
         unknown.remove('--')
@@ -179,11 +178,11 @@ def main():
 
     parser.add_argument(
         '--username',
-        required=True)
+        required=False)
 
     parser.add_argument(
         '--password',
-        required=True)
+        required=False)
 
     # Only parse known args. Unknown ones will be passed on the the called script
     args, unknown = parser.parse_known_args()

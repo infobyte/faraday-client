@@ -20,4 +20,4 @@ future>=0.18.2
 XlsxWriter>=1.2.8
 pycairo>=1.18.1
 future>=0.18.2
-faraday-plugins>=1.0.1,<2.0.0
+faraday-plugins>=1.2.0,<2.0.0
