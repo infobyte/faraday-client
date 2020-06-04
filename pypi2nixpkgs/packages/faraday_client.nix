@@ -37,4 +37,9 @@ buildPythonPackage rec {
     future
     faraday-plugins
   ];
+
+  meta = {
+    description = "Faraday GTK Client";
+    homepage = "https://github.com/infobyte/faraday_client";
+  };
 }
