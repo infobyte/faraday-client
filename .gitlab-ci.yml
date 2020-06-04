@@ -50,7 +50,7 @@ build_nix_python3:
     - mkdir -p ~/faraday
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday-plugins.git ~/faraday/plugins
     - cd ~/faraday/plugins
-    - git checkout develop
+    - git checkout dev
     - cd -
     - nix-build
     - mkdir -p /opt/faraday
