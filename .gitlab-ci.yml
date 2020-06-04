@@ -181,7 +181,7 @@ macos_pkg:
         - cd build_installer
         - /usr/bin/tar zxf faraday.tar.gz
         - cd faraday_copy
-        - git clone git@gitlab.com:faradaysec/faraday-linux-installers-builder.git
+        - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday-linux-installers-builder.git
         - cd faraday-linux-installers-builder
         - git clone https://github.com/jordansissel/fpm.git
         - cd fpm
