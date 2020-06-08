@@ -1867,7 +1867,7 @@ class aboutDialog(Gtk.AboutDialog):
                           "\n FaradaySec LLC. All rights reserved."
                           )
 
-        faraday_website = "http://www.faradaysec.com/faraday.html"
+        faraday_website = "https://www.faradaysec.com"
         self.set_website(faraday_website)
         self.set_website_label("Learn more about Faraday")
 

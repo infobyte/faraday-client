@@ -13,7 +13,7 @@ import click
 from faraday_client.gui.gui_app import FaradayUi
 from faraday_client.gui.nogui.eventwatcher import EventWatcher
 import faraday_client.model.guiapi
-from faraday.server.utils.logger import get_logger
+from faraday_client.utils.logger import get_logger
 
 from faraday_client.config.configuration import getInstanceConfiguration
 CONF = getInstanceConfiguration()

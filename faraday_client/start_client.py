@@ -123,10 +123,6 @@ def getParserArgs():
                         default=False,
                         help="Force to ask for credentials")
 
-    parser.add_argument('--dev-mode', action="store_true", dest="dev_mode",
-                        default=False,
-                        help="Enable dev mode. This will use the user config and plugin folder.")
-
     parser.add_argument('--cert',
                         action="store",
                         dest="cert_path",
@@ -166,21 +162,10 @@ def getParserArgs():
                         default=False,
                         help="Enables debug mode. Default = disabled")
 
-    parser.add_argument('--creds-file',
-                        action="store",
-                        dest="creds_file",
-                        default=None,
-                        help="File containing user's credentials to be used in CLI mode")
 
     parser.add_argument('--nodeps',
                         action="store_true",
                         help='Skip dependency check')
-    parser.add_argument('--keep-old', action='store_true', help='Keep old object in CLI mode if Faraday find a conflict')
-    parser.add_argument('--keep-new', action='store_true', help='Keep new object in CLI mode if Faraday find a conflict (DEFAULT ACTION)')
-
-    parser.add_argument('--license-path',
-                        help='Path to the licence .tar.gz',
-                        default=None)
 
     parser.add_argument('-v', '--version', action='version',
                         version='Faraday Client v{version}'.format(version=__version__))
@@ -238,18 +223,8 @@ def start_faraday_client():
 
     logger.info("Starting main application.")
     start = main_app.start
-
-    serverURL = getInstanceConfiguration().getServerURI()
-    if serverURL:
-        url = "%s/_ui" % serverURL
-        print(Fore.WHITE + Style.BRIGHT + "\n* " + "Faraday UI is ready")
-        print(
-            Fore.WHITE + Style.BRIGHT + "Point your browser to: \n[%s]" % url)
-
     print(Fore.RESET + Back.RESET + Style.RESET_ALL)
-
     exit_status = start()
-
     return exit_status
 
 
@@ -391,8 +366,8 @@ def login(ask_for_credentials):
                 logger.error("Faraday server returned invalid response: %s", test_server_response.status_code)
                 sys.exit(1)
         except requests.exceptions.SSLError as e:
-            logger.error("Invalid SSL Certificate, use --cert CERTIFICATE for self signed certificates")
-            print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for self signed certificates")
+            logger.error("Invalid SSL Certificate, use --cert CERTIFICATE for custom certificate")
+            print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for custom certificate")
             sys.exit(1)
         except requests.exceptions.ConnectionError as e:
             logger.error("Connection to Faraday server FAILED: %s - use --login to set a new server", server_url)

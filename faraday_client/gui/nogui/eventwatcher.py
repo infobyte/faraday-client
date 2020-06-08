@@ -6,7 +6,7 @@ See the file 'doc/LICENSE' for the license information
 """
 from __future__ import absolute_import
 
-from faraday.server.utils.logger import get_logger
+from faraday_client.utils.logger import get_logger
 from faraday_client.gui.customevents import CHANGEFROMINSTANCE
 
 

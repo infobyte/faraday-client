@@ -88,12 +88,11 @@ class ReportProcessor:
     def processReport(self, filename):
         """ Process one Report """
         logger.debug("Report file is %s" % filename)
-        report_analyzer = ReportAnalyzer(self.plugin_controller, filename)
-        plugin_id = report_analyzer.get_plugin_id()
-        if not plugin_id:
+        plugin = self.plugin_controller.plugin_manager.report_analyzer.get_plugin(filename)
+        if not plugin:
             logger.error('Plugin not found: automatic and manual try!')
             return None
-        return self.sendReport(plugin_id, filename)
+        return self.sendReport(plugin.id.lower(), filename)
 
     def sendReport(self, plugin_id, filename):
         """Sends a report to the appropiate plugin specified by plugin_id"""
