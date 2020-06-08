@@ -341,7 +341,7 @@ def try_login_user(server_uri, api_username, api_password, u2fa_token=None):
         return session_cookie
 
 
-def login(ask_for_credentials):
+def login(ask_for_credentials, cert_path):
     """
     Sets the username and passwords from the command line.
     If --login flag is set then username and password is set
@@ -378,6 +378,10 @@ def login(ask_for_credentials):
             if session_cookies and server_url:
                 if is_authenticated(server_url, session_cookies):
                     logger.debug("Valid Previous session cookie found")
+                    if parsed_url.scheme == "https" and cert_path:
+                        CONF.setCerPath(cert_path)
+                    else:
+                        CONF.setCerPath(None)
                     return True
         print(f"""\nPlease provide your valid Faraday credentials for {server_url}\nYou have 3 attempts.""")
         MAX_ATTEMPTS = 3
@@ -394,6 +398,10 @@ def login(ask_for_credentials):
                 session_cookie = try_login_user(server_url, api_username, api_password, u2fa_token)
             if session_cookie:
                 CONF.setFaradaySessionCookies(session_cookie)
+                if parsed_url.scheme == "https" and cert_path:
+                    CONF.setCerPath(cert_path)
+                else:
+                    CONF.setCerPath(None)
                 user_info = get_user_info()
                 if not user_info:
                     continue
@@ -422,14 +430,18 @@ def main():
     setupFolders(CONST_FARADAY_FOLDER_LIST)
     printBanner()
     logger.info("Dependencies met.")
+    checkConfiguration(args.gui)
+    setConf()
+    CONF = getInstanceConfiguration()
+    cert_path = CONF.getCertPath()
     if args.cert_path:
         if not os.path.isfile(args.cert_path):
             logger.error("Certificate Path Don't exists [%s]", args.cert_path)
             sys.exit(1)
-        os.environ[REQUESTS_CA_BUNDLE_VAR] = args.cert_path
-    checkConfiguration(args.gui)
-    setConf()
-    login(args.login)
+        cert_path = os.path.abspath(args.cert_path)
+    if cert_path:
+        os.environ[REQUESTS_CA_BUNDLE_VAR] = cert_path
+    login(args.login, cert_path)
     start_faraday_client()
 
 

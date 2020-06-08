@@ -28,6 +28,7 @@ CONF = getInstanceConfiguration()
 
 plugins = None
 
+REQUESTS_CA_BUNDLE_VAR = "REQUESTS_CA_BUNDLE"
 
 class RawDescriptionAndDefaultsHelpFormatter(argparse.RawDescriptionHelpFormatter,
                                              argparse.ArgumentDefaultsHelpFormatter):
@@ -184,9 +185,15 @@ def main():
         '--password',
         required=False)
 
+    parser.add_argument('--cert',
+                        action="store",
+                        dest="cert_path",
+                        default=None,
+                        help="Path to the valid Faraday server certificate")
     # Only parse known args. Unknown ones will be passed on the the called script
     args, unknown = parser.parse_known_args()
-
+    if args.cert_path:
+        os.environ[REQUESTS_CA_BUNDLE_VAR] = args.cert_path
     if not args.interactive:
         dispatch(args, unknown, parser.format_help(), args.username, args.password)
     else:
