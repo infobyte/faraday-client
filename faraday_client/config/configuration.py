@@ -46,6 +46,7 @@ CONST_REPO_PASSWORD = "repo_password"
 CONST_API_URL = "api_url"
 CONST_FARADAY_SESSION_COOKIE = "faraday_session_cookie"
 CONST_FARADAY_SESSION_COOKIE_NAME = "faraday_session_2"
+CONST_CERT_PATH = "cert_path"
 CONST_CUSTOM_PLUGINS_PATH = "custom_plugins_path"
 CONST_COUCH_URI = "couch_uri"
 CONST_COUCH_REPLICS = "couch_replics"
@@ -157,6 +158,7 @@ class Configuration:
             self._perspective_view = self._getValue(tree, CONST_PERSISTENCE_PATH)
             self._repo_password = self._getValue(tree, CONST_REPO_PASSWORD)
             self._api_url = self._getValue(tree, CONST_API_URL)
+            self._cert_path = self._getValue(tree, CONST_CERT_PATH, default="")
             self._couch_uri = self._getValue(tree, CONST_COUCH_URI, default="")
             self._couch_replics = self._getValue(tree, CONST_COUCH_REPLICS, default="")
             self._couch_is_replicated = bool(self._getValue(tree, CONST_COUCH_ISREPLICATED, default = False))
@@ -273,6 +275,9 @@ class Configuration:
 
     def getServerURI(self):
         return self._api_url
+
+    def getCertPath(self):
+        return self._cert_path
 
     def getFaradaySessionCookies(self):
         if self._session_cookies:
@@ -452,6 +457,9 @@ class Configuration:
     def setAPIUrl(self, url):
         self._api_url = url
 
+    def setCerPath(self, cert_path):
+        self._cert_path = cert_path
+
     def setCouchUri(self, uri):
         self._couch_uri = uri
 
@@ -609,6 +617,10 @@ class Configuration:
         SERVER_URL = Element(CONST_API_URL)
         SERVER_URL.text = self.getServerURI()
         ROOT.append(SERVER_URL)
+
+        CERT_PATH = Element(CONST_CERT_PATH)
+        CERT_PATH.text = self.getCertPath()
+        ROOT.append(CERT_PATH)
 
         FARADAY_SESSION_COOKIE = Element(CONST_FARADAY_SESSION_COOKIE)
         FARADAY_SESSION_COOKIE.text = self.getFaradaySessionCookies().get(CONST_FARADAY_SESSION_COOKIE_NAME)
