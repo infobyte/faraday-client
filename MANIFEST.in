@@ -11,6 +11,6 @@ recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
 include faraday_client/zsh/faraday.zsh
 include faraday_client/zsh/faraday-terminal.zsh
 include faraday_client/gui/gtk/menubar.xml
-include faraday/config/default.xml
+include faraday_client/config/default.xml
 recursive-include faraday_client/data *
 include faraday_client/plugins/port_mapper.txt
