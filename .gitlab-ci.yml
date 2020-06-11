@@ -48,9 +48,9 @@ build_nix_python3:
     - git checkout dev
     - cd -
     - nix-build
-    - mkdir -p /opt/faraday
-    - cp -r $(readlink result)/* /opt/faraday
-    - tar czf /py3.tar.gz /opt/faraday $(nix-store --query --requisites $(readlink result))
+    - mkdir -p /opt/faraday-client
+    - cp -r $(readlink result)/* /opt/faraday-client
+    - tar czf /py3.tar.gz /opt/faraday-client $(nix-store --query --requisites $(readlink result))
     - mv /py3.tar.gz $CI_PROJECT_DIR
   artifacts:
     name: python3
