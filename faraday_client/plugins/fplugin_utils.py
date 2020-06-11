@@ -82,14 +82,12 @@ def get_available_plugins():
 
 def build_faraday_plugin_command(plugin, workspace_name, absolute_path=False):
     faraday_directory = os.path.dirname(os.path.realpath(os.path.join(__file__, "../")))
-    path = os.path.join(faraday_directory, "bin/")
-
-    return '{path}fplugin {command} -u {url} -w {workspace} '.format(
-        path='"%s"' % path if absolute_path else '',
-        command=plugin,
-        url=CONF.getServerURI(),
-        workspace=workspace_name
-    )
+    path = os.path.join(faraday_directory, "bin", "fplugin")
+    cert_path = CONF.getCertPath()
+    command = f"fplugin {plugin} -u {CONF.getServerURI()} -w {workspace_name}"
+    if cert_path:
+        command = f"{command} --cert={cert_path}"
+    return command
 
 
 # I'm Py3

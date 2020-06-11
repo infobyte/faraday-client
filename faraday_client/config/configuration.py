@@ -4,9 +4,9 @@ Copyright (C) 2013  Infobyte LLC (http://www.infobytesec.com/)
 See the file 'doc/LICENSE' for the license information
 
 """
+from faraday_client import __version__ as client_version
 import os
 import json
-import shutil
 
 from faraday_client.config.constant import CONST_FARADAY_HOME_PATH
 
@@ -46,6 +46,7 @@ CONST_REPO_PASSWORD = "repo_password"
 CONST_API_URL = "api_url"
 CONST_FARADAY_SESSION_COOKIE = "faraday_session_cookie"
 CONST_FARADAY_SESSION_COOKIE_NAME = "faraday_session_2"
+CONST_CERT_PATH = "cert_path"
 CONST_CUSTOM_PLUGINS_PATH = "custom_plugins_path"
 CONST_COUCH_URI = "couch_uri"
 CONST_COUCH_REPLICS = "couch_replics"
@@ -157,6 +158,7 @@ class Configuration:
             self._perspective_view = self._getValue(tree, CONST_PERSISTENCE_PATH)
             self._repo_password = self._getValue(tree, CONST_REPO_PASSWORD)
             self._api_url = self._getValue(tree, CONST_API_URL)
+            self._cert_path = self._getValue(tree, CONST_CERT_PATH, default="")
             self._couch_uri = self._getValue(tree, CONST_COUCH_URI, default="")
             self._couch_replics = self._getValue(tree, CONST_COUCH_REPLICS, default="")
             self._couch_is_replicated = bool(self._getValue(tree, CONST_COUCH_ISREPLICATED, default = False))
@@ -164,7 +166,6 @@ class Configuration:
             self._repo_user = self._getValue(tree, CONST_REPO_USER)
             self._report_path = self._getValue(tree, CONST_REPORT_PATH)
             self._shell_maximized = self._getValue(tree, CONST_SHELL_MAXIMIZED)
-            self._version = self._getValue(tree, CONST_VERSION)
             self._last_workspace = self._getValue(tree, CONST_LAST_WORKSPACE, default="untitled")
             self._plugin_settings = json.loads(self._getValue(tree, CONST_PLUGIN_SETTINGS, default="{}"))
             self._osint = json.loads(self._getValue(tree, CONST_OSINT, default = "{\"host\": \"shodan.io\",\"icon\": \"shodan\",\"label\": \"Shodan\", \"prefix\": \"/search?query=\", \"suffix\": \"\", \"use_external_icon\": false}"))
@@ -275,6 +276,9 @@ class Configuration:
     def getServerURI(self):
         return self._api_url
 
+    def getCertPath(self):
+        return self._cert_path
+
     def getFaradaySessionCookies(self):
         if self._session_cookies:
             return {CONST_FARADAY_SESSION_COOKIE_NAME: self._session_cookies}
@@ -311,7 +315,7 @@ class Configuration:
         return self._shell_maximized
 
     def getVersion(self):
-        return self._version
+        return client_version
 
     def getLastWorkspace(self):
         return self._last_workspace
@@ -450,11 +454,11 @@ class Configuration:
     def setShellMaximized(self, val):
         self._shell_maximized = val
 
-    def setVersion(self, val):
-        self._version = val
-
     def setAPIUrl(self, url):
         self._api_url = url
+
+    def setCerPath(self, cert_path):
+        self._cert_path = cert_path
 
     def setCouchUri(self, uri):
         self._couch_uri = uri
@@ -614,6 +618,10 @@ class Configuration:
         SERVER_URL.text = self.getServerURI()
         ROOT.append(SERVER_URL)
 
+        CERT_PATH = Element(CONST_CERT_PATH)
+        CERT_PATH.text = self.getCertPath()
+        ROOT.append(CERT_PATH)
+
         FARADAY_SESSION_COOKIE = Element(CONST_FARADAY_SESSION_COOKIE)
         FARADAY_SESSION_COOKIE.text = self.getFaradaySessionCookies().get(CONST_FARADAY_SESSION_COOKIE_NAME)
         ROOT.append(FARADAY_SESSION_COOKIE)
@@ -621,7 +629,7 @@ class Configuration:
         CUSTOM_PLUGINS_PATH = Element(CONST_CUSTOM_PLUGINS_PATH)
         CUSTOM_PLUGINS_PATH.text = self.getCustomPluginsPath()
         ROOT.append(CUSTOM_PLUGINS_PATH)
-        
+
         COUCH_URI = Element(CONST_COUCH_URI)
         COUCH_URI.text = self.getCouchURI()
         ROOT.append(COUCH_URI)
@@ -633,10 +641,6 @@ class Configuration:
         COUCH_REPLICS = Element(CONST_COUCH_REPLICS)
         COUCH_REPLICS.text = self.getCouchReplics()
         ROOT.append(COUCH_REPLICS)
-
-        VERSION = Element(CONST_VERSION)
-        VERSION.text = self.getVersion()
-        ROOT.append(VERSION)
 
         PLUGIN_SETTINGS = Element(CONST_PLUGIN_SETTINGS)
         PLUGIN_SETTINGS.text = json.dumps(self.getPluginSettings())
