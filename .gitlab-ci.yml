@@ -140,6 +140,23 @@ generate_deb:
         expire_in: 15 days
 
 
+py2app:
+  stage: osx
+  allow_failure: true
+  before_script:
+    - pip3 install virtualenv
+    - virtualenv venv
+  script:
+    - . venv/bin/activate
+    - pip install py2app
+    - python setup.py py2app
+  artifacts:
+    name: 'faradau-client_$CI_COMMIT_REF_NAME.app'
+    paths:
+      - 'dist/faraday_client.app'
+    expire_in: 15 days
+
+
 macos_pkg:
     tags:
         - macos
