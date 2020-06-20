@@ -1,0 +1,6 @@
+Before installing the pkg file:
+
+1) Install brew
+2) Install python3 with: brew install python3
+3) Install GTK dependencies: brew install vte3 pygobject3 libffi
+4) Install Faraday-Client .pkg
