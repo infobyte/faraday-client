@@ -22,6 +22,7 @@ try:
 except ImportError as e:
     print ("You are missing Gobject Instrospection. Please install "
            "version 3.14 or above (recommended) or 3.12")
+    raise
     sys.exit(1)
 
 try:

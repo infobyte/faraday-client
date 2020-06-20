@@ -13,11 +13,13 @@ from builtins import input
 import os
 import sys
 import shutil
+import pathlib
 import getpass
 import argparse
 import requests
 import requests.exceptions
 import logging
+from pathlib import Path
 
 
 from faraday_client.config.configuration import getInstanceConfiguration
@@ -49,7 +51,8 @@ from urllib.parse import urlparse, urljoin
 
 USER_HOME = os.path.expanduser(CONST_USER_HOME)
 # find_module returns if search is successful, the return value is a 3-element tuple (file, pathname, description):
-FARADAY_BASE = os.path.dirname(faraday_client.__file__)
+
+FARADAY_BASE = os.path.dirname(pathlib.Path(__file__).absolute())
 os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  # Use double dirname to obtain parent directory
 FARADAY_CLIENT_BASE = FARADAY_BASE
 
@@ -64,7 +67,6 @@ FARADAY_BASE_CONFIG_XML = os.path.join(FARADAY_BASE, CONST_FARADAY_BASE_CFG)
 USER_ZSHRC = os.path.expanduser(CONST_USER_ZSHRC)
 
 FARADAY_USER_ZSHRC = os.path.join(FARADAY_USER_HOME, CONST_FARADAY_ZSHRC)
-FARADAY_USER_ZSH_PATH = os.path.join(FARADAY_USER_HOME, CONST_ZSH_PATH)
 FARADAY_BASE_ZSH = os.path.join(FARADAY_CLIENT_BASE, CONST_FARADAY_ZSH_FARADAY)
 
 FARADAY_REQUIREMENTS_FILE = os.path.join(FARADAY_BASE, CONST_REQUIREMENTS_FILE)
@@ -249,8 +251,13 @@ def setupZSH():
         f.write("source \"%s\"" % FARADAY_BASE_ZSH)
 
     # Don't use shutil.copy to ensure the destination file will be writable
-    with open(os.path.join(FARADAY_USER_ZSH_PATH, 'faraday.zsh'), 'w') as dst:
-        with open(FARADAY_BASE_ZSH) as src:
+    if (Path(FARADAY_BASE) / Path(CONST_ZSH_PATH) / Path('faraday.zsh')).is_file():
+        zsh_path = Path(FARADAY_BASE) / Path(CONST_ZSH_PATH) / Path('faraday.zsh')
+    if (Path(FARADAY_BASE) / Path('faraday.zsh')).is_file():
+        zsh_path = Path(FARADAY_BASE) / Path('faraday.zsh')
+
+    with open(zsh_path, 'w') as dst:
+        with open(zsh_path) as src:
             dst.write(src.read())
 
 
@@ -261,9 +268,12 @@ def setupXMLConfig():
     If there is no custom config the default one will be copied as a default.
     """
 
-    if not os.path.isfile(FARADAY_USER_CONFIG_XML):
+    if not Path(FARADAY_USER_CONFIG_XML).is_file():
         logger.info("Copying default configuration from project.")
-        shutil.copy(FARADAY_BASE_CONFIG_XML, FARADAY_USER_CONFIG_XML)
+        if (Path(FARADAY_BASE_CONFIG_XML)).is_file():
+            shutil.copy(FARADAY_BASE_CONFIG_XML, FARADAY_USER_CONFIG_XML)
+        if (Path(FARADAY_BASE) / Path('default.xml')).is_file():
+            shutil.copy(Path(FARADAY_BASE) / Path('default.xml'), FARADAY_USER_CONFIG_XML)
     else:
         logger.info("Using custom user configuration.")
 

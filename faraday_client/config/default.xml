@@ -27,17 +27,9 @@
     <api_con_info_host>None</api_con_info_host>
     <api_con_info_port>None</api_con_info_port>
     <auth encrypted="no" algorithm="OTR">0</auth>
-    <repo_url type="svn"></repo_url>
-    <repo_user>u</repo_user>
-    <repo_password></repo_password>
-    <couch_uri>http://127.0.0.1:5985</couch_uri>
-    <couch_is_replicated/>
-    <couch_replics/>
 
     <updates_uri>https://www.faradaysec.com/scripts/updates.php</updates_uri>
     <tickets_uri>https://www.faradaysec.com/scripts/listener.php</tickets_uri>
     <tickets_template>{}</tickets_template>
     <tickets_api>{}</tickets_api>
-
-
 </faraday>

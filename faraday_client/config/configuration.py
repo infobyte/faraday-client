@@ -7,6 +7,7 @@ See the file 'doc/LICENSE' for the license information
 from faraday_client import __version__ as client_version
 import os
 import json
+from pathlib import Path
 
 from faraday_client.config.constant import CONST_FARADAY_HOME_PATH
 
@@ -68,7 +69,6 @@ CONST_PLUGIN_SETTINGS = "plugin_settings"
 
 
 DEFAULT_XML = os.path.dirname(__file__) + "/default.xml"
-DEFAULT_SERVER_INI = os.path.join(os.path.dirname(__file__), "..", "server", "default.ini")
 
 
 class Configuration:
@@ -678,7 +678,6 @@ class Configuration:
 
 
 def getInstanceConfiguration():
-    # TODO: move this to the client and stop using this on the server.
     global the_config
     if the_config is None:
         faraday_dir = CONST_FARADAY_HOME_PATH
@@ -691,7 +690,15 @@ def getInstanceConfiguration():
         faraday_user_config = os.path.join(config_dir, "user.xml")
         if not os.path.isfile(faraday_user_config):
             with open(faraday_user_config, 'w') as dst:
-                with open(DEFAULT_XML) as src:
+                default_xml_path = None
+                if Path(DEFAULT_XML).is_file():
+                    default_xml_path = DEFAULT_XML
+                base_path = os.getenv('RESOURCEPATH')
+                if (Path(base_path) / Path('default.xml')).is_file():
+                    default_xml_path = Path(base_path) / Path('default.xml')
+                if not default_xml_path:
+                    raise UserWarning('Could not find default configuration.', base_path)
+                with open(default_xml_path) as src:
                     dst.write(src.read())
 
         the_config = Configuration(os.path.join(config_dir, "user.xml"))

@@ -18,9 +18,16 @@ with open('HISTORY.rst') as history_file:
 with open('requirements.txt') as requirements:
     requirements = [requirement.strip('\n') for requirement in requirements.readlines()]
 
-setup_requirements = []
+setup_requirements = ['py2app']
 
 test_requirements = []
+
+APP = ['faraday_client/start_client.py']
+DATA_FILES = [
+    'faraday_client/zsh/faraday.zsh',
+    'faraday_client/config/default.xml',
+]
+OPTIONS = {}
 
 try:
     # When setuptools_scm is installed, it ignores the MANIFEST.in contents,
@@ -34,6 +41,9 @@ except ImportError:
     pass
 
 setup(
+    app=APP,
+    data_files=DATA_FILES,
+    options={'py2app': OPTIONS},
     author="Matias Lang",
     author_email='matiasl@faradaysec.com',
     python_requires='>=3.5',
