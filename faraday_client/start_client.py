@@ -357,6 +357,9 @@ def login(ask_for_credentials, cert_path):
                 server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {server_url}): ") \
                              or server_url
         parsed_url = urlparse(server_url)
+        if not  all([parsed_url.scheme, parsed_url.netloc]):
+            logger.error("Invalid URL: %s", server_url)
+            sys.exit(1)
         try:
             if parsed_url.scheme == "https":
                 logger.debug("Validate server ssl certificate [%s]", server_url)
