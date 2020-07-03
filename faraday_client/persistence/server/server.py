@@ -75,15 +75,6 @@ OBJECT_TYPE_END_POINT_MAPPER = {
 def _conf():
     from faraday_client.config.configuration import getInstanceConfiguration  # pylint:disable=import-outside-toplevel
     CONF = getInstanceConfiguration()
-
-    # If you are running this libs outside of Faraday, cookies are not setted.
-    # you need get a valid cookie auth and set that.
-    # Fplugin run in other instance, so this dont generate any trouble.
-    if not CONF.getFaradaySessionCookies() and not FARADAY_UPLOAD_REPORTS_WEB_COOKIE:
-        server_url = CONF.getServerURI() if FARADAY_UP else SERVER_URL
-        cookie = login_user(server_url, CONF.getAPIUsername(), CONF.getAPIPassword())
-        CONF.setFaradaySessionCookies(cookie)
-
     return CONF
 
 
