@@ -282,9 +282,11 @@ def main(workspace="", args=None, parser=None):
             if vulnerability is not None:
                 if host and not service:
                     parent_type = 'Host'
+                    parent_filter = 'host_id'
                     parent_id = host.getID()
                 if host and service:
                     parent_type = 'Service'
+                    parent_filter = 'service_id'
                     parent_id = service.getID()
                 vulnerability.setParent(parent_id)
                 vulnerability.setParentType(parent_type)
@@ -292,8 +294,7 @@ def main(workspace="", args=None, parser=None):
                 vuln_params = {
                     'name': vulnerability.getName(),
                     'description': vulnerability.getDescription(),
-                    'parent_type': parent_type,
-                    'parent': parent_id,
+                    parent_filter: parent_id
                 }
 
                 if not models.get_vuln(WORKSPACE, **vuln_params):
@@ -306,8 +307,7 @@ def main(workspace="", args=None, parser=None):
                 vuln_web_params = {
                     'name': vulnerability_web.getName(),
                     'description': vulnerability_web.getDescription(),
-                    'parent': service.getID(),
-                    'parent_type': 'Service',
+                    'service_id': service.getID(),
                     'method': vulnerability_web.getMethod(),
                     'parameter_name': vulnerability_web.getParams(),
                     'path': vulnerability_web.getPath(),
