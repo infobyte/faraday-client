@@ -1563,7 +1563,7 @@ def create_workspace(workspace_name, description, start_date, finish_date,
         A dictionary with the server's response.
     """
     if duration is None:
-        duration = {"start": start_date, "end": finish_date}
+        duration = {"start_date": start_date, "end_date": finish_date}
     return _save_db_to_server(workspace_name,
                               name=workspace_name,
                               description=description,
