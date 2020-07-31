@@ -81,7 +81,7 @@ zshaddhistory() {
 precmd() {
     send-output
     WORKSPACE=`cat $HOME/.faraday/config/user.xml |  grep '<last_workspace' | cut -d '>' -f 2 | cut -d '<' -f 1`
-    PS1="%{${fg_bold[red]}%}[faraday]($WORKSPACE)%{${reset_color}%} "$'\n'" $USERPS1"
+    PS1="%{${fg_bold[red]}%}[faraday]($WORKSPACE)%{${reset_color}%} "$'\n'"$USERPS1"
     return 0
 }
 
