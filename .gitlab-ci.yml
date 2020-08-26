@@ -161,6 +161,7 @@ macos_pkg:
         - cd faraday_copy
         - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday-linux-installers-builder.git
         - cd faraday-linux-installers-builder
+        - git checkout tkt_11_add_faraday_terminal_zsh
         - git clone https://github.com/jordansissel/fpm.git
         - cd fpm
         - git checkout d7b466787d17581bc723e474ecf6e18f48226031
