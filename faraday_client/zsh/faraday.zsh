@@ -81,7 +81,7 @@ zshaddhistory() {
 precmd() {
     send-output
     WORKSPACE=`cat $HOME/.faraday/config/user.xml |  grep '<last_workspace' | cut -d '>' -f 2 | cut -d '<' -f 1`
-    PS1="%{${fg_bold[red]}%}[faraday]($WORKSPACE)%{${reset_color}%} $USERPS1"
+    PS1="%{${fg_bold[red]}%}[faraday]($WORKSPACE)%{${reset_color}%} "$'\n'"$USERPS1"
     return 0
 }
 
@@ -89,24 +89,5 @@ zshexit() {
     send-output
 }
 
-if [ -n "${FARADAY_PATH+x}" ]; then
-    echo "[+] Faraday path set. Aliasing fplugin"
-
-    function fplugin() {
-     python "$FARADAY_PATH/client/bin/fplugin.py" $*;
-     }
-else
-
-    if [ -s "./faraday-server.py" ]; then
-        echo "[+] Faraday path not set, but server found. Aliasing fplugin"
-        function fplugin() {
-         "./bin/fplugin" $*;
-         }
-    else
-
-        echo "[-] Faraday path not set"
-    fi
-
-fi
 
 zle -N accept-line add-output

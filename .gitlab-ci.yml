@@ -21,6 +21,8 @@ before_script:
 stages:
     - build_faraday
     - build_installers
+    - osx
+
 
 generate_build_file:
     image: registry.gitlab.com/faradaysec/integrationrepo
@@ -34,34 +36,27 @@ generate_build_file:
         paths:
             - "faraday.tar.gz"
         expire_in: 3 days
-    rules:
-        - if: '$CI_COMMIT_REF_NAME =~ /^.*\/(master)$/'
-          when: on_success
-        - if: '$CI_COMMIT_TAG || $BUILD_TEST || $FULL_TEST || $DAILY_TEST'
-          when: on_success
-        - when: never
 
 
 build_nix_python3:
   image: nixorg/nix
   stage: build_faraday
   script:
+    - mkdir -p ~/faraday
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday-plugins.git ~/faraday/plugins
+    - cd ~/faraday/plugins
+    - git checkout dev
+    - cd -
     - nix-build
-    - mkdir -p /opt/faraday
-    - cp -r $(readlink result)/* /opt/faraday
-    - tar czf /py3.tar.gz /opt/faraday $(nix-store --query --requisites $(readlink result))
+    - mkdir -p /opt/faraday-client
+    - cp -r $(readlink result)/* /opt/faraday-client
+    - tar czf /py3.tar.gz /opt/faraday-client $(nix-store --query --requisites $(readlink result))
     - mv /py3.tar.gz $CI_PROJECT_DIR
   artifacts:
     name: python3
     paths:
       - py3.tar.gz
     expire_in: 15 days # in the future we don't need to expire this.
-  rules:
-    - if: '$CI_COMMIT_REF_NAME =~ /^.*\/(master)$/'
-      when: on_success
-    - if: '$CI_COMMIT_TAG || $BUILD_TEST || $FULL_TEST || $DAILY_TEST'
-      when: on_success
-    - when: never
 
 
 generate_rpm:
@@ -69,15 +64,15 @@ generate_rpm:
     image: centos:7
     before_script:
         - yum -y upgrade
-        - yum -y install which git
-        - yum -y install epel-release
+        - yum -y install which git epel-release centos-release-scl
         - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday-linux-installers-builder.git
         - mv py3.tar.gz /
         - cd /; tar xf py3.tar.gz; cd -
-        - yum -y install ruby ruby-devel rubygems gobject-introspection-devel curl zsh mailcap libffi-devel openssl-devel openldap-devel libxslt-devel libxml2-devel libxslt-devel freetype-devel libjpeg-devel gtk+-devel gtk3-devel gtk2-devel postgresql-devel
+        - yum -y install gobject-introspection-devel curl zsh mailcap libffi-devel openssl-devel openldap-devel libxslt-devel libxml2-devel libxslt-devel freetype-devel libjpeg-devel gtk+-devel gtk3-devel gtk2-devel postgresql-devel
         - yum groups -y install "Development Tools"
-        - yum -y install centos-release-scl
-        - yum -y install rh-python36
+        - yum -y install rh-python36 rh-ruby23 rh-ruby23-ruby-devel
+        - source /opt/rh/rh-ruby23/enable
+        - export X_SCLS="`scl enable rh-ruby23 'echo $X_SCLS'`"
         - source /opt/rh/rh-python36/enable
         - pip install virtualenv
         - pip install virtualenv-tools3
@@ -107,12 +102,6 @@ generate_rpm:
         paths:
             - "faraday-client_amd64.rpm"
         expire_in: 15 days
-    rules:
-        - if: '$CI_COMMIT_REF_NAME =~ /^.*\/(master)$/'
-          when: on_success
-        - if: '$CI_COMMIT_TAG || $BUILD_TEST || $FULL_TEST || $DAILY_TEST'
-          when: on_success
-        - when: never
 
 
 generate_deb:
@@ -149,17 +138,12 @@ generate_deb:
         paths:
             - "faraday-client_amd64.deb"
         expire_in: 15 days
-    rules:
-        - if: '$CI_COMMIT_REF_NAME =~ /^.*\/(master)$/'
-          when: on_success
-        - if: '$CI_COMMIT_TAG || $BUILD_TEST || $FULL_TEST || $DAILY_TEST'
-          when: on_success
-        - when: never
+
 
 macos_pkg:
     tags:
         - macos
-    stage: build_installers
+    stage: osx
     allow_failure: true
     before_script:
       - echo 'export PATH="/usr/local/opt/openssl/bin:$PATH"' >> ~/.bash_profile
@@ -175,7 +159,7 @@ macos_pkg:
         - cd build_installer
         - /usr/bin/tar zxf faraday.tar.gz
         - cd faraday_copy
-        - git clone git@gitlab.com:faradaysec/faraday-linux-installers-builder.git
+        - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday-linux-installers-builder.git
         - cd faraday-linux-installers-builder
         - git clone https://github.com/jordansissel/fpm.git
         - cd fpm
@@ -195,8 +179,6 @@ macos_pkg:
             - Faraday-client.pkg
         expire_in: 1 week
     rules:
-        - if: '$CI_COMMIT_REF_NAME =~ /^.*\/(master)$/'
-          when: on_success
-        - if: '$CI_COMMIT_TAG || $BUILD_TEST || $FULL_TEST || $DAILY_TEST'
-          when: on_success
-        - when: never
+        - when: manual
+    dependencies:
+        - generate_build_file

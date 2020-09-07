@@ -123,10 +123,6 @@ def getParserArgs():
                         default=False,
                         help="Force to ask for credentials")
 
-    parser.add_argument('--dev-mode', action="store_true", dest="dev_mode",
-                        default=False,
-                        help="Enable dev mode. This will use the user config and plugin folder.")
-
     parser.add_argument('--cert',
                         action="store",
                         dest="cert_path",
@@ -166,21 +162,10 @@ def getParserArgs():
                         default=False,
                         help="Enables debug mode. Default = disabled")
 
-    parser.add_argument('--creds-file',
-                        action="store",
-                        dest="creds_file",
-                        default=None,
-                        help="File containing user's credentials to be used in CLI mode")
 
     parser.add_argument('--nodeps',
                         action="store_true",
                         help='Skip dependency check')
-    parser.add_argument('--keep-old', action='store_true', help='Keep old object in CLI mode if Faraday find a conflict')
-    parser.add_argument('--keep-new', action='store_true', help='Keep new object in CLI mode if Faraday find a conflict (DEFAULT ACTION)')
-
-    parser.add_argument('--license-path',
-                        help='Path to the licence .tar.gz',
-                        default=None)
 
     parser.add_argument('-v', '--version', action='version',
                         version='Faraday Client v{version}'.format(version=__version__))
@@ -247,9 +232,7 @@ def start_faraday_client():
             Fore.WHITE + Style.BRIGHT + "Point your browser to: \n[%s]" % url)
 
     print(Fore.RESET + Back.RESET + Style.RESET_ALL)
-
     exit_status = start()
-
     return exit_status
 
 
@@ -366,7 +349,7 @@ def try_login_user(server_uri, api_username, api_password, u2fa_token=None):
         return session_cookie
 
 
-def login(ask_for_credentials):
+def login(ask_for_credentials, cert_path):
     """
     Sets the username and passwords from the command line.
     If --login flag is set then username and password is set
@@ -384,6 +367,9 @@ def login(ask_for_credentials):
         if not server_url.endswith("/"):
             server_url = f"{server_url}/"
         parsed_url = urlparse(server_url)
+        if not  all([parsed_url.scheme, parsed_url.netloc]):
+            logger.error("Invalid URL: %s", server_url)
+            sys.exit(1)
         try:
             if parsed_url.scheme == "https":
                 logger.debug("Validate server ssl certificate [%s]", server_url)
@@ -393,8 +379,8 @@ def login(ask_for_credentials):
                 logger.error("Faraday server returned invalid response: %s", test_server_response.status_code)
                 sys.exit(1)
         except requests.exceptions.SSLError as e:
-            logger.error("Invalid SSL Certificate, use --cert CERTIFICATE for self signed certificates")
-            print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for self signed certificates")
+            logger.error("Invalid SSL Certificate, use --cert CERTIFICATE for custom certificate")
+            print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for custom certificate")
             sys.exit(1)
         except requests.exceptions.ConnectionError as e:
             logger.error("Connection to Faraday server FAILED: %s - use --login to set a new server", server_url)
@@ -405,6 +391,10 @@ def login(ask_for_credentials):
             if session_cookies and server_url:
                 if is_authenticated(server_url, session_cookies):
                     logger.debug("Valid Previous session cookie found")
+                    if parsed_url.scheme == "https" and cert_path:
+                        CONF.setCerPath(cert_path)
+                    else:
+                        CONF.setCerPath(None)
                     return True
         print(f"""\nPlease provide your valid Faraday credentials for {server_url}\nYou have 3 attempts.""")
         MAX_ATTEMPTS = 3
@@ -421,6 +411,10 @@ def login(ask_for_credentials):
                 session_cookie = try_login_user(server_url, api_username, api_password, u2fa_token)
             if session_cookie:
                 CONF.setFaradaySessionCookies(session_cookie)
+                if parsed_url.scheme == "https" and cert_path:
+                    CONF.setCerPath(cert_path)
+                else:
+                    CONF.setCerPath(None)
                 user_info = get_user_info()
                 if not user_info:
                     continue
@@ -449,14 +443,18 @@ def main():
     setupFolders(CONST_FARADAY_FOLDER_LIST)
     printBanner()
     logger.info("Dependencies met.")
+    checkConfiguration(args.gui)
+    setConf()
+    CONF = getInstanceConfiguration()
+    cert_path = CONF.getCertPath()
     if args.cert_path:
         if not os.path.isfile(args.cert_path):
             logger.error("Certificate Path Don't exists [%s]", args.cert_path)
             sys.exit(1)
-        os.environ[REQUESTS_CA_BUNDLE_VAR] = args.cert_path
-    checkConfiguration(args.gui)
-    setConf()
-    login(args.login)
+        cert_path = os.path.abspath(args.cert_path)
+    if cert_path:
+        os.environ[REQUESTS_CA_BUNDLE_VAR] = cert_path
+    login(args.login, cert_path)
     start_faraday_client()
 
 
