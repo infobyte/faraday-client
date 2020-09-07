@@ -379,6 +379,7 @@ def login(ask_for_credentials, cert_path):
                 logger.error("Faraday server returned invalid response: %s", test_server_response.status_code)
                 sys.exit(1)
         except requests.exceptions.SSLError as e:
+            print(e)
             logger.error("Invalid SSL Certificate, use --cert CERTIFICATE for custom certificate")
             print(f"{Fore.RED}Invalid SSL Certificate, use --cert CERTIFICATE_PATH for custom certificate")
             sys.exit(1)
