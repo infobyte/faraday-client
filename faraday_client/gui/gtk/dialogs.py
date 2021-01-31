@@ -151,6 +151,7 @@ class LoginDialog(Gtk.Dialog):
     """A simple login dialog with a user and password"""
     def __init__(self, parent):
         Gtk.Dialog.__init__(self,
+                            title=f"Faraday login",
                             flags=Gtk.DialogFlags.MODAL,
                             buttons=("OK", Gtk.ResponseType.OK,
                                      "Cancel", Gtk.ResponseType.CANCEL))
