@@ -397,10 +397,6 @@ class AuthDialog(Gtk.Dialog):
         new2FAToken = self.get2FAToken()
         if self.attempts_counter < self.max_attempts:
             try:
-                print("URL: " + newUrl)
-                print("User: " + newUser)
-                print("Pass: " + newPass)
-                print("Token: " + new2FAToken)
                 session_cookie = login_user(newUrl, newUser, newPass, new2FAToken)
             except Required2FAError:
                 error_message = f"2FA Token Required"
