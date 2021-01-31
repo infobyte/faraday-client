@@ -11,15 +11,7 @@ import logging
 from faraday_client.persistence.server.exceptions import Required2FAError
 from past.builtins import basestring
 
-
-import webbrowser
-import gi  # pylint: disable=import-error
-import os
-from faraday_client.start_client import FARADAY_CLIENT_BASE
-gi.require_version('Gtk', '3.0')
-
 from faraday_client.persistence.server.server import ResourceDoesNotExist
-from gi.repository import Gtk, GdkPixbuf, Gdk  # pylint: disable=import-error
 from faraday_client.config.configuration import getInstanceConfiguration
 from faraday_client.persistence.server.server import (
     is_authenticated,
@@ -33,9 +25,19 @@ from faraday_client.gui.gtk.decorators import scrollable
 from faraday_client.gui.gtk.compatibility import CompatibleScrolledWindow as GtkScrolledWindow
 from faraday_client.plugins import fplugin_utils
 
+import webbrowser
+import gi  # pylint: disable=import-error
+import os
+from faraday_client.start_client import FARADAY_CLIENT_BASE
+
+from gi.repository import Gtk, GdkPixbuf, Gdk  # pylint: disable=import-error
+
+gi.require_version('Gtk', '3.0')
+
 CONF = getInstanceConfiguration()
 
 logger = logging.getLogger(__name__)
+
 
 class PreferenceWindowDialog(Gtk.Dialog):
     """Sets up a preference dialog with basically nothing more than a
@@ -72,9 +74,9 @@ class PreferenceWindowDialog(Gtk.Dialog):
         button_box = Gtk.Box(spacing=6)
         main_box.pack_end(button_box, False, True, 10)
 
-        OK_button = Gtk.Button.new_with_label("OK")
-        OK_button.connect("clicked", self.on_click_ok)
-        button_box.pack_start(OK_button, False, True, 10)
+        ok_button = Gtk.Button.new_with_label("OK")
+        ok_button.connect("clicked", self.on_click_ok)
+        button_box.pack_start(ok_button, False, True, 10)
         cancel_button = Gtk.Button.new_with_label("Cancel")
 
         self.connect("key_press_event", key_reactions)
@@ -87,20 +89,19 @@ class PreferenceWindowDialog(Gtk.Dialog):
         """Button is useless, only there because GTK likes it. Takes the
         repourl (Couch IP) from self.ip_entry and connect to it if possible.
         """
-        repourl = self.ip_entry.get_text()
+        repo_url = self.ip_entry.get_text()
 
-        if not check_server_url(repourl):
+        if not check_server_url(repo_url):
             errorDialog(self, "Could not connect to Faraday Server.",
-                        ("Are you sure it is running and that the URL is correct?"))
+                        "Are you sure it is running and that the URL is correct?")
             return False
 
-
-        credentials_ok = self.credentialsOK(repourl)
-        couch_connection_ok = self.connectCouchCallback(repourl, parent=self)
+        credentials_ok = self.credentials_ok(repo_url)
+        couch_connection_ok = self.connectCouchCallback(repo_url, parent=self)
         if credentials_ok and couch_connection_ok:
             self.destroy()
 
-    def credentialsOK(self, repourl):
+    def credentials_ok(self, repo_url):
         """Pops up a dialog (if necessary) to set up Faraday
         credentials. Dialog is a LoginDialog which emits a signal marked
         by 42 when the user clicks its button. The run method returns 42
@@ -108,12 +109,12 @@ class PreferenceWindowDialog(Gtk.Dialog):
         It's a boolean function, return True if auth ok, False if not.
         Number 42 was chosen for obvious reasons :) """
 
-        if is_authenticated(repourl, CONF.getFaradaySessionCookies()):
+        if is_authenticated(repo_url, CONF.getFaradaySessionCookies()):
             return True
 
         # if that didn't work...
-        loginDialog = LoginDialog(self)
-        return loginDialog.run(3, repourl, self)
+        login_dialog = LoginDialog(self)
+        return login_dialog.run(3, repo_url)
 
     def on_click_cancel(self, button=None):
         self.destroy()
@@ -149,6 +150,7 @@ class ForcePreferenceWindowDialog(PreferenceWindowDialog):
 
 class LoginDialog(Gtk.Dialog):
     """A simple login dialog with a user and password"""
+
     def __init__(self, parent):
         Gtk.Dialog.__init__(self,
                             title=f"Faraday login",
@@ -157,9 +159,7 @@ class LoginDialog(Gtk.Dialog):
                                      "Cancel", Gtk.ResponseType.CANCEL))
 
         self.set_default_response(Gtk.ResponseType.OK)
-
         self.set_keep_above(True)
-
         self.set_transient_for(parent)
         content_area = self.get_content_area()
 
@@ -173,7 +173,7 @@ class LoginDialog(Gtk.Dialog):
         Add extra Entry to let user add custom URL
         If url is valid, we set it as text else let it be empty
         """
-        urlBox = Gtk.Box()
+        url_box = Gtk.Box()
         url_label = Gtk.Label()
         url_label.set_text("URL:")
         self.url_entry = Gtk.Entry()
@@ -184,47 +184,47 @@ class LoginDialog(Gtk.Dialog):
             self.url_entry.set_text(server_url)
         else:
             self.url_entry.set_text("http://localhost:5985")
-        urlBox.pack_start(url_label, True, True, 3)
-        urlBox.pack_start(self.url_entry, False, False, 5)
-        content_area.pack_start(urlBox, True, True, 10)
+        url_box.pack_start(url_label, True, True, 3)
+        url_box.pack_start(self.url_entry, False, False, 5)
+        content_area.pack_start(url_box, True, True, 10)
 
-        userBox = Gtk.Box()
+        user_box = Gtk.Box()
         user_label = Gtk.Label()
         user_label.set_text("User:")
         self.user_entry = Gtk.Entry()
         self.user_entry.set_width_chars(24)
         self.user_entry.set_activates_default(True)
-        userBox.pack_start(user_label, True, True, 3)
-        userBox.pack_start(self.user_entry, False, False, 5)
-        content_area.pack_start(userBox, True, True, 10)
+        user_box.pack_start(user_label, True, True, 3)
+        user_box.pack_start(self.user_entry, False, False, 5)
+        content_area.pack_start(user_box, True, True, 10)
 
-        passwordBox = Gtk.Box()
+        passwd_box = Gtk.Box()
         password_label = Gtk.Label()
         password_label.set_text("Password:")
         self.password_entry = Gtk.Entry()
         self.password_entry.set_visibility(False)
         self.password_entry.set_width_chars(24)
         self.password_entry.set_activates_default(True)
-        passwordBox.pack_start(password_label, True, True, 3)
-        passwordBox.pack_start(self.password_entry, False, False, 5)
-        content_area.pack_start(passwordBox, True, True, 10)
+        passwd_box.pack_start(password_label, True, True, 3)
+        passwd_box.pack_start(self.password_entry, False, False, 5)
+        content_area.pack_start(passwd_box, True, True, 10)
         self.show_all()
 
-    def getUrl(self):
+    def entry_get_url(self):
         if self.url_entry.get_text() is not None:
             res = self.url_entry.get_text()
         else:
             res = ""
         return res
 
-    def getUser(self):
+    def entry_get_user(self):
         if self.user_entry.get_text() is not None:
             res = self.user_entry.get_text()
         else:
             res = ""
         return res
 
-    def getPassword(self):
+    def entry_get_password(self):
         if self.password_entry.get_text() is not None:
             res = self.password_entry.get_text()
         else:
@@ -236,36 +236,28 @@ class LoginDialog(Gtk.Dialog):
             run = Gtk.Dialog.run(self)
 
             if run == Gtk.ResponseType.OK:
-                newUser = self.getUser()
-                newPass = self.getPassword()
-                newUrl = self.getUrl()
-                session_cookie = login_user(newUrl, newUser, newPass)
+                txt_user = self.entry_get_user()
+                txt_pass = self.entry_get_password()
+                txt_url = self.entry_get_url()
+                session_cookie = login_user(txt_url, txt_user, txt_pass)
 
                 if not session_cookie:
-                    if attempt != attempts-1:
-                        errorDialog(self, ("Invalid credentials!. You "
-                                           "have " +
-                                           str(attempts-1-attempt) +
-                                           " attempt(s) left."))
+                    if attempt != attempts - 1:
+                        errorDialog(self, f"Invalid credentials!. You have {attempts - 1 - attempt} attempt(s) left.")
                 else:
-
-                    CONF.setDBUser(newUser)
+                    CONF.setDBUser(txt_user)
                     CONF.setFaradaySessionCookies(session_cookie)
-
                     user_info = get_user_info()
 
                     try:
                         if 'client' in user_info['userCtx']['roles']:
-                            errorDialog(self, ("You can't login as a client. "
-                                               "You have " +
-                                               str(attempts - 1 - attempt) +
-                                               " attempt(s) left."))
+                            errorDialog(self, f"You can't login as a client. You have {attempts - 1 - attempt}\
+                                               attempt(s) left.")
                             continue
                     except (TypeError, KeyError):
                         pass
 
                     self.destroy()
-
                     return True
 
             if run in [Gtk.ResponseType.CANCEL, -4]:
@@ -273,9 +265,7 @@ class LoginDialog(Gtk.Dialog):
                 self.exit()
                 return False
         else:
-            errorDialog(self, ("Invalid credentials after " +
-                                 str(attempts) + " tries. " +
-                                 "Check your credentials and try again."))
+            errorDialog(self, f"Invalid credentials after {attempts} tries. Check your credentials and try again.")
             self.exit()
             return False
 
@@ -285,11 +275,10 @@ class LoginDialog(Gtk.Dialog):
 
 class ForceLoginDialog(LoginDialog):
     """A simple login dialog with a user and password"""
+
     def __init__(self, parent, exit_faraday_callback):
         LoginDialog.__init__(self, parent)
-
         self.set_deletable(False)
-
         self.exit_faraday = exit_faraday_callback
 
     def exit(self, button=None):
@@ -298,7 +287,6 @@ class ForceLoginDialog(LoginDialog):
 
 
 class AuthDialog(Gtk.Dialog):
-
     """Faraday auth dialog"""
 
     def __init__(self, reload_ws_callback, parent):
@@ -388,7 +376,6 @@ class AuthDialog(Gtk.Dialog):
             res = ""
         return res
 
-
     def getUser(self):
         if self.user_entry.get_text() is not None:
             res = self.user_entry.get_text()
@@ -454,7 +441,7 @@ class AuthDialog(Gtk.Dialog):
                         MessageDialog(self, "Faraday Authentication Successful")
                         self.destroy()
         else:
-            error_message= "Max login attempts reached"
+            error_message = "Max login attempts reached"
             errorDialog(self, (error_message))
 
     def on_click_cancel(self, button=None):
@@ -467,7 +454,7 @@ class NewWorkspaceDialog(Gtk.Window):
     a description and a type for a new workspace. Also checks that the
     those attributes don't correspond to an existing workspace"""
 
-    def __init__(self, create_ws_callback,  workspace_manager, sidebar, parent,
+    def __init__(self, create_ws_callback, workspace_manager, sidebar, parent,
                  title=None):
 
         Gtk.Window.__init__(self, title="Create New Workspace")
@@ -628,7 +615,7 @@ class PluginOptionsDialog(Gtk.Window):
                                                        for i in range(3)]
 
         self.nameEntry, self.versionEntry, self.pluginVersionEntry = [
-                Gtk.Label() for i in range(3)]
+            Gtk.Label() for i in range(3)]
 
         nameLabel.set_text("Name: ")
         versionLabel.set_text("Version: ")
@@ -926,6 +913,7 @@ class HostInfoDialog(Gtk.Window):
     strings and ints) and the object per se, which are in the model folder and
     are totally alien to GTK.
     """
+
     def __init__(self, parent, active_ws_name, host):
         """Creates a window with the information about a given hosts.
         The parent is needed so the window can set transient for
@@ -951,13 +939,13 @@ class HostInfoDialog(Gtk.Window):
 
         self.specific_info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.specific_info_frame = self.create_scroll_frame(
-                                       self.specific_info,
-                                       "Service Information")
+            self.specific_info,
+            "Service Information")
 
         self.vuln_info = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.vuln_info_frame = self.create_scroll_frame(
-                                            self.vuln_info,
-                                            "Vulnerability Information")
+            self.vuln_info,
+            "Vulnerability Information")
 
         main_tree = self.create_main_tree_view(self.model)
         vuln_list = self.create_vuln_list()
@@ -1210,6 +1198,7 @@ class HostInfoDialog(Gtk.Window):
         """Return the model for the vulnerabilities of the obj object.
         It will be sorted alphabetically.
         """
+
         def params_to_string(params):  # XXX
             """Converts params to a string, in case it gets here as a list.
             It's pretty anoyting, but needed for backwards compatibility.
@@ -1306,6 +1295,7 @@ class HostInfoDialog(Gtk.Window):
         """Take a selection as selected_object and an object_type
         and return the actual object, not the model's selection.
         """
+
         def safely(func):
             def safe_wrapper(*args, **kwargs):
                 try:
@@ -1314,7 +1304,8 @@ class HostInfoDialog(Gtk.Window):
                     dialog = errorDialog(self, ("There has been a problem. "
                                                 "The object you clicked on "
                                                 "does not exist anymore."))
-                    self.destroy() # exit
+                    self.destroy()  # exit
+
             return safe_wrapper
 
         object_id = selected_object[0]
@@ -1471,8 +1462,8 @@ class ConflictsDialog(Gtk.Window):
             dialog.run()
             dialog.destroy()
 
-        except ResourceDoesNotExist: # TODO: revert this hack to prevent exception when
-                         # fixing conflict of non existent object
+        except ResourceDoesNotExist:  # TODO: revert this hack to prevent exception when
+            # fixing conflict of non existent object
             dialog = Gtk.MessageDialog(self, 0,
                                        Gtk.MessageType.INFO,
                                        Gtk.ButtonsType.OK,
@@ -1911,8 +1902,8 @@ class aboutDialog(Gtk.AboutDialog):
     """The simple about dialog displayed when the user clicks on "about"
     ont the menu. Could be in application.py, but for consistency reasons
     its here"""
-    def __init__(self, main_window):
 
+    def __init__(self, main_window):
         Gtk.AboutDialog.__init__(self, transient_for=main_window, modal=True)
         icons = os.path.join(FARADAY_CLIENT_BASE, "data", "images", "icons")
         faraday_icon = GdkPixbuf.Pixbuf.new_from_file(
@@ -1930,6 +1921,7 @@ class aboutDialog(Gtk.AboutDialog):
         faraday_website = "https://www.faradaysec.com"
         self.set_website(faraday_website)
         self.set_website_label("Learn more about Faraday")
+
 
 class errorDialog(Gtk.MessageDialog):
     """A simple error dialog to show the user where things went wrong.
@@ -2009,6 +2001,5 @@ def strict_key_reactions(window, event):
         return True
     else:
         return False
-
 
 # I'm Py3
