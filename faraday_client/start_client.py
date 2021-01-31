@@ -323,7 +323,6 @@ _/ ____\_____  ____________     __| _/_____   ___.__.
     logger.info("Starting Faraday IDE.")
 
 
-
 def try_login_user(server_uri, api_username, api_password, u2fa_token=None):
     try:
         session_cookie = login_user(server_uri, api_username, api_password, u2fa_token)
@@ -341,7 +340,7 @@ def try_login_user(server_uri, api_username, api_password, u2fa_token=None):
         return session_cookie
 
 
-def login(ask_for_credentials, cert_path):
+def login(cert_path):
     """
     Sets the username and passwords from the command line.
     If --login flag is set then username and password is set
@@ -353,9 +352,8 @@ def login(ask_for_credentials, cert_path):
             server_url = input("\nPlease enter the Faraday Server URL (Press enter for http://localhost:5985): ") \
                          or "http://localhost:5985"
         else:
-            if ask_for_credentials:
-                server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {server_url}): ") \
-                             or server_url
+            server_url = input(f"\nPlease enter the Faraday Server URL (Press enter for last used: {server_url}): ") \
+                         or server_url
         parsed_url = urlparse(server_url)
         if not all([parsed_url.scheme, parsed_url.netloc]):
             logger.error("Invalid URL: %s", server_url)
@@ -376,16 +374,6 @@ def login(ask_for_credentials, cert_path):
             logger.error("Connection to Faraday server FAILED: %s - use --login to set a new server", server_url)
             sys.exit(1)
         CONF.setAPIUrl(server_url)
-        if not ask_for_credentials:
-            session_cookies = CONF.getFaradaySessionCookies()
-            if session_cookies and server_url:
-                if is_authenticated(server_url, session_cookies):
-                    logger.debug("Valid Previous session cookie found")
-                    if parsed_url.scheme == "https" and cert_path:
-                        CONF.setCerPath(cert_path)
-                    else:
-                        CONF.setCerPath(None)
-                    return True
         print(f"""\nPlease provide your valid Faraday credentials for {server_url}\nYou have 3 attempts.""")
         MAX_ATTEMPTS = 3
         for attempt in range(1, MAX_ATTEMPTS + 1):
@@ -423,6 +411,7 @@ def login(ask_for_credentials, cert_path):
     except KeyboardInterrupt:
         sys.exit(0)
 
+
 def main():
     """
     Main function for launcher.
@@ -444,7 +433,10 @@ def main():
         cert_path = os.path.abspath(args.cert_path)
     if cert_path:
         os.environ[REQUESTS_CA_BUNDLE_VAR] = cert_path
-    login(args.login, cert_path)
+
+    if args.login:
+        # We only call terminal login when user provides login flag
+        login(cert_path)
     start_faraday_client()
 
 
