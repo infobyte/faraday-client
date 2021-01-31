@@ -138,7 +138,7 @@ class MainApplication:
         faraday_client.model.api.stopAPIServer()
         restapi.stopServer()
         self._model_controller.stop()
-        if self._model_controller.isAlive():
+        if self._model_controller.is_alive():
             # runs only if thread has started, i.e. self._model_controller.start() is run first
             self._model_controller.join()
         faraday_client.model.api.devlog("Waiting for controller threads to end...")
