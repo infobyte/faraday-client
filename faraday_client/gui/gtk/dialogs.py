@@ -305,6 +305,8 @@ class AuthDialog(Gtk.Dialog):
         self.url_entry.set_activates_default(True)
         if server_url:
             self.url_entry.set_text(server_url)
+        else:
+            self.url_entry.set_text("http://localhost:5985")
         urlBox.pack_start(url_label, True, True, 3)
         urlBox.pack_start(self.url_entry, False, False, 5)
         content_area.pack_start(urlBox, True, True, 10)
