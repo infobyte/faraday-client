@@ -353,7 +353,8 @@ class AuthDialog(Gtk.Dialog):
 
     def getUrl(self):
         if self.url_entry.get_text() is not None:
-            res = self.url_entry.get_text()
+            from urllib.parse import urlparse
+            res = urlparse(self.url_entry.get_text()).scheme
         else:
             res = ""
         return res
