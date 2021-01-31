@@ -88,7 +88,7 @@ def _get_base_server_url():
         server_url = SERVER_URL
     try:
         return server_url.rstrip('/')
-    except:
+    except AttributeError:
         # Sometime program crashes (NonType object has no attribute rstrip
         # Could be logic bug?
         # Try to fix it
