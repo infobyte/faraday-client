@@ -168,6 +168,25 @@ class LoginDialog(Gtk.Dialog):
         instructions.set_max_width_chars(38)
         content_area.pack_start(instructions, True, True, 10)
 
+        """
+        Add extra Entry to let user add custom URL
+        If url is valid, we set it as text else let it be empty
+        """
+        urlBox = Gtk.Box()
+        url_label = Gtk.Label()
+        url_label.set_text("URL:")
+        self.url_entry = Gtk.Entry()
+        self.url_entry.set_width_chars(24)
+        self.url_entry.set_activates_default(True)
+        server_url = CONF.getServerURI()
+        if server_url:
+            self.url_entry.set_text(server_url)
+        else:
+            self.url_entry.set_text("http://localhost:5985")
+        urlBox.pack_start(url_label, True, True, 3)
+        urlBox.pack_start(self.url_entry, False, False, 5)
+        content_area.pack_start(urlBox, True, True, 10)
+
         userBox = Gtk.Box()
         user_label = Gtk.Label()
         user_label.set_text("User:")
@@ -190,6 +209,13 @@ class LoginDialog(Gtk.Dialog):
         content_area.pack_start(passwordBox, True, True, 10)
         self.show_all()
 
+    def getUrl(self):
+        if self.url_entry.get_text() is not None:
+            res = self.url_entry.get_text()
+        else:
+            res = ""
+        return res
+
     def getUser(self):
         if self.user_entry.get_text() is not None:
             res = self.user_entry.get_text()
@@ -204,14 +230,15 @@ class LoginDialog(Gtk.Dialog):
             res = ""
         return res
 
-    def run(self, attempts, url, parent):
+    def run(self, attempts, parent):
         for attempt in range(attempts):
             run = Gtk.Dialog.run(self)
 
             if run == Gtk.ResponseType.OK:
                 newUser = self.getUser()
                 newPass = self.getPassword()
-                session_cookie = login_user(url, newUser, newPass)
+                newUrl = self.getUrl()
+                session_cookie = login_user(newUrl, newUser, newPass)
 
                 if not session_cookie:
                     if attempt != attempts-1:
