@@ -79,7 +79,6 @@ def _conf():
 
 
 def _get_base_server_url():
-
     # Faraday server is running, and this module is used by upload_reports...
     if FARADAY_UPLOAD_REPORTS_OVERWRITE_SERVER_URL:
         server_url = FARADAY_UPLOAD_REPORTS_OVERWRITE_SERVER_URL
@@ -87,7 +86,13 @@ def _get_base_server_url():
         server_url = _conf().getAPIUrl()
     else:
         server_url = SERVER_URL
-    return server_url.rstrip('/')
+    try:
+        return server_url.rstrip('/')
+    except:
+        # Sometime program crashes (NonType object has no attribute rstrip
+        # Could be logic bug?
+        # Try to fix it
+        return SERVER_URL.rstrip('/')
 
 def _create_server_api_url():
     """Return the server's api url."""
