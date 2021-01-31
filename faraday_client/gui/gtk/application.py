@@ -813,11 +813,17 @@ class GuiApp(Gtk.Application, FaradayUi):
 
             if not should_login:
                 return
+        server_url = CONF.getServerURI()
+        need_login = False
+        if not server_url:
+            need_login = True
+        elif not is_authenticated(server_url, CONF.getFaradaySessionCookies()):
+            need_login = True
 
-        if not is_authenticated(CONF.getServerURI(), CONF.getFaradaySessionCookies()):
+        if need_login:
             loginDialog = ForceLoginDialog(self.window,
                                            self.exit_faraday_without_confirm)
-            loginDialog.run(3, CONF.getServerURI(), self.window)
+            loginDialog.run(3, self.window)
             self.reload_workspaces()
 
         workspace_argument_set = self.open_workspace_from_args()
