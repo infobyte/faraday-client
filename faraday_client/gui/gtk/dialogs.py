@@ -274,7 +274,11 @@ class AuthDialog(Gtk.Dialog):
     """Faraday auth dialog"""
 
     def __init__(self, reload_ws_callback, parent):
-        super().__init__(title=f"Faraday login for {CONF.getAPIUrl()}", flags=Gtk.DialogFlags.MODAL)
+        server_url = CONF.getAPIUrl()
+        if not server_url:
+            super().__init__(title=f"Faraday login", flags=Gtk.DialogFlags.MODAL)
+        else:
+            super().__init__(title=f"Faraday login for {server_url}", flags=Gtk.DialogFlags.MODAL)
         self.set_default_response(Gtk.ResponseType.OK)
         self.set_keep_above(True)
         self.set_transient_for(parent)
@@ -288,6 +292,22 @@ class AuthDialog(Gtk.Dialog):
         instructions.set_line_wrap(True)
         instructions.set_max_width_chars(38)
         content_area.pack_start(instructions, True, True, 10)
+
+        """
+        Add extra Entry to let user add custom URL
+        If url is valid, we set it as text else let it be empty
+        """
+        urlBox = Gtk.Box()
+        url_label = Gtk.Label()
+        url_label.set_text("URL:")
+        self.url_entry = Gtk.Entry()
+        self.url_entry.set_width_chars(24)
+        self.url_entry.set_activates_default(True)
+        if server_url:
+            self.url_entry.set_text(server_url)
+        urlBox.pack_start(url_label, True, True, 3)
+        urlBox.pack_start(self.url_entry, False, False, 5)
+        content_area.pack_start(urlBox, True, True, 10)
 
         userBox = Gtk.Box()
         user_label = Gtk.Label()
@@ -331,6 +351,14 @@ class AuthDialog(Gtk.Dialog):
         button_box.pack_end(cancel_button, False, True, 10)
         self.show_all()
 
+    def getUrl(self):
+        if self.url_entry.get_text() is not None:
+            res = self.url_entry.get_text()
+        else:
+            res = ""
+        return res
+
+
     def getUser(self):
         if self.user_entry.get_text() is not None:
             res = self.user_entry.get_text()
@@ -361,12 +389,13 @@ class AuthDialog(Gtk.Dialog):
         self.destroy()
 
     def on_click_ok(self, buttons=None):
+        newUrl = self.getUrl()
         newUser = self.getUser()
         newPass = self.getPassword()
         new2FAToken = self.get2FAToken()
         if self.attempts_counter < self.max_attempts:
             try:
-                session_cookie = login_user(CONF.getAPIUrl(), newUser, newPass, new2FAToken)
+                session_cookie = login_user(newUrl, newUser, newPass, new2FAToken)
             except Required2FAError:
                 error_message = f"2FA Token Required"
                 errorDialog(self, (error_message))
@@ -401,6 +430,7 @@ class AuthDialog(Gtk.Dialog):
     def on_click_cancel(self, button=None):
         """Override on_click_cancel to make it exit Faraday."""
         self.destroy()
+
 
 class NewWorkspaceDialog(Gtk.Window):
     """Sets up the New Workspace Dialog, where the user can set a name,
