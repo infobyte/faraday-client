@@ -1,3 +1,7 @@
+**This is deprecated please use Faraday-Cli instead!!!**
+
+https://github.com/infobyte/faraday-cli
+
 ==================
 Faraday GTK Client
 ==================
