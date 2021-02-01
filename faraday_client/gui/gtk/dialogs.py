@@ -34,7 +34,7 @@ from gi.repository import Gtk, GdkPixbuf, Gdk  # pylint: disable=import-error
 
 gi.require_version('Gtk', '3.0')
 
-CONF = getInstanceConfiguration()
+user_config = getInstanceConfiguration()
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class PreferenceWindowDialog(Gtk.Dialog):
         ip_label.set_text("Faraday Server IP or URL")
         main_box.pack_start(ip_label, True, False, 10)
 
-        couch_uri = CONF.getServerURI()
+        couch_uri = user_config.getServerURI()
         self.ip_entry = Gtk.Entry()
         text = couch_uri if couch_uri else "http://127.0.0.1:5050"
         self.ip_entry.set_text(text)
@@ -109,7 +109,7 @@ class PreferenceWindowDialog(Gtk.Dialog):
         It's a boolean function, return True if auth ok, False if not.
         Number 42 was chosen for obvious reasons :) """
 
-        if is_authenticated(repo_url, CONF.getFaradaySessionCookies()):
+        if is_authenticated(repo_url, user_config.getFaradaySessionCookies()):
             return True
 
         # if that didn't work...
@@ -179,7 +179,7 @@ class LoginDialog(Gtk.Dialog):
         self.url_entry = Gtk.Entry()
         self.url_entry.set_width_chars(24)
         self.url_entry.set_activates_default(True)
-        server_url = CONF.getServerURI()
+        server_url = user_config.getServerURI()
         if server_url:
             self.url_entry.set_text(server_url)
         else:
@@ -245,8 +245,8 @@ class LoginDialog(Gtk.Dialog):
                     if attempt != attempts - 1:
                         errorDialog(self, f"Invalid credentials!. You have {attempts - 1 - attempt} attempt(s) left.")
                 else:
-                    CONF.setDBUser(txt_user)
-                    CONF.setFaradaySessionCookies(session_cookie)
+                    user_config.setDBUser(txt_user)
+                    user_config.setFaradaySessionCookies(session_cookie)
                     user_info = get_user_info()
 
                     try:
@@ -254,6 +254,9 @@ class LoginDialog(Gtk.Dialog):
                             errorDialog(self, f"You can't login as a client. You have {attempts - 1 - attempt}\
                                                attempt(s) left.")
                             continue
+                        else:
+                            user_config.saveConfig()
+                            user_config.setAPIUrl(txt_url)
                     except (TypeError, KeyError):
                         pass
 
@@ -290,7 +293,7 @@ class AuthDialog(Gtk.Dialog):
     """Faraday auth dialog"""
 
     def __init__(self, reload_ws_callback, parent):
-        server_url = CONF.getAPIUrl()
+        server_url = user_config.getAPIUrl()
         if not server_url:
             super().__init__(title=f"Faraday login", flags=Gtk.DialogFlags.MODAL)
         else:
@@ -313,7 +316,7 @@ class AuthDialog(Gtk.Dialog):
         Add extra Entry to let user add custom URL
         If url is valid, we set it as text else let it be empty
         """
-        urlBox = Gtk.Box()
+        url_box = Gtk.Box()
         url_label = Gtk.Label()
         url_label.set_text("URL:")
         self.url_entry = Gtk.Entry()
@@ -323,40 +326,40 @@ class AuthDialog(Gtk.Dialog):
             self.url_entry.set_text(server_url)
         else:
             self.url_entry.set_text("http://localhost:5985")
-        urlBox.pack_start(url_label, True, True, 3)
-        urlBox.pack_start(self.url_entry, False, False, 5)
-        content_area.pack_start(urlBox, True, True, 10)
+        url_box.pack_start(url_label, True, True, 3)
+        url_box.pack_start(self.url_entry, False, False, 5)
+        content_area.pack_start(url_box, True, True, 10)
 
-        userBox = Gtk.Box()
+        user_box = Gtk.Box()
         user_label = Gtk.Label()
         user_label.set_text("User:")
         self.user_entry = Gtk.Entry()
         self.user_entry.set_width_chars(24)
         self.user_entry.set_activates_default(True)
-        userBox.pack_start(user_label, True, True, 3)
-        userBox.pack_start(self.user_entry, False, False, 5)
-        content_area.pack_start(userBox, True, True, 10)
+        user_box.pack_start(user_label, True, True, 3)
+        user_box.pack_start(self.user_entry, False, False, 5)
+        content_area.pack_start(user_box, True, True, 10)
 
-        passwordBox = Gtk.Box()
+        password_box = Gtk.Box()
         password_label = Gtk.Label()
         password_label.set_text("Password:")
         self.password_entry = Gtk.Entry()
         self.password_entry.set_visibility(False)
         self.password_entry.set_width_chars(24)
         self.password_entry.set_activates_default(True)
-        passwordBox.pack_start(password_label, True, True, 3)
-        passwordBox.pack_start(self.password_entry, False, False, 5)
-        content_area.pack_start(passwordBox, True, True, 10)
+        password_box.pack_start(password_label, True, True, 3)
+        password_box.pack_start(self.password_entry, False, False, 5)
+        content_area.pack_start(password_box, True, True, 10)
 
-        u2FABox = Gtk.Box()
-        u2FA_label = Gtk.Label()
-        u2FA_label.set_text("2FA Token:")
+        u_2fa_box = Gtk.Box()
+        u_2fa_label = Gtk.Label()
+        u_2fa_label.set_text("2FA Token:")
         self.u2FA_entry = Gtk.Entry()
         self.u2FA_entry.set_width_chars(24)
         self.u2FA_entry.set_activates_default(True)
-        u2FABox.pack_start(u2FA_label, True, True, 3)
-        u2FABox.pack_start(self.u2FA_entry, False, False, 5)
-        content_area.pack_start(u2FABox, True, True, 10)
+        u_2fa_box.pack_start(u_2fa_label, True, True, 3)
+        u_2fa_box.pack_start(self.u2FA_entry, False, False, 5)
+        content_area.pack_start(u_2fa_box, True, True, 10)
 
         button_box = Gtk.Box(spacing=6)
         content_area.pack_end(button_box, False, True, 10)
@@ -369,28 +372,28 @@ class AuthDialog(Gtk.Dialog):
         button_box.pack_end(cancel_button, False, True, 10)
         self.show_all()
 
-    def getUrl(self):
+    def get_url(self):
         if self.url_entry.get_text() is not None:
             res = self.url_entry.get_text()
         else:
             res = ""
         return res
 
-    def getUser(self):
+    def get_user(self):
         if self.user_entry.get_text() is not None:
             res = self.user_entry.get_text()
         else:
             res = ""
         return res
 
-    def getPassword(self):
+    def get_password(self):
         if self.password_entry.get_text() is not None:
             res = self.password_entry.get_text()
         else:
             res = ""
         return res
 
-    def get2FAToken(self):
+    def get_2fa_token(self):
         if self.u2FA_entry.get_text() is not None:
             res = self.u2FA_entry.get_text()
         else:
@@ -406,43 +409,42 @@ class AuthDialog(Gtk.Dialog):
         self.destroy()
 
     def on_click_ok(self, buttons=None):
-        newUrl = self.getUrl()
-        newUser = self.getUser()
-        newPass = self.getPassword()
-        new2FAToken = self.get2FAToken()
+        new_url = self.get_url()
+        new_user = self.get_user()
+        new_pass = self.get_password()
+        new_2fa_token = self.get_2fa_token()
         if self.attempts_counter < self.max_attempts:
             try:
-                session_cookie = login_user(newUrl, newUser, newPass, new2FAToken)
+                session_cookie = login_user(new_url, new_user, new_pass, new_2fa_token)
             except Required2FAError:
                 error_message = f"2FA Token Required"
-                errorDialog(self, (error_message))
+                errorDialog(self, error_message)
             else:
                 if not session_cookie:
                     logger.warning("Faraday Auth invalid")
-                    self.clear()
                     self.attempts_counter += 1
                     error_message = f"Invalid credentials!. You have {self.max_attempts - self.attempts_counter} attempt(s) left."
-                    errorDialog(self, (error_message))
+                    errorDialog(self, error_message)
                 else:
-                    old_cookies = CONF.getFaradaySessionCookies()
-                    CONF.setFaradaySessionCookies(session_cookie)
+                    old_cookies = user_config.getFaradaySessionCookies()
+                    user_config.setFaradaySessionCookies(session_cookie)
                     user_info = get_user_info()
                     if 'client' in user_info['roles']:
-                        CONF.setFaradaySessionCookies(old_cookies)
+                        user_config.setFaradaySessionCookies(old_cookies)
                         self.clear()
                         self.attempts_counter += 1
                         error_message = f"You can't login as a client. You have {self.max_attempts - self.attempts_counter} attempt(s) left."
-                        errorDialog(self, (error_message))
+                        errorDialog(self, error_message)
                         self.show_all()
                     else:
                         logger.info("Faraday Auth Successful")
-                        CONF.saveConfig()
+                        user_config.saveConfig()
                         self.reload_ws_callback()
                         MessageDialog(self, "Faraday Authentication Successful")
                         self.destroy()
         else:
             error_message = "Max login attempts reached"
-            errorDialog(self, (error_message))
+            errorDialog(self, error_message)
 
     def on_click_cancel(self, button=None):
         """Override on_click_cancel to make it exit Faraday."""
@@ -931,7 +933,7 @@ class HostInfoDialog(Gtk.Window):
         host_info = self.model[0]
 
         host_id = self.model[0][0]
-        couch_url = CONF.getServerURI()
+        couch_url = user_config.getServerURI()
         base_url = couch_url + "/_ui/#/host/ws/"
         self.edit_url = base_url + active_ws_name + "/hid/" + host_id
 
@@ -1911,8 +1913,8 @@ class aboutDialog(Gtk.AboutDialog):
         self.set_logo(faraday_icon)
         self.set_program_name("Faraday")
 
-        app_name = str(CONF.getAppname())
-        version = str(CONF.getVersion())
+        app_name = str(user_config.getAppname())
+        version = str(user_config.getVersion())
 
         self.set_comments(app_name + " " + version + " " +
                           "\n FaradaySec LLC. All rights reserved."
