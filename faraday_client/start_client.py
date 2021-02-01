@@ -19,7 +19,6 @@ import requests
 import requests.exceptions
 import logging
 
-
 from faraday_client.config.configuration import getInstanceConfiguration
 from faraday_client.config.constant import (
     CONST_USER_HOME,
@@ -39,11 +38,12 @@ from faraday_client.utils.logger import set_logging_level
 CONST_FARADAY_HOME_PATH = os.path.expanduser('~/.faraday')
 
 from faraday_client import __version__
-from faraday_client.persistence.server.server import login_user, get_user_info, is_authenticated
+from faraday_client.persistence.server.server import login_user, get_user_info
 
 import faraday_client
 
 from colorama import init, Fore, Back, Style
+
 init(autoreset=True)
 from urllib.parse import urlparse, urljoin
 
@@ -77,7 +77,7 @@ FARADAY_DEFAULT_HOST = "localhost"
 logger = logging.getLogger(__name__)
 
 
-def getParserArgs():
+def get_parser_args():
     """
     Parser setup for faraday launcher arguments.
     """
@@ -134,7 +134,7 @@ def getParserArgs():
                         dest="gui",
                         default="gtk",
                         help="Select interface to start faraday. Supported values are "
-                              "gtk and 'no' (no GUI at all). Defaults to GTK")
+                             "gtk and 'no' (no GUI at all). Defaults to GTK")
 
     parser.add_argument('--cli',
                         action="store_true",
@@ -161,7 +161,6 @@ def getParserArgs():
                         action="store_true",
                         default=False,
                         help="Enables debug mode. Default = disabled")
-
 
     parser.add_argument('--nodeps',
                         action="store_true",
@@ -254,7 +253,7 @@ def setupZSH():
             dst.write(src.read())
 
 
-def setupXMLConfig():
+def setup_xml_config():
     """
     Checks user configuration file status.
 
@@ -268,7 +267,7 @@ def setupXMLConfig():
         logger.info("Using custom user configuration.")
 
 
-def checkConfiguration(gui_type):
+def check_configuration(gui_type):
     """
     Checks if the environment is ready to run Faraday.
 
@@ -280,20 +279,20 @@ def checkConfiguration(gui_type):
     logger.info("Setting up ZSH integration.")
     setupZSH()
     logger.info("Setting up user configuration.")
-    setupXMLConfig()
+    setup_xml_config()
 
 
-def setupFolders(folderlist):
+def setup_folders(folder_list):
     """
     Checks if a list of folders exists and creates them otherwise.
     """
 
-    for folder in folderlist:
+    for folder in folder_list:
         fp_folder = os.path.join(FARADAY_USER_HOME, folder)
-        checkFolder(fp_folder)
+        check_folder(fp_folder)
 
 
-def checkFolder(folder):
+def check_folder(folder):
     """
     Checks whether a folder exists and creates it if it doesn't.
     """
@@ -304,11 +303,11 @@ def checkFolder(folder):
         os.makedirs(folder)
 
 
-def printBanner():
+def print_banner():
     """
     Prints Faraday's ascii banner.
     """
-    print (Fore.RED + """
+    print(Fore.RED + """
   _____                           .___
 _/ ____\_____  ____________     __| _/_____   ___.__.
 \   __\ \__  \ \_  __ \__  \   / __ | \__  \ <   |  |
@@ -327,7 +326,8 @@ def try_login_user(server_uri, api_username, api_password, u2fa_token=None):
     try:
         session_cookie = login_user(server_uri, api_username, api_password, u2fa_token)
     except requests.exceptions.SSLError:
-        print("SSL certificate validation failed.\nYou can use the --cert option in Faraday to set the path of the cert")
+        print(
+            "SSL certificate validation failed.\nYou can use the --cert option in Faraday to set the path of the cert")
         sys.exit(-1)
     except requests.exceptions.MissingSchema:
         print("The Faraday Server URL is incorrect, please try again.")
@@ -345,8 +345,8 @@ def login(cert_path):
     Sets the username and passwords from the command line.
     If --login flag is set then username and password is set
     """
-    CONF = getInstanceConfiguration()
-    server_url = CONF.getAPIUrl()
+    user_config = getInstanceConfiguration()
+    server_url = user_config.getAPIUrl()
     try:
         if not server_url:
             server_url = input("\nPlease enter the Faraday Server URL (Press enter for http://localhost:5985): ") \
@@ -373,10 +373,10 @@ def login(cert_path):
         except requests.exceptions.ConnectionError as e:
             logger.error("Connection to Faraday server FAILED: %s - use --login to set a new server", server_url)
             sys.exit(1)
-        CONF.setAPIUrl(server_url)
+        user_config.setAPIUrl(server_url)
         print(f"""\nPlease provide your valid Faraday credentials for {server_url}\nYou have 3 attempts.""")
-        MAX_ATTEMPTS = 3
-        for attempt in range(1, MAX_ATTEMPTS + 1):
+        max_attempts = 3
+        for attempt in range(1, max_attempts + 1):
             api_username = input("Username (press enter for faraday): ") or "faraday"
             api_password = getpass.getpass('Password: ')
             try:
@@ -388,25 +388,25 @@ def login(cert_path):
                     u2fa_token = input("2FA Token: ")
                 session_cookie = try_login_user(server_url, api_username, api_password, u2fa_token)
             if session_cookie:
-                CONF.setFaradaySessionCookies(session_cookie)
+                user_config.setFaradaySessionCookies(session_cookie)
                 if parsed_url.scheme == "https" and cert_path:
-                    CONF.setCerPath(cert_path)
+                    user_config.setCerPath(cert_path)
                 else:
-                    CONF.setCerPath(None)
+                    user_config.setCerPath(None)
                 user_info = get_user_info()
                 if not user_info:
                     continue
                 else:
                     if 'roles' in user_info:
                         if 'client' in user_info['roles']:
-                            print(f"You can't login as a client. You have {MAX_ATTEMPTS - attempt} attempt(s) left.")
+                            print(f"You can't login as a client. You have {max_attempts - attempt} attempt(s) left.")
                             continue
                     logger.info('Login successful: {0}'.format(api_username))
-                    CONF.saveConfig()
+                    user_config.saveConfig()
                     break
-            print(f'Login failed, please try again. You have {MAX_ATTEMPTS - attempt} more attempts')
+            print(f'Login failed, please try again. You have {max_attempts - attempt} more attempts')
         else:
-            logger.fatal(f'Invalid credentials, {MAX_ATTEMPTS} attempts failed. Quitting Faraday...')
+            logger.fatal(f'Invalid credentials, {max_attempts} attempts failed. Quitting Faraday...')
             sys.exit(-1)
     except KeyboardInterrupt:
         sys.exit(0)
@@ -418,11 +418,11 @@ def main():
     """
     global args
 
-    args = getParserArgs()
-    setupFolders(CONST_FARADAY_FOLDER_LIST)
-    printBanner()
+    args = get_parser_args()
+    setup_folders(CONST_FARADAY_FOLDER_LIST)
+    print_banner()
     logger.info("Dependencies met.")
-    checkConfiguration(args.gui)
+    check_configuration(args.gui)
     setConf()
     CONF = getInstanceConfiguration()
     cert_path = CONF.getCertPath()

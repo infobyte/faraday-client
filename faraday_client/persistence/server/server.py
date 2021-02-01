@@ -39,10 +39,10 @@ import requests
 from faraday_client import __version__ as f_version
 from faraday_client.persistence.server.utils import force_unique
 from faraday_client.persistence.server.server_io_exceptions import (WrongObjectSignature,
-                                                     CantCommunicateWithServerError,
-                                                     ConflictInDatabase,
-                                                     ResourceDoesNotExist,
-                                                     Unauthorized)
+                                                                    CantCommunicateWithServerError,
+                                                                    ConflictInDatabase,
+                                                                    ResourceDoesNotExist,
+                                                                    Unauthorized)
 
 from faraday_client.persistence.server.changes_stream import (
     WebsocketsChangesStream
@@ -71,7 +71,6 @@ OBJECT_TYPE_END_POINT_MAPPER = {
 }
 
 
-
 def _conf():
     from faraday_client.config.configuration import getInstanceConfiguration  # pylint:disable=import-outside-toplevel
     CONF = getInstanceConfiguration()
@@ -94,9 +93,11 @@ def _get_base_server_url():
         # Try to fix it
         return SERVER_URL.rstrip('/')
 
+
 def _create_server_api_url():
     """Return the server's api url."""
     return "{0}/_api/v2".format(_get_base_server_url())
+
 
 def _create_server_get_url(workspace_name, object_name=None, object_id=None, **params):
     """Creates a url to get from the server. Takes the workspace name
@@ -141,6 +142,7 @@ def _create_server_put_url(workspace_name, obj_type, obj_id, command_id):
 def _create_server_delete_url(workspace_name, obj_type, object_id, command_id=None):
     return _create_server_put_url(workspace_name, obj_type, object_id, command_id)
 
+
 # XXX: COUCH IT!
 def _create_couch_get_url(workspace_name, object_id):
     server_url = _get_base_server_url()
@@ -169,6 +171,7 @@ def _add_session_cookies(func):
     """A decorator which wrapps a function dealing with I/O with the server and
     adds authentication to the parameters.
     """
+
     def wrapper(*args, **kwargs):
         if FARADAY_UPLOAD_REPORTS_WEB_COOKIE:
             kwargs['cookies'] = FARADAY_UPLOAD_REPORTS_WEB_COOKIE
@@ -176,6 +179,7 @@ def _add_session_cookies(func):
             kwargs['cookies'] = _conf().getFaradaySessionCookies()
         response = func(*args, **kwargs)
         return response
+
     return wrapper if FARADAY_UP else func
 
 
@@ -210,6 +214,7 @@ def _unsafe_io_with_server(server_io_function, server_expected_responses,
         raise CantCommunicateWithServerError(server_io_function, server_url, payload, answer)
     return answer
 
+
 def _parse_json(response_object):
     """Takes a response object and return its response as a dictionary."""
     try:
@@ -231,6 +236,7 @@ def _get(request_url, **params):
                                               [200],
                                               request_url,
                                               params=params))
+
 
 def _put(post_url, expected_response=201, **params):
     """Put to the post_url. If update is True, try to get the object
@@ -266,7 +272,7 @@ def _delete(delete_url, database=False):
         last_rev = _get(delete_url)['_rev']
         params = {'rev': last_rev}
     return _parse_json(_unsafe_io_with_server(requests.delete,
-                                              [200,204],
+                                              [200, 204],
                                               delete_url,
                                               params=params))
 
@@ -318,6 +324,7 @@ def _get_raw_workspace_summary(workspace_name):
     request_url = _create_server_get_url(workspace_name)
     return _get(request_url)
 
+
 def _save_to_server(workspace_name, **params):
     """
 
@@ -328,13 +335,16 @@ def _save_to_server(workspace_name, **params):
     post_url = _create_server_post_url(workspace_name, params['type'], params.get('command_id', None))
     return _post(post_url, update=False, expected_response=201, **params)
 
+
 def _get_raw_report_count_vulns(workspace_name, **params):
     request_url = _create_server_get_url(workspace_name, 'report/countVulns')
     return _get(request_url, **params)
 
+
 def _update_in_server(workspace_name, faraday_object_id, **params):
     put_url = _create_server_put_url(workspace_name, params['type'], faraday_object_id, params.get('command_id', None))
     return _put(put_url, expected_response=200, **params)
+
 
 def _save_db_to_server(db_name, **params):
     post_url = _create_server_db_url(db_name)
@@ -438,6 +448,7 @@ def get_web_vulns(workspace_name, **params):
     """
     return get_all_vulns(workspace_name, type="VulnerabilityWeb", **params)
 
+
 def get_interfaces(workspace_name, **params):
     """Get interfaces from the server.
 
@@ -450,6 +461,7 @@ def get_interfaces(workspace_name, **params):
     """
     return _get_faraday_ready_dictionaries(workspace_name, 'interfaces',
                                            'interfaces', **params)
+
 
 def get_services(workspace_name, **params):
     """Get services from the server.
@@ -464,6 +476,7 @@ def get_services(workspace_name, **params):
     return _get_faraday_ready_dictionaries(workspace_name, 'services',
                                            'services', **params)
 
+
 def get_credentials(workspace_name, **params):
     """Get credentials from the server.
 
@@ -477,6 +490,7 @@ def get_credentials(workspace_name, **params):
     return _get_faraday_ready_dictionaries(workspace_name, 'credentials',
                                            'rows', **params)
 
+
 def get_notes(workspace_name, **params):
     """Get notes from the server.
 
@@ -489,6 +503,7 @@ def get_notes(workspace_name, **params):
     """
     return _get_faraday_ready_dictionaries(workspace_name, 'notes',
                                            'rows', **params)
+
 
 def get_commands(workspace_name, **params):
     """Get commands from the server.
@@ -514,6 +529,7 @@ def get_report(workspace_name, object_id):
     request_url = _create_server_post_url(workspace_name, object_id)
     return _get(request_url)
 
+
 def get_report_docx(workspace_name, report_object_id):
     """Get an report docx.
 
@@ -538,6 +554,7 @@ def get_report_docx(workspace_name, report_object_id):
 
     return _unsafe_io_with_server(requests.get, 200, request_url)
 
+
 def get_report_count_vulns(workspace_name, confirmed=False, tags=[]):
     """
     Get vulnerabilities count from the server.
@@ -554,7 +571,7 @@ def get_report_count_vulns(workspace_name, confirmed=False, tags=[]):
     """
 
     return _get_raw_report_count_vulns(
-            workspace_name, confirmed="true" if confirmed else "false", tags=",".join(tags))
+        workspace_name, confirmed="true" if confirmed else "false", tags=",".join(tags))
 
 
 def get_objects(workspace_name, object_signature, **params):
@@ -599,12 +616,14 @@ def get_changes_stream(workspace_name, heartbeat='1000', stream_provider=_websoc
       stream_provider: A function that returns an instance of a Stream provider
     """
     return stream_provider(workspace_name, feed='continuous',
-                          heartbeat=heartbeat, **extra_params)
+                           heartbeat=heartbeat, **extra_params)
+
 
 def get_workspaces_names():
     """Returns:
         A dictionary with a list with the workspaces names."""
     return _get("{0}/ws".format(_create_server_api_url()))
+
 
 # XXX: COUCH IT!
 def _clean_up_stupid_couch_response(response_string):
@@ -614,6 +633,7 @@ def _clean_up_stupid_couch_response(response_string):
     ok_yeah = "}".join(almost_there)
     hopefully_valid_json = "{{{0}}}".format(ok_yeah)
     return json.loads(hopefully_valid_json)
+
 
 # XXX: COUCH IT!
 # COUCH IT LEVEL: REVOLUTIONS
@@ -671,6 +691,7 @@ def get_object(workspace_name, object_signature, object_id):
     objects = get_objects(workspace_name, object_signature, couchid=object_id)
     return force_unique(objects)
 
+
 def get_host(workspace_name, host_id):
     """Get an unique host.
 
@@ -687,6 +708,7 @@ def get_host(workspace_name, host_id):
         contact Infobyte LCC.
     """
     return force_unique(get_hosts(workspace_name, couchid=host_id))
+
 
 def get_vuln(workspace_name, vuln_id):
     """Get an unique vuln.
@@ -705,6 +727,7 @@ def get_vuln(workspace_name, vuln_id):
     """
     return force_unique(get_vulns(workspace_name, couchid=vuln_id))
 
+
 def get_web_vuln(workspace_name, vuln_id):
     """Get an unique web vuln.
 
@@ -721,6 +744,7 @@ def get_web_vuln(workspace_name, vuln_id):
         contact Infobyte LCC.
     """
     return force_unique(get_web_vulns(workspace_name, couchid=vuln_id))
+
 
 def get_interface(workspace_name, interface_id):
     """Get an unique interface.
@@ -739,6 +763,7 @@ def get_interface(workspace_name, interface_id):
     """
     return force_unique(get_interfaces(workspace_name, couchid=interface_id))
 
+
 def get_service(workspace_name, service_id):
     """Get an unique service.
 
@@ -755,6 +780,7 @@ def get_service(workspace_name, service_id):
         contact Infobyte LCC.
     """
     return force_unique(get_services(workspace_name, couchid=service_id))
+
 
 def get_note(workspace_name, note_id):
     """Get an unique note.
@@ -773,6 +799,7 @@ def get_note(workspace_name, note_id):
     """
     return force_unique(get_notes(workspace_name, couchid=note_id))
 
+
 def get_credential(workspace_name, credential_id):
     """Get an unique credential.
 
@@ -790,6 +817,7 @@ def get_credential(workspace_name, credential_id):
     """
     return force_unique(get_services(workspace_name, couchid=credential_id))
 
+
 def get_command(workspace_name, command_id):
     """Get an unique command.
 
@@ -806,6 +834,7 @@ def get_command(workspace_name, command_id):
         contact Infobyte LCC.
     """
     return force_unique(get_commands(workspace_name, couchid=command_id))
+
 
 def get_workspace(workspace_name, **params):
     """Get an unique command.
@@ -825,6 +854,7 @@ def get_workspace(workspace_name, **params):
     request_url = _create_server_get_url(workspace_name)
     return _get(request_url, **params)
 
+
 def get_workspace_summary(workspace_name):
     """Get a collection of data about the workspace.
 
@@ -835,6 +865,7 @@ def get_workspace_summary(workspace_name):
         A dictionary with the workspace's information
     """
     return _get_raw_workspace_summary(workspace_name)['stats']
+
 
 def get_workspace_numbers(workspace_name):
     """Get the number of hosts, interfaces, services and vulns in the workspace.
@@ -848,6 +879,7 @@ def get_workspace_numbers(workspace_name):
     stats = _get_raw_workspace_summary(workspace_name)['stats']
     return stats['hosts'], stats['services'], stats['total_vulns']
 
+
 def get_hosts_number(workspace_name, **params):
     """
     Args:
@@ -858,6 +890,7 @@ def get_hosts_number(workspace_name, **params):
         The amount of hosts in the workspace as an integer.
     """
     return int(get_workspace_summary(workspace_name)['hosts'])
+
 
 def get_services_number(workspace_name, **params):
     """
@@ -870,6 +903,7 @@ def get_services_number(workspace_name, **params):
     """
     return int(get_workspace_summary(workspace_name)['services'])
 
+
 def get_interfaces_number(workspace_name, **params):
     """
     Args:
@@ -880,6 +914,7 @@ def get_interfaces_number(workspace_name, **params):
         The amount of interfaces in the workspace as an integer.
     """
     return int(get_workspace_summary(workspace_name)['interfaces'])
+
 
 def get_vulns_number(workspace_name, **params):
     """
@@ -892,6 +927,7 @@ def get_vulns_number(workspace_name, **params):
     """
     return int(get_workspace_summary(workspace_name)['total_vulns'])
 
+
 def get_notes_number(workspace_name, **params):
     """
     Args:
@@ -902,6 +938,7 @@ def get_notes_number(workspace_name, **params):
         The amount of notes in the workspace as an integer.
     """
     return int(get_workspace_summary(workspace_name)['notes'])
+
 
 def get_credentials_number(workspace_name, **params):
     """
@@ -914,6 +951,7 @@ def get_credentials_number(workspace_name, **params):
     """
     return int(_get_raw_credentials(workspace_name, **params))
 
+
 def get_commands_number(workspace_name, **params):
     """
     Args:
@@ -924,6 +962,7 @@ def get_commands_number(workspace_name, **params):
         The amount of commands in the workspace as an integer.
     """
     return int(_get_raw_commands(workspace_name, **params))
+
 
 def create_host(workspace_name, command_id, ip, os, default_gateway=None,
                 description="", metadata=None, owned=False, owner="",
@@ -959,6 +998,7 @@ def create_host(workspace_name, command_id, ip, os, default_gateway=None,
                            hostnames=hostnames,
                            mac=mac,
                            type="Host")
+
 
 def update_host(workspace_name, command_id, id, ip, os, default_gateway="",
                 description="", metadata=None, owned=False, owner="",
@@ -1032,6 +1072,7 @@ def create_service(workspace_name, command_id, name, description, ports, parent,
                            version=version,
                            type="Service",
                            metadata=metadata)
+
 
 def update_service(workspace_name, command_id, id, name, description, ports,
                    parent, owned=False, owner="", protocol="", status="",
@@ -1118,7 +1159,8 @@ def create_vuln(workspace_name, command_id, name, description, parent, parent_ty
                            status=status,
                            metadata=metadata,
                            policyviolations=policyviolations,
-			   external_id=external_id)
+                           external_id=external_id)
+
 
 def update_vuln(workspace_name, command_id, id, name, description, parent,
                 parent_type, owned=None, owner="", confirmed=False, data="",
@@ -1168,7 +1210,8 @@ def update_vuln(workspace_name, command_id, id, name, description, parent,
                              status=status,
                              metadata=metadata,
                              policyviolations=policyviolations,
-			     external_id=external_id)
+                             external_id=external_id)
+
 
 def create_vuln_web(workspace_name, command_id, name, description, parent,
                     parent_type, owned=None, owner="", confirmed=False,
@@ -1237,6 +1280,7 @@ def create_vuln_web(workspace_name, command_id, name, description, parent,
                            type='VulnerabilityWeb',
                            policyviolations=policyviolations,
                            tags=tags, external_id=external_id)
+
 
 def update_vuln_web(workspace_name, command_id, id, name, description,
                     parent, parent_type, owned=None, owner="",
@@ -1308,6 +1352,7 @@ def update_vuln_web(workspace_name, command_id, id, name, description,
                              tags=tags,
                              external_id=external_id)
 
+
 def create_note(workspace_name, command_id, object_type, object_id, name, text, owned=None, owner="",
                 description="", metadata=None):
     """Creates a note.
@@ -1337,6 +1382,7 @@ def create_note(workspace_name, command_id, object_type, object_id, name, text, 
                            text=text,
                            type="Note",
                            metadata=metadata)
+
 
 def update_note(workspace_name, command_id, id, name, text,
                 object_type, object_id, owned=None,
@@ -1404,6 +1450,7 @@ def create_credential(workspace_name, command_id, name, username, password,
                            password=password,
                            type="Cred")
 
+
 def update_credential(workspace_name, command_id, id, name, username, password,
                       parent, parent_type, owned=None, owner="",
                       description="", metadata=None):
@@ -1438,6 +1485,7 @@ def update_credential(workspace_name, command_id, id, name, username, password,
                              password=password,
                              type="Cred")
 
+
 def create_command(workspace_name, command, tool, import_source, duration=None, hostname=None,
                    ip=None, itime=None, params=None, user=None):
     """Creates a command.
@@ -1468,8 +1516,9 @@ def create_command(workspace_name, command, tool, import_source, duration=None, 
                            workspace=workspace_name,
                            type="CommandRunInformation")
 
+
 def update_command(workspace_name, command_id, command, tool, import_source
-,duration=None, hostname=None,
+                   , duration=None, hostname=None,
                    ip=None, itime=None, params=None, user=None):
     """Updates a command.
 
@@ -1503,7 +1552,8 @@ def update_command(workspace_name, command_id, command, tool, import_source
 
 
 def create_executive_report(workspace_name, id, name, tags=[], title="", enterprise="", scope="", objectives="",
-                            summary="", confirmed=False, template_name="", conclusions="", recommendations="", date=None,
+                            summary="", confirmed=False, template_name="", conclusions="", recommendations="",
+                            date=None,
                             owner="", grouped=False):
     """Creates a Executive report.
 
@@ -1613,6 +1663,7 @@ def delete_workspace(workspace_name):
     db_url = _create_server_db_url(workspace_name)
     return _delete(db_url, database=True)
 
+
 def server_info():
     """Return server info if we can stablish a connection with the server,
     None otherwise.
@@ -1621,6 +1672,7 @@ def server_info():
         return _get("{0}/info".format(_create_server_api_url()))
     except:
         return None
+
 
 def login_user(uri, uname, upass, u2fa_token=None):
     auth = {"email": uname, "password": upass}
@@ -1683,9 +1735,11 @@ def check_server_url(url_to_test):
         test_okey = False
     return test_okey
 
+
 def get_user_info():
     try:
-        resp = requests.get(urlparse.urljoin(_get_base_server_url(), "/_api/session"), cookies=_conf().getFaradaySessionCookies(), timeout=1)
+        resp = requests.get(urlparse.urljoin(_get_base_server_url(), "/_api/session"),
+                            cookies=_conf().getFaradaySessionCookies(), timeout=1)
         if (resp.status_code != 401) and (resp.status_code != 403):
             return resp.json()
         else:
@@ -1694,6 +1748,5 @@ def get_user_info():
         return False
     except requests.adapters.ReadTimeout:
         return False
-
 
 # I'm Py3
