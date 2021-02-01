@@ -254,13 +254,12 @@ class LoginDialog(Gtk.Dialog):
                             errorDialog(self, f"You can't login as a client. You have {attempts - 1 - attempt}\
                                                attempt(s) left.")
                             continue
-                        else:
-                            user_config.saveConfig()
-                            user_config.setAPIUrl(txt_url)
                     except (TypeError, KeyError):
                         pass
 
                     self.destroy()
+                    user_config.setAPIUrl(txt_url)
+                    user_config.saveConfig()
                     return True
 
             if run in [Gtk.ResponseType.CANCEL, -4]:
