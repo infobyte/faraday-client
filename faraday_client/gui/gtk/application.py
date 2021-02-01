@@ -20,16 +20,16 @@ import logging
 try:
     import gi
 except ImportError as e:
-    print ("You are missing Gobject Instrospection. Please install "
-           "version 3.14 or above (recommended) or 3.12")
+    print("You are missing Gobject Instrospection. Please install "
+          "version 3.14 or above (recommended) or 3.12")
     sys.exit(1)
 
 try:
     gi.require_version('Gtk', '3.0')
 except ValueError:
-    print ("WARNING: You don't seem to have installed the recommended version"
-           " of GTK. You can still use the program, but we recommend you"
-           " check your install of GTK+3")
+    print("WARNING: You don't seem to have installed the recommended version"
+          " of GTK. You can still use the program, but we recommend you"
+          " check your install of GTK+3")
 
 try:
     gi.require_version('Vte', '2.91')
@@ -41,8 +41,8 @@ try:
     # modules. this just checks for every dependence when starting the app
     from gi.repository import Gio, Gtk, GdkPixbuf, Vte, GLib, GObject, Gdk
 except ImportError as e:
-    print ("You are missing some of the required dependencies. "
-           "Check that you have GTK+3 and Vte installed.")
+    print("You are missing some of the required dependencies. "
+          "Check that you have GTK+3 and Vte installed.")
     sys.exit(1)
 
 import faraday_client.model.guiapi
@@ -87,13 +87,12 @@ from faraday_client.start_client import FARADAY_CLIENT_BASE
 
 from faraday_client.plugins import fplugin_utils
 
-
 CONF = getInstanceConfiguration()
 
 logger = logging.getLogger(__name__)
 
 
-def checkSSL(uri):
+def check_ssl(uri):
     """
     This method checks SSL validation
     It only returns True if the certificate is valid
@@ -201,8 +200,8 @@ class GuiApp(Gtk.Application, FaradayUi):
         except Exception as ex:
             traceback_str = traceback.format_exc()
             faraday_client.model.api.log("An exception was captured while deleting "
-                          "workspace %s\n%s" % (ws_name, traceback_str),
-                          "ERROR")
+                                         "workspace %s\n%s" % (ws_name, traceback_str),
+                                         "ERROR")
 
         available_workspaces = self.serverIO.get_workspaces_names()
         if available_workspaces:
@@ -311,7 +310,8 @@ class GuiApp(Gtk.Application, FaradayUi):
                     logger.info("Exit because there are no workspaces found, and user is not admin")
                     GObject.idle_add(self.window.destroy)
                     GObject.idle_add(self.on_quit)
-                error_message = "You don't have permissions or no workspace is available.\n"\
+
+                error_message = "You don't have permissions or no workspace is available.\n" \
                                 "Please contact faraday admin to create a workspace or to assign permissions."
                 dialog = errorDialog(self.window, error_message)
                 dialog.connect("destroy", exit)
@@ -377,7 +377,7 @@ class GuiApp(Gtk.Application, FaradayUi):
             with https but didn't pass the checkSSL test.
             """
             if server_uri.startswith("https://"):
-                return checkSSL(server_uri)
+                return check_ssl(server_uri)
             else:
                 return True
 
@@ -391,7 +391,7 @@ class GuiApp(Gtk.Application, FaradayUi):
                          "password are still valid."))
             success = False
         elif server_url.startswith("https://"):
-            if not checkSSL(server_url):
+            if not check_ssl(server_url):
                 errorDialog(self.window,
                             "The SSL certificate validation has failed")
             success = False
@@ -768,8 +768,8 @@ class GuiApp(Gtk.Application, FaradayUi):
 
         appmenu.insert_submenu(1, "Faraday Plugin", fmenu)
 
-        helpMenu = builder.get_object('Help')
-        self.set_menubar(helpMenu)
+        help_menu = builder.get_object('Help')
+        self.set_menubar(help_menu)
 
     def do_activate(self):
         """If there's no window, create one and present it (show it to user).
@@ -792,14 +792,14 @@ class GuiApp(Gtk.Application, FaradayUi):
         self.window.set_icon(self.icon)
         self.window.present()
 
-        self.loghandler = GUIHandler()
+        self.log_handler = GUIHandler()
         if CONF.getDebugStatus():
-            self.loghandler.setLevel(logging.DEBUG)
+            self.log_handler.setLevel(logging.DEBUG)
         else:
-            self.loghandler.setLevel(logging.INFO)
+            self.log_handler.setLevel(logging.INFO)
         faraday_client.model.guiapi.setMainApp(self)
-        add_handler(self.loghandler)
-        self.loghandler.registerGUIOutput(self.window)
+        add_handler(self.log_handler)
+        self.log_handler.registerGUIOutput(self.window)
 
         notifier = faraday_client.model.log.getNotifier()
         notifier.widget = self.window
@@ -821,9 +821,9 @@ class GuiApp(Gtk.Application, FaradayUi):
             need_login = True
 
         if need_login:
-            loginDialog = ForceLoginDialog(self.window,
-                                           self.exit_faraday_without_confirm)
-            loginDialog.run(3, self.window)
+            login_dialog = ForceLoginDialog(self.window,
+                                            self.exit_faraday_without_confirm)
+            login_dialog.run(3, self.window)
             self.reload_workspaces()
 
         workspace_argument_set = self.open_workspace_from_args()
@@ -835,9 +835,9 @@ class GuiApp(Gtk.Application, FaradayUi):
 
     def on_plugin_options(self, action, param):
         """Defines what happens when you press "Plugins" on the menu"""
-        pluginsOption_window = PluginOptionsDialog(self.plugin_manager,
-                                                   self.window)
-        pluginsOption_window.show_all()
+        plugins_option_window = PluginOptionsDialog(self.plugin_manager,
+                                                    self.window)
+        plugins_option_window.show_all()
 
     def on_faraday_plugin(self, action, param):
         """Defines what happens when you press "Faraday Plugin..." on the menu"""
@@ -848,11 +848,10 @@ class GuiApp(Gtk.Application, FaradayUi):
         else:
             name = ""
 
-
-        pluginsOption_window = FaradayPluginsDialog(self.window.get_current_focused_terminal(),
+        plugin_option_window = FaradayPluginsDialog(self.window.get_current_focused_terminal(),
                                                     name,
                                                     self.window)
-        pluginsOption_window.show_all()
+        plugin_option_window.show_all()
 
     def on_new_button(self, action=None, params=None, title=None):
         """Defines what happens when you press the 'new' button on the toolbar
@@ -975,7 +974,7 @@ class GuiApp(Gtk.Application, FaradayUi):
         changes her Couch URL, the sidebar will reload reflecting the
         new workspaces available"""
 
-        #preference_window = PreferenceWindowDialog(self.reload_workspaces,
+        # preference_window = PreferenceWindowDialog(self.reload_workspaces,
         #                                           self.connect_to_couch,
         #                                           self.window)
         preference_window = AuthDialog(self.reload_workspaces, self.window)
@@ -1016,6 +1015,5 @@ class GuiApp(Gtk.Application, FaradayUi):
             command = fplugin_utils.build_faraday_plugin_command(plugin, active_workspace.getName())
             fd = terminal.get_pty().get_fd()
             os.write(fd, command.encode())
-
 
 # I'm Py3
