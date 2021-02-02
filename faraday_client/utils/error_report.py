@@ -14,8 +14,6 @@ import sys
 import traceback
 import threading
 import requests
-import hashlib
-import platform
 import faraday_client.model.guiapi
 from io import StringIO
 from faraday_client.gui.customevents import ShowExceptionCustomEvent
@@ -48,6 +46,9 @@ def exception_handler(obj_type, value, tb):
     Since this handler may be called from threads, the dialog must be created
     using gtk idle_add or signals to avoid issues.
     """
+    import hashlib
+    import platform
+    import distro
 
     text = StringIO()
     traceback.print_exception(obj_type, value, tb, file=text)
@@ -55,7 +56,7 @@ def exception_handler(obj_type, value, tb):
 
     excepts = f"Traceback: {text.getvalue()}".encode('utf-8')
     exception_hash = hashlib.sha256(excepts).hexdigest()
-    os_dist = " ".join(platform.dist())
+    os_dist = " ".join(distro.linux_distribution())
     python_version = platform.python_version()
     faraday_version = CONF.getVersion()
 
