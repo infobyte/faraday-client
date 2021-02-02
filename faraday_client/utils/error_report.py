@@ -34,11 +34,12 @@ CONF = getInstanceConfiguration()
 def get_crash_log():
     pass
 
+
 def get_system_info():
     pass
 
 
-def exception_handler(type, value, tb):
+def exception_handler(obj_type, value, tb):
     """
     This is a custom exception handler to replace the python original one.
     The idea is to show the user a dialog with the information and let him/her
@@ -49,13 +50,10 @@ def exception_handler(type, value, tb):
     """
 
     text = StringIO()
-    traceback.print_exception(type, value, tb, file=text)
+    traceback.print_exception(obj_type, value, tb, file=text)
     error_name = text.getvalue().split('\n')[-2]
 
-    excepts = """
-    Traceback: %s
-    """ % (text.getvalue() )
-
+    excepts = f"Traceback: {text.getvalue()}".encode('utf-8')
     exception_hash = hashlib.sha256(excepts).hexdigest()
     os_dist = " ".join(platform.dist())
     python_version = platform.python_version()
@@ -63,13 +61,12 @@ def exception_handler(type, value, tb):
 
     modules_info = ""
     try:
-        modules_info = ",".join([ "%s=%s" % (x.key, x.version)
-                            for x in pip.get_installed_distributions()])
+        modules_info = ",".join(["%s=%s" % (x.key, x.version)
+                                 for x in pip.get_installed_distributions()])
     except (ImportError, AttributeError):
         pass
 
-
-    python_dist = "Python %s \n Modules: [ %s ]" % (python_version, modules_info)
+    python_dist = f"Python {python_version} \n Modules: [ {modules_info} ]"
 
     description = """
     Exception: %s
@@ -78,8 +75,6 @@ def exception_handler(type, value, tb):
               Faraday Version: %s
               Python Versions: %s
     """ % (excepts, exception_hash, os_dist, faraday_version, python_dist)
-
-
 
     event = ShowExceptionCustomEvent(description, reportToDevelopers, error_name)
     faraday_client.model.guiapi.postCustomEvent(event)
@@ -103,14 +98,15 @@ def reportToDevelopers(name=None, *description):
             params['summary'] = 'autoreport %s' % time.time()
 
         resp = requests.post(uri,
-                            headers = headers,
-                            data = params, timeout = 1, verify=True)
+                             headers=headers,
+                             data=params, timeout=1, verify=True)
 
         model.api.devlog("Report sent to faraday server")
 
     except Exception as e:
         model.api.devlog("Error reporting to developers:")
         model.api.devlog(e)
+
 
 def installThreadExcepthook():
     """
@@ -122,9 +118,11 @@ def installThreadExcepthook():
     since this replaces a new-style class method.
     """
     init_old = threading.Thread.__init__
+
     def init(self, *args, **kwargs):
         init_old(self, *args, **kwargs)
         run_old = self.run
+
         def run_with_except_hook(*args, **kw):
             try:
                 run_old(*args, **kw)
@@ -132,8 +130,9 @@ def installThreadExcepthook():
                 if isinstance(e, (KeyboardInterrupt, SystemExit)):
                     raise
                 sys.excepthook(*sys.exc_info())
-        self.run = run_with_except_hook
-    threading.Thread.__init__ = init
 
+        self.run = run_with_except_hook
+
+    threading.Thread.__init__ = init
 
 # I'm Py3
