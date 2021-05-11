@@ -210,7 +210,7 @@ def main(workspace='', args=None, parser=None):
 
     session = Session()
     session.post(models.server.SERVER_URL + '/_api/login', json={'email': models.server.AUTH_USER, 'password': models.server.AUTH_PASS})
-    vulns = session.get(models.server.SERVER_URL + '/_api/v2/ws/' + workspace + '/vulns')
+    vulns = session.get(models.server.SERVER_URL + '/_api/v3/ws/' + workspace + '/vulns')
 
     parser.add_argument('-o', '--output', help='Output xlsx file report', required=True)
     parsed_args = parser.parse_args(args)

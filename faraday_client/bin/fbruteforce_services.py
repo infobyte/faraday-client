@@ -66,7 +66,7 @@ def search_hosts_by_service(workspace, b_service):
 
 def total_credentials(workspace):
     json_creds = server._get(
-        SERVER_URL + "/_api/v2/ws/%s/credential" % workspace)
+        SERVER_URL + "/_api/v3/ws/%s/credential" % workspace)
 
     return len(json_creds["rows"])
 
@@ -75,7 +75,7 @@ def get_credentials(workspace, key):
     credentials = ""
 
     json_creds = server._get(
-        SERVER_URL + "/_api/v2/ws/%s/credential" % workspace)
+        SERVER_URL + "/_api/v3/ws/%s/credential" % workspace)
 
     if len(json_creds["rows"]) > 0:
 
@@ -93,7 +93,7 @@ def show_table_services(workspace):
     table = ""
 
     j_parsed = server._get(
-        SERVER_URL + "/_api/v2/ws/%s/services/count?group_by=name" % workspace)
+        SERVER_URL + "/_api/v3/ws/%s/services/count?group_by=name" % workspace)
 
     if len(j_parsed["groups"]) > 0:
 
