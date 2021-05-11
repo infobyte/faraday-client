@@ -25,7 +25,7 @@ stages:
 
 
 generate_build_file:
-    image: registry.gitlab.com/faradaysec/integrationrepo
+    image: registry.gitlab.com/faradaysec/devops
     stage: build_faraday
     script:
         - "/bin/mkdir faraday_copy"
@@ -105,7 +105,7 @@ generate_rpm:
 
 
 generate_deb:
-    image: registry.gitlab.com/faradaysec/integrationrepo
+    image: registry.gitlab.com/faradaysec/devops
     stage: build_installers
     before_script:
         - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/faradaysec/faraday-linux-installers-builder.git
