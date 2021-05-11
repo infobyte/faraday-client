@@ -16,7 +16,7 @@ __prettyname__ = 'Close vulns if a certain time has passed'
 
 
 def get_vulns_from_workspace(session, url, workspace):
-    vulns = session.get('{url}/_api/v2/ws/{ws_name}/vulns/'\
+    vulns = session.get('{url}/_api/v3/ws/{ws_name}/vulns'\
                         .format(url=url, ws_name=workspace))
 
     return vulns.json()
@@ -37,7 +37,7 @@ def close_vulns(session, url, workspace, vulns, duration_time):
             # If elapsed time since creation is greater than duration time, the vuln will be closed
             if elapsed_time.total_seconds() > duration_time and vuln['value']['status'] != 'closed':
                 vuln['value']['status'] = 'closed'
-                close = session.put('{url}/_api/v2/ws/{ws_name}/vulns/{vuln_id}/'\
+                close = session.put('{url}/_api/v3/ws/{ws_name}/vulns/{vuln_id}'\
                                     .format(url=url,
                                             ws_name=workspace,
                                             vuln_id=vuln['id']

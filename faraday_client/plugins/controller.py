@@ -133,7 +133,7 @@ class PluginController(Thread):
         data['tool'] = data['command']
         data.pop('id_available')
         res = requests.put(
-            f'{base_url}/_api/v2/ws/{command.workspace}/commands/{command_id}/',
+            f'{base_url}/_api/v3/ws/{command.workspace}/commands/{command_id}',
             json=data,
             cookies=cookies)
         logger.info(f'Sent command duration {res.status_code}')
@@ -142,7 +142,7 @@ class PluginController(Thread):
         cookies = _conf().getFaradaySessionCookies()
         base_url = _get_base_server_url()
         res = requests.post(
-            f'{base_url}/_api/v2/ws/{workspace}/bulk_create/',
+            f'{base_url}/_api/v3/ws/{workspace}/bulk_create',
             cookies=cookies,
             json=json.loads(data))
         if res.status_code != 201:

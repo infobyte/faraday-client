@@ -134,7 +134,7 @@ class WebsocketsChangesStream(ChangesStream):
 
         response = _post(
             _create_server_api_url() +
-            '/ws/{}/websocket_token/'.format(self.workspace_name),
+            '/ws/{}/websocket_token'.format(self.workspace_name),
             expected_response=200)
         token = response['token']
         self.ws.send(json.dumps({
