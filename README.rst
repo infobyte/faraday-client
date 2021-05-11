@@ -1,6 +1,8 @@
-**This is deprecated please use Faraday-Cli instead!!!**
+================
+This is deprecated please use `Faraday-Cli <https://github.com/infobyte/faraday-cli>`_ instead!!!
+================
 
-https://github.com/infobyte/faraday-cli
+v1.1.0 was a hand-off release, updating only accessing Faraday using API v3 (v2 will be deprecated too).
 
 ==================
 Faraday GTK Client
