@@ -91,7 +91,7 @@ def _get_base_server_url():
 
 def _create_server_api_url():
     """Return the server's api url."""
-    return "{0}/_api/v2".format(_get_base_server_url())
+    return "{0}/_api/v3".format(_get_base_server_url())
 
 def _create_server_get_url(workspace_name, object_name=None, object_id=None, **params):
     """Creates a url to get from the server. Takes the workspace name
@@ -103,7 +103,7 @@ def _create_server_get_url(workspace_name, object_name=None, object_id=None, **p
     Return the get_url as a string.
     """
     get_url = "/{0}".format(object_name) if object_name else ""
-    get_url += "/{0}/".format(object_id) if object_id else ""
+    get_url += "/{0}".format(object_id) if object_id else ""
     get_url = '{0}/ws/{1}{2}'.format(_create_server_api_url(),
                                      workspace_name,
                                      get_url)
@@ -116,7 +116,7 @@ def _create_server_post_url(workspace_name, obj_type, command_id):
     object_end_point_name = OBJECT_TYPE_END_POINT_MAPPER[obj_type]
     if obj_type == 'comment':
         object_end_point_name = object_end_point_name.strip('/') + '_unique/'
-    post_url = '{0}/ws/{1}/{2}/'.format(server_api_url, workspace_name, object_end_point_name)
+    post_url = '{0}/ws/{1}/{2}'.format(server_api_url, workspace_name, object_end_point_name)
     if command_id:
         get_params = {'command_id': command_id}
         post_url += '?' + urlencode(get_params)
@@ -126,7 +126,7 @@ def _create_server_post_url(workspace_name, obj_type, command_id):
 def _create_server_put_url(workspace_name, obj_type, obj_id, command_id):
     server_api_url = _create_server_api_url()
     object_end_point_name = OBJECT_TYPE_END_POINT_MAPPER[obj_type]
-    put_url = '{0}/ws/{1}/{2}/{3}/'.format(server_api_url, workspace_name, object_end_point_name, obj_id)
+    put_url = '{0}/ws/{1}/{2}/{3}'.format(server_api_url, workspace_name, object_end_point_name, obj_id)
     if command_id:
         get_params = {'command_id': command_id}
         put_url += '?' + urlencode(get_params)
@@ -156,7 +156,7 @@ def _create_couch_db_url(workspace_name):
 
 def _create_server_db_url(workspace_name):
     server_api_url = _create_server_api_url()
-    db_url = '{0}/ws/'.format(server_api_url)
+    db_url = '{0}/ws'.format(server_api_url)
     return db_url
 
 
@@ -1671,7 +1671,7 @@ def check_server_url(url_to_test):
     False otherwise.
     """
     try:
-        resp = _get("{0}/_api/v2/info".format(url_to_test))
+        resp = _get("{0}/_api/v3/info".format(url_to_test))
         return 'Faraday Server' in resp
     except Exception as ex:
         logger.exception(ex)
